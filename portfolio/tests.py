@@ -2,6 +2,7 @@ from datetime import date
 
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 from django.utils.text import slugify
 
 from .models import Skill, Project, JourneyEntry, Education, ContactMessage
@@ -229,3 +230,118 @@ class ContactMessageModelTest(TestCase):
         )
         with self.assertRaises(ValidationError):
             msg.full_clean()
+
+
+class HomePageViewTest(TestCase):
+    def setUp(self):
+        self.skill = Skill.objects.create(
+            name="Python", category=SkillCategory.BACKEND
+        )
+        self.skill2 = Skill.objects.create(
+            name="Django", category=SkillCategory.BACKEND
+        )
+        self.featured_project = Project.objects.create(
+            title="Featured Project",
+            short_description="A featured project desc",
+            description="Full description of featured project",
+            featured=True,
+        )
+        self.featured_project.technologies.add(self.skill, self.skill2)
+        self.regular_project = Project.objects.create(
+            title="Regular Project",
+            short_description="A regular project desc",
+            featured=False,
+        )
+        self.journey = JourneyEntry.objects.create(
+            date=date(2025, 1, 1), title="Started learning", description="Description"
+        )
+        self.education = Education.objects.create(
+            institution="University",
+            degree="B.Tech",
+            field_of_study="Computer Science",
+            start_date=date(2022, 8, 1),
+            end_date=date(2026, 5, 31),
+        )
+
+    def test_homepage_returns_200(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_homepage_uses_correct_template(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertTemplateUsed(response, "portfolio/home.html")
+
+    def test_homepage_context_featured_projects(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertEqual(list(response.context["featured_projects"]), [self.featured_project])
+
+    def test_homepage_context_skills(self):
+        response = self.client.get(reverse("portfolio:home"))
+        # Skills are ordered by category, then order, then name alphabetically
+        expected_skills = sorted([self.skill, self.skill2], key=lambda s: (s.category, s.order, s.name))
+        self.assertEqual(list(response.context["skills"]), expected_skills)
+
+    def test_homepage_context_journey_entries(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertEqual(list(response.context["journey_entries"]), [self.journey])
+
+    def test_homepage_context_education(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertEqual(list(response.context["education"]), [self.education])
+
+    def test_homepage_empty_database_returns_200(self):
+        # Remove all records to simulate an empty database
+        Skill.objects.all().delete()
+        Project.objects.all().delete()
+        JourneyEntry.objects.all().delete()
+        Education.objects.all().delete()
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["featured_projects"]), 0)
+        self.assertEqual(len(response.context["skills"]), 0)
+        self.assertEqual(len(response.context["journey_entries"]), 0)
+        self.assertEqual(len(response.context["education"]), 0)
+
+
+class ProjectDetailViewTest(TestCase):
+    def setUp(self):
+        self.python = Skill.objects.create(
+            name="Python", category=SkillCategory.BACKEND
+        )
+        self.django = Skill.objects.create(
+            name="Django", category=SkillCategory.BACKEND
+        )
+        self.project = Project.objects.create(
+            title="Detail Project",
+            short_description="A project to view in detail",
+            description="Full description here",
+            featured=True,
+        )
+        self.project.technologies.add(self.python, self.django)
+
+    def test_valid_slug_returns_200(self):
+        response = self.client.get(
+            reverse("portfolio:project_detail", kwargs={"slug": self.project.slug})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_correct_project_displayed(self):
+        response = self.client.get(
+            reverse("portfolio:project_detail", kwargs={"slug": self.project.slug})
+        )
+        self.assertEqual(response.context["project"], self.project)
+        self.assertContains(response, self.project.title)
+
+    def test_invalid_slug_returns_404(self):
+        response = self.client.get(
+            reverse("portfolio:project_detail", kwargs={"slug": "non-existent-slug"})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_project_technologies_available(self):
+        response = self.client.get(
+            reverse("portfolio:project_detail", kwargs={"slug": self.project.slug})
+        )
+        # Technologies are ordered by the Skill model's default ordering: category, order, name
+        expected_technologies = sorted([self.python, self.django], key=lambda s: (s.category, s.order, s.name))
+        self.assertEqual(list(response.context["technologies"]), expected_technologies)

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.title }} - Portfolio{% endblock %}
+
+{% block content %}
+<article class="project-detail">
+    <header class="project-header">
+        <h1>{{ project.title }}</h1>
+        {% if project.image %}
+        <figure class="project-image">
+            <img src="{{ project.image.url }}" alt="{{ project.title }}">
+        </figure>
+        {% endif %}
+    </header>
+
+    <section class="project-content">
+        <div class="project-description">
+            <h2>About</h2>
+            <p>{{ project.description|linebreaks }}</p>
+        </div>
+
+        {% if project.github_url or project.live_demo_url %}
+        <div class="project-links">
+            <h2>Links</h2>
+            <ul>
+                {% if project.github_url %}
+                <li><a href="{{ project.github_url }}" target="_blank" rel="noopener">GitHub</a></li>
+                {% endif %}
+                {% if project.live_demo_url %}
+                <li><a href="{{ project.live_demo_url }}" target="_blank" rel="noopener">Live Demo</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if technologies %}
+        <section class="project-technologies">
+            <h2>Technologies Used</h2>
+            <div class="tech-tags">
+                {% for tech in technologies %}
+                <span class="tech-tag">{{ tech.name }}</span>
+                {% empty %}
+                <p>No technologies specified.</p>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </section>
+</article>
+{% endblock %}

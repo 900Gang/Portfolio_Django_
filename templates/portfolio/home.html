@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Portfolio{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Welcome to My Portfolio</h1>
+    <p>Explore my projects, skills, and journey.</p>
+</section>
+
+{% if featured_projects %}
+<section class="projects">
+    <h2>Featured Projects</h2>
+    <div class="projects-grid">
+        {% for project in featured_projects %}
+        <article class="project-card">
+            <h3>{{ project.title }}</h3>
+            {% if project.image %}
+            <img src="{{ project.image.url }}" alt="{{ project.title }}">
+            {% endif %}
+            <p>{{ project.short_description|truncatewords:20 }}</p>
+            <a href="{% url 'portfolio:project_detail' project.slug %}" class="btn">View Details</a>
+        </article>
+        {% empty %}
+        <p>No featured projects available.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if skills %}
+<section class="skills">
+    <h2>Skills</h2>
+    <div class="skills-grid">
+        {% for skill in skills %}
+        <span class="skill-tag">{{ skill.name }}</span>
+        {% empty %}
+        <p>No skills listed.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if journey_entries %}
+<section class="journey">
+    <h2>Journey</h2>
+    <ul class="timeline">
+        {% for entry in journey_entries %}
+        <li class="timeline-item">
+            <time>{{ entry.date }}</time>
+            <h3>{{ entry.title }}</h3>
+            <p>{{ entry.description|truncatewords:15 }}</p>
+        </li>
+        {% empty %}
+        <li>No journey entries recorded.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% if education %}
+<section class="education">
+    <h2>Education</h2>
+    <div class="education-cards">
+        {% for edu in education %}
+        <article class="education-card">
+            <h3>{{ edu.degree }}</h3>
+            <p>{{ edu.institution }}</p>
+            <p>{{ edu.field_of_study }}</p>
+            <time>{{ edu.start_date }} - {% if edu.end_date %}{{ edu.end_date }}{% else %}Present{% endif %}</time>
+        </article>
+        {% empty %}
+        <p>No education records.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
