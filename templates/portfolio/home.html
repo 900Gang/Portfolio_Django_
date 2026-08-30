@@ -26,6 +26,33 @@
     </div>
 </section>
 
+<!-- About Section -->
+<section id="about" class="about section">
+    <div class="about-content">
+        <div class="about-header">
+            <span class="about-label">About</span>
+            <h2 class="section-title">About Me</h2>
+        </div>
+        <p class="about-intro">
+            Computer Science Engineering student passionate about building web applications and learning through practical development.
+        </p>
+        <div class="about-highlights">
+            <div class="highlight-item">
+                <h3 class="highlight-title">Web Development</h3>
+                <p class="highlight-description">Creating responsive, user-friendly websites with modern frontend technologies.</p>
+            </div>
+            <div class="highlight-item">
+                <h3 class="highlight-title">Backend Development</h3>
+                <p class="highlight-description">Building server-side applications and APIs using Python and Django.</p>
+            </div>
+            <div class="highlight-item">
+                <h3 class="highlight-title">Database Applications</h3>
+                <p class="highlight-description">Designing and implementing database-driven web applications.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% if featured_projects %}
 <section id="projects" class="projects section">
     <div class="section-header">
@@ -52,20 +79,39 @@
 </section>
 {% endif %}
 
-{% if skills %}
+<!-- Skills Section -->
 <section id="skills" class="skills section">
     <div class="section-header">
-        <h2 class="section-title">Skills</h2>
+        <span class="skills-label">Skills</span>
+        <h2 class="section-title">Technical Skills</h2>
     </div>
-    <div class="skills-grid">
-        {% for skill in skills %}
-        <span class="skill-badge badge badge-secondary">{{ skill.name }}</span>
-        {% empty %}
+    <div class="skills-content">
+        {% regroup skills by category as skills_by_category %}
+        {% if skills_by_category %}
+        <div class="skills-grouped">
+            {% for category_group in skills_by_category %}
+            <div class="skills-group">
+                <h3 class="skills-group-title">
+                    {{ category_group.grouper }}
+                </h3>
+                <div class="skills-grid">
+                    {% for skill in category_group.list %}
+                    <article class="skill-card">
+                        <div class="skill-content">
+                            <h3 class="skill-name">{{ skill.name }}</h3>
+                            <span class="skill-status badge badge-{{ skill.get_status_display|lower|slugify }}">{{ skill.get_status_display }}</span>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
         <p>No skills listed.</p>
-        {% endfor %}
+        {% endif %}
     </div>
 </section>
-{% endif %}
 
 {% if journey_entries %}
 <section id="journey" class="journey section">

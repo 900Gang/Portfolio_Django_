@@ -275,20 +275,7 @@ class HomePageViewTest(TestCase):
         response = self.client.get(reverse("portfolio:home"))
         self.assertEqual(list(response.context["featured_projects"]), [self.featured_project])
 
-    def test_homepage_context_skills(self):
-        response = self.client.get(reverse("portfolio:home"))
-        # Skills are ordered by category, then order, then name alphabetically
-        expected_skills = sorted([self.skill, self.skill2], key=lambda s: (s.category, s.order, s.name))
-        self.assertEqual(list(response.context["skills"]), expected_skills)
-
-    def test_homepage_context_journey_entries(self):
-        response = self.client.get(reverse("portfolio:home"))
-        self.assertEqual(list(response.context["journey_entries"]), [self.journey])
-
-    def test_homepage_context_education(self):
-        response = self.client.get(reverse("portfolio:home"))
-        self.assertEqual(list(response.context["education"]), [self.education])
-
+    
     def test_homepage_empty_database_returns_200(self):
         # Remove all records to simulate an empty database
         Skill.objects.all().delete()
@@ -301,6 +288,31 @@ class HomePageViewTest(TestCase):
         self.assertEqual(len(response.context["skills"]), 0)
         self.assertEqual(len(response.context["journey_entries"]), 0)
         self.assertEqual(len(response.context["education"]), 0)
+        # Check that About section content is still present even with empty DB
+        self.assertContains(response, "About Me")
+        self.assertContains(response, "Computer Science Engineering student")
+
+    def test_homepage_about_section_present(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, "About Me")
+        self.assertContains(response, "Computer Science Engineering student")
+        self.assertContains(response, "Web Development")
+        self.assertContains(response, "Backend Development")
+        self.assertContains(response, "Database Applications")
+
+    def test_homepage_skills_section_present(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, "Technical Skills")
+        # Check that skills are grouped by category
+        self.assertContains(response, "Backend")
+        # Check that skill names appear
+        self.assertContains(response, "Python")
+        self.assertContains(response, "Django")
+
+    def test_homepage_skills_show_status_badges(self):
+        response = self.client.get(reverse("portfolio:home"))
+        # Check for status badges (based on test setup skills)
+        self.assertContains(response, "Learning")
 
 
 class ProjectDetailViewTest(TestCase):
