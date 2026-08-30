@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
@@ -115,12 +117,12 @@ class JourneyEntryModelTest(TestCase):
 
     def test_journey_entry_str(self):
         entry = JourneyEntry.objects.create(
-            date="2025-01-01",
+            date=date(2025, 1, 1),
             title="New Year Goal",
             description="Learn web development",
         )
-        # The date field is a DateField, so it will be converted to a date object
-        self.assertEqual(str(entry), "2025 — New Year Goal")
+        expected = f"{entry.date.year} — {entry.title}"
+        self.assertEqual(str(entry), expected)
 
     def test_journey_entry_ordering(self):
         JourneyEntry.objects.create(
