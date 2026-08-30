@@ -1,0 +1,121 @@
+/* Responsive Breakpoints */
+
+/* Define breakpoints */
+:root {
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+}
+
+/* Base container width adjustments */
+.container {
+    width: 100%;
+    padding-left: var(--layout-page-padding);
+    padding-right: var(--layout-page-padding);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (min-width: var(--breakpoint-sm)) {
+    .container {
+        max-width: 540px;
+    }
+}
+
+@media (min-width: var(--breakpoint-md)) {
+    .container {
+        max-width: 720px;
+    }
+}
+
+@media (min-width: var(--breakpoint-lg)) {
+    .container {
+        max-width: 960px;
+    }
+}
+
+@media (min-width: var(--breakpoint-xl)) {
+    .container {
+        max-width: 1140px;
+    }
+}
+
+/* Responsive typography */
+@media (max-width: var(--breakpoint-md)) {
+    h1 {
+        font-size: var(--font-size-3xl);
+    }
+
+    h2 {
+        font-size: var(--font-size-2xl);
+    }
+
+    h3 {
+        font-size: var(--font-size-lg);
+    }
+}
+
+/* Responsive spacing */
+@media (max-width: var(--breakpoint-sm)) {
+    :root {
+        --layout-section-spacing: 2rem;
+        --layout-container-spacing: 1rem;
+        --layout-page-padding: 0.5rem;
+    }
+}
+
+/* Flex utilities for stacking on small screens */
+@media (max-width: var(--breakpoint-sm)) {
+    .flex-sm-column {
+        flex-direction: column !important;
+    }
+
+    .flex-sm-wrap {
+        flex-wrap: wrap !important;
+    }
+
+    .gap-sm-2 {
+        gap: 0.5rem !important;
+    }
+
+    .gap-sm-3 {
+        gap: 0.75rem !important;
+    }
+}
+
+/* Grid utilities */
+@media (min-width: var(--breakpoint-md)) {
+    .grid-md-2 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .grid-md-3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (min-width: var(--breakpoint-lg)) {
+    .grid-lg-3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .grid-lg-4 {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Keep essential transitions for usability */
+    .btn, .link, .badge, .card {
+        transition-duration: var(--transition-fast) !important;
+    }
+}
