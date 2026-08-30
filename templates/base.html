@@ -14,14 +14,28 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    {% include 'components/navigation.html' %}
+    <!-- Skip to content link -->
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
 
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    <!-- Page Wrapper -->
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="site-header">
+            {% include 'components/navigation.html' %}
+        </header>
 
-    {% include 'components/footer.html' %}
+        <!-- Main Content -->
+        <main id="main-content" class="site-main">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            {% include 'components/footer.html' %}
+        </footer>
+    </div>
 
     {% block extra_js %}{% endblock %}
+<script src="{% static 'js/navigation.js' %}"></script>
 </body>
 </html>

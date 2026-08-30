@@ -12,6 +12,7 @@
     --color-accent-hover: #0b5ed7;
     --color-success: #198754;
     --color-error: #dc3545;
+    --color-bg-alt: #f0f2f5;
 
     /* Typography */
     --font-family-sans-serif: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -40,6 +41,11 @@
     --layout-page-padding: 1rem;
     --layout-section-spacing: 3rem;
     --layout-container-spacing: 1.5rem;
+
+    /* Header */
+    --header-height: 4rem;
+    --header-bg: var(--color-bg);
+    --header-border: var(--color-border);
 
     /* Components */
     --radius-sm: 0.25rem;

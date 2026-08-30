@@ -3,23 +3,47 @@
 {% block title %}Home - Portfolio{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <h1>Welcome to My Portfolio</h1>
-    <p>Explore my projects, skills, and journey.</p>
+<!-- Hero Section -->
+<section id="home" class="hero section">
+    <div class="hero-content">
+        <p class="hero-eyebrow">Computer Science Engineering Student</p>
+        <h1 class="hero-title">Anand N</h1>
+        <p class="hero-description">
+            Building web applications with Django, Python, and modern JavaScript.
+        </p>
+        <div class="hero-actions">
+            <a href="#projects" class="btn btn-primary">View Projects</a>
+            <a href="#contact" class="btn btn-outline">Contact Me</a>
+        </div>
+        <div class="hero-tech">
+            <span class="tech-badge">HTML</span>
+            <span class="tech-badge">CSS</span>
+            <span class="tech-badge">JavaScript</span>
+            <span class="tech-badge">Python</span>
+            <span class="tech-badge">Django</span>
+            <span class="tech-badge">Git</span>
+        </div>
+    </div>
 </section>
 
 {% if featured_projects %}
-<section class="projects">
-    <h2>Featured Projects</h2>
+<section id="projects" class="projects section">
+    <div class="section-header">
+        <h2 class="section-title">Featured Projects</h2>
+    </div>
     <div class="projects-grid">
         {% for project in featured_projects %}
-        <article class="project-card">
-            <h3>{{ project.title }}</h3>
-            {% if project.image %}
-            <img src="{{ project.image.url }}" alt="{{ project.title }}">
-            {% endif %}
-            <p>{{ project.short_description|truncatewords:20 }}</p>
-            <a href="{% url 'portfolio:project_detail' project.slug %}" class="btn">View Details</a>
+        <article class="project-card card">
+            <div class="card-body">
+                {% if project.image %}
+                <figure class="project-image">
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
+                </figure>
+                {% endif %}
+                <h3 class="project-title">{{ project.title }}</h3>
+                <p class="project-description">{{ project.short_description|truncatewords:20 }}</p>
+                <a href="{% url 'portfolio:project_detail' project.slug %}" class="btn btn-sm">View Details</a>
+            </div>
         </article>
         {% empty %}
         <p>No featured projects available.</p>
@@ -29,11 +53,13 @@
 {% endif %}
 
 {% if skills %}
-<section class="skills">
-    <h2>Skills</h2>
+<section id="skills" class="skills section">
+    <div class="section-header">
+        <h2 class="section-title">Skills</h2>
+    </div>
     <div class="skills-grid">
         {% for skill in skills %}
-        <span class="skill-tag">{{ skill.name }}</span>
+        <span class="skill-badge badge badge-secondary">{{ skill.name }}</span>
         {% empty %}
         <p>No skills listed.</p>
         {% endfor %}
@@ -42,14 +68,18 @@
 {% endif %}
 
 {% if journey_entries %}
-<section class="journey">
-    <h2>Journey</h2>
+<section id="journey" class="journey section">
+    <div class="section-header">
+        <h2 class="section-title">Journey</h2>
+    </div>
     <ul class="timeline">
         {% for entry in journey_entries %}
         <li class="timeline-item">
-            <time>{{ entry.date }}</time>
-            <h3>{{ entry.title }}</h3>
-            <p>{{ entry.description|truncatewords:15 }}</p>
+            <div class="timeline-content">
+                <time class="timeline-date">{{ entry.date }}</time>
+                <h3 class="timeline-title">{{ entry.title }}</h3>
+                <p class="timeline-description">{{ entry.description|truncatewords:15 }}</p>
+            </div>
         </li>
         {% empty %}
         <li>No journey entries recorded.</li>
@@ -59,15 +89,22 @@
 {% endif %}
 
 {% if education %}
-<section class="education">
-    <h2>Education</h2>
+<section id="education" class="education section">
+    <div class="section-header">
+        <h2 class="section-title">Education</h2>
+    </div>
     <div class="education-cards">
         {% for edu in education %}
-        <article class="education-card">
-            <h3>{{ edu.degree }}</h3>
-            <p>{{ edu.institution }}</p>
-            <p>{{ edu.field_of_study }}</p>
-            <time>{{ edu.start_date }} - {% if edu.end_date %}{{ edu.end_date }}{% else %}Present{% endif %}</time>
+        <article class="education-card card">
+            <div class="card-body">
+                <h3 class="education-degree">{{ edu.degree }}</h3>
+                <p class="education-institution">{{ edu.institution }}</p>
+                <p class="education-field">{{ edu.field_of_study }}</p>
+                <time class="education-date">
+                    {{ edu.start_date }} -
+                    {% if edu.end_date %}{{ edu.end_date }}{% else %}Present{% endif %}
+                </time>
+            </div>
         </article>
         {% empty %}
         <p>No education records.</p>
