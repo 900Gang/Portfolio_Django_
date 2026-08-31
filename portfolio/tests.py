@@ -314,6 +314,28 @@ class HomePageViewTest(TestCase):
         # Check for status badges (based on test setup skills)
         self.assertContains(response, "Learning")
 
+    def test_homepage_projects_section_displays_featured_project(self):
+        response = self.client.get(reverse("portfolio:home"))
+        detail_url = reverse(
+            "portfolio:project_detail", kwargs={"slug": self.featured_project.slug}
+        )
+
+        self.assertContains(response, 'id="projects"')
+        self.assertContains(response, "Featured Projects")
+        self.assertContains(response, self.featured_project.title)
+        self.assertContains(response, self.skill.name)
+        self.assertContains(response, detail_url)
+        self.assertNotContains(response, self.regular_project.title)
+
+    def test_homepage_projects_empty_state_renders_without_projects(self):
+        Project.objects.all().delete()
+
+        response = self.client.get(reverse("portfolio:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="projects"')
+        self.assertContains(response, "No featured projects yet. Check back soon!")
+
 
 class ProjectDetailViewTest(TestCase):
     def setUp(self):
@@ -327,6 +349,8 @@ class ProjectDetailViewTest(TestCase):
             title="Detail Project",
             short_description="A project to view in detail",
             description="Full description here",
+            github_url="https://github.com/example/detail-project",
+            live_demo_url="https://example.com/detail-project",
             featured=True,
         )
         self.project.technologies.add(self.python, self.django)
@@ -357,3 +381,36 @@ class ProjectDetailViewTest(TestCase):
         # Technologies are ordered by the Skill model's default ordering: category, order, name
         expected_technologies = sorted([self.python, self.django], key=lambda s: (s.category, s.order, s.name))
         self.assertEqual(list(response.context["technologies"]), expected_technologies)
+        self.assertContains(response, self.python.name)
+        self.assertContains(response, self.django.name)
+
+    def test_project_detail_displays_summary_description_and_links(self):
+        response = self.client.get(
+            reverse("portfolio:project_detail", kwargs={"slug": self.project.slug})
+        )
+
+        self.assertContains(response, self.project.title)
+        self.assertContains(response, self.project.short_description)
+        self.assertContains(response, self.project.description)
+        self.assertContains(response, self.project.github_url)
+        self.assertContains(response, self.project.live_demo_url)
+        self.assertContains(response, 'rel="noopener noreferrer"')
+        self.assertContains(
+            response, f'{reverse("portfolio:home")}#projects'
+        )
+
+    def test_project_detail_does_not_render_blank_external_links(self):
+        project = Project.objects.create(
+            title="No Link Project",
+            short_description="A project without external links",
+            description="",
+        )
+
+        response = self.client.get(
+            reverse("portfolio:project_detail", kwargs={"slug": project.slug})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Project links")
+        self.assertNotContains(response, 'class="project-detail-actions"')
+        self.assertNotContains(response, "Project details")

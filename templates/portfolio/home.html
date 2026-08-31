@@ -53,31 +53,23 @@
     </div>
 </section>
 
-{% if featured_projects %}
 <section id="projects" class="projects section">
     <div class="section-header">
         <h2 class="section-title">Featured Projects</h2>
     </div>
+    {% if featured_projects %}
     <div class="projects-grid">
         {% for project in featured_projects %}
-        <article class="project-card card">
-            <div class="card-body">
-                {% if project.image %}
-                <figure class="project-image">
-                    <img src="{{ project.image.url }}" alt="{{ project.title }}">
-                </figure>
-                {% endif %}
-                <h3 class="project-title">{{ project.title }}</h3>
-                <p class="project-description">{{ project.short_description|truncatewords:20 }}</p>
-                <a href="{% url 'portfolio:project_detail' project.slug %}" class="btn btn-sm">View Details</a>
-            </div>
-        </article>
-        {% empty %}
-        <p>No featured projects available.</p>
+        {% include 'components/project_card.html' %}
         {% endfor %}
     </div>
+    {% else %}
+    <div class="projects-empty">
+        <p class="projects-empty-text">No featured projects yet. Check back soon!</p>
+        <a href="#about" class="btn btn-primary">Learn More About Me</a>
+    </div>
+    {% endif %}
 </section>
-{% endif %}
 
 <!-- Skills Section -->
 <section id="skills" class="skills section">

@@ -4,47 +4,67 @@
 
 {% block content %}
 <article class="project-detail">
-    <header class="project-header">
-        <h1>{{ project.title }}</h1>
+    <div class="project-detail-container">
+        <nav class="project-breadcrumb" aria-label="Breadcrumb">
+            <a href="{% url 'portfolio:home' %}#projects">← Back to projects</a>
+        </nav>
+
+        <header class="project-detail-header">
+            <h1 class="project-detail-title">{{ project.title }}</h1>
+            <p class="project-detail-summary">{{ project.short_description }}</p>
+        </header>
+
         {% if project.image %}
-        <figure class="project-image">
-            <img src="{{ project.image.url }}" alt="{{ project.title }}">
+        <figure class="project-detail-image">
+            <img src="{{ project.image.url }}" alt="{{ project.title }} project image">
         </figure>
-        {% endif %}
-    </header>
-
-    <section class="project-content">
-        <div class="project-description">
-            <h2>About</h2>
-            <p>{{ project.description|linebreaks }}</p>
-        </div>
-
-        {% if project.github_url or project.live_demo_url %}
-        <div class="project-links">
-            <h2>Links</h2>
-            <ul>
-                {% if project.github_url %}
-                <li><a href="{{ project.github_url }}" target="_blank" rel="noopener">GitHub</a></li>
-                {% endif %}
-                {% if project.live_demo_url %}
-                <li><a href="{{ project.live_demo_url }}" target="_blank" rel="noopener">Live Demo</a></li>
-                {% endif %}
-            </ul>
+        {% else %}
+        <div class="project-detail-image project-image-fallback" aria-hidden="true">
+            <span>&lt;/&gt;</span>
         </div>
         {% endif %}
 
-        {% if technologies %}
-        <section class="project-technologies">
-            <h2>Technologies Used</h2>
-            <div class="tech-tags">
-                {% for tech in technologies %}
-                <span class="tech-tag">{{ tech.name }}</span>
-                {% empty %}
-                <p>No technologies specified.</p>
-                {% endfor %}
+        <div class="project-detail-layout">
+            <div class="project-detail-main">
+                {% if project.description %}
+                <section class="project-detail-section" aria-labelledby="project-details-heading">
+                    <h2 id="project-details-heading">Project details</h2>
+                    <div class="project-detail-description">{{ project.description|linebreaks }}</div>
+                </section>
+                {% endif %}
             </div>
-        </section>
-        {% endif %}
-    </section>
+
+            <aside class="project-detail-sidebar" aria-label="Project information">
+                {% if technologies %}
+                <section class="project-detail-section" aria-labelledby="technologies-heading">
+                    <h2 id="technologies-heading">Technologies</h2>
+                    <ul class="project-tech" aria-label="Technologies used in {{ project.title }}">
+                        {% for technology in technologies %}
+                        <li><span class="tech-badge">{{ technology.name }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </section>
+                {% endif %}
+
+                {% if project.github_url or project.live_demo_url %}
+                <section class="project-detail-section" aria-labelledby="project-links-heading">
+                    <h2 id="project-links-heading">Project links</h2>
+                    <div class="project-detail-actions">
+                        {% if project.github_url %}
+                        <a href="{{ project.github_url }}" class="btn btn-outline" target="_blank" rel="noopener noreferrer">
+                            GitHub <span class="visually-hidden">(opens in a new tab)</span>
+                        </a>
+                        {% endif %}
+                        {% if project.live_demo_url %}
+                        <a href="{{ project.live_demo_url }}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                            Live demo <span class="visually-hidden">(opens in a new tab)</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
+            </aside>
+        </div>
+    </div>
 </article>
 {% endblock %}

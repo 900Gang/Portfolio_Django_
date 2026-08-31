@@ -8,7 +8,9 @@ def home(request):
     Homepage view displaying featured projects, skills, journey entries, and education.
     """
     context = {
-        'featured_projects': Project.objects.filter(featured=True)[:6],
+        'featured_projects': Project.objects.filter(featured=True).prefetch_related(
+            'technologies'
+        )[:6],
         'skills': Skill.objects.all(),
         'journey_entries': JourneyEntry.objects.all()[:10],
         'education': Education.objects.all(),

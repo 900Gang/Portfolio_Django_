@@ -1,0 +1,44 @@
+{% if project %}
+<article class="project-card card">
+    {% if project.image %}
+    <figure class="project-image">
+        <img src="{{ project.image.url }}" alt="{{ project.title }} project image" loading="lazy">
+    </figure>
+    {% else %}
+    <div class="project-image project-image-fallback" aria-hidden="true">
+        <span>&lt;/&gt;</span>
+    </div>
+    {% endif %}
+
+    <div class="card-body project-card-body">
+        <h3 class="project-title">
+            <a href="{% url 'portfolio:project_detail' project.slug %}" class="project-title-link">{{ project.title }}</a>
+        </h3>
+        <p class="project-description">{{ project.short_description }}</p>
+
+        {% with project_technologies=project.technologies.all %}
+        {% if project_technologies %}
+        <ul class="project-tech" aria-label="Technologies used in {{ project.title }}">
+            {% for technology in project_technologies %}
+            <li><span class="tech-badge">{{ technology.name }}</span></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+
+        <div class="project-actions" aria-label="Project links for {{ project.title }}">
+            <a href="{% url 'portfolio:project_detail' project.slug %}" class="btn btn-primary">View details</a>
+            {% if project.github_url %}
+            <a href="{{ project.github_url }}" class="project-action-link" target="_blank" rel="noopener noreferrer">
+                GitHub <span class="visually-hidden">(opens in a new tab)</span>
+            </a>
+            {% endif %}
+            {% if project.live_demo_url %}
+            <a href="{{ project.live_demo_url }}" class="project-action-link" target="_blank" rel="noopener noreferrer">
+                Live demo <span class="visually-hidden">(opens in a new tab)</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</article>
+{% endif %}
