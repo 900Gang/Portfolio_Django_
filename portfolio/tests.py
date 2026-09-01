@@ -462,3 +462,219 @@ class ProjectDetailViewTest(TestCase):
         self.assertNotContains(response, "Project links")
         self.assertNotContains(response, 'class="project-detail-actions"')
         self.assertNotContains(response, "Project details")
+
+
+class ContactFormTest(TestCase):
+    """Tests for the contact form and submission flow."""
+
+    def test_contact_section_renders_on_homepage(self):
+        """Verify contact section appears on homepage GET."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="contact"')
+        self.assertContains(response, "Get In Touch")
+        self.assertContains(response, 'name="name"')
+        self.assertContains(response, 'name="email"')
+        self.assertContains(response, 'name="subject"')
+        self.assertContains(response, 'name="message"')
+
+    def test_contact_form_has_csrf_token(self):
+        """Verify CSRF protection is present."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, 'name="csrfmiddlewaretoken"')
+
+    def test_valid_contact_form_submission(self):
+        """Test successful form submission creates ContactMessage."""
+        initial_count = ContactMessage.objects.count()
+
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Test User",
+                "email": "test@example.com",
+                "subject": "Test Subject",
+                "message": "This is a test message.",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), initial_count + 1)
+
+        # Verify saved data
+        msg = ContactMessage.objects.latest("created_at")
+        self.assertEqual(msg.name, "Test User")
+        self.assertEqual(msg.email, "test@example.com")
+        self.assertEqual(msg.subject, "Test Subject")
+        self.assertEqual(msg.message, "This is a test message.")
+        self.assertFalse(msg.is_read)
+
+    def test_valid_submission_shows_success_message(self):
+        """Verify success message appears after valid submission."""
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Test User",
+                "email": "test@example.com",
+                "subject": "Test Subject",
+                "message": "This is a test message.",
+            },
+            follow=True,
+        )
+
+        self.assertContains(response, "Your message has been sent successfully.")
+
+    def test_valid_submission_redirects_to_prevent_duplicate(self):
+        """Verify redirect-after-POST pattern."""
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Test User",
+                "email": "test@example.com",
+                "subject": "Test Subject",
+                "message": "This is a test message.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("portfolio:home"))
+
+    def test_invalid_email_rejected(self):
+        """Test that invalid email is rejected."""
+        initial_count = ContactMessage.objects.count()
+
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Test User",
+                "email": "not-an-email",
+                "subject": "Test Subject",
+                "message": "This is a test message.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), initial_count)
+        self.assertContains(response, "Enter a valid email address")
+
+    def test_missing_required_fields_rejected(self):
+        """Test that missing required fields are rejected."""
+        initial_count = ContactMessage.objects.count()
+
+        # Missing name
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "",
+                "email": "test@example.com",
+                "subject": "Test Subject",
+                "message": "This is a test message.",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), initial_count)
+
+        # Missing email
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Test User",
+                "email": "",
+                "subject": "Test Subject",
+                "message": "This is a test message.",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), initial_count)
+
+        # Missing subject
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Test User",
+                "email": "test@example.com",
+                "subject": "",
+                "message": "This is a test message.",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), initial_count)
+
+        # Missing message
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Test User",
+                "email": "test@example.com",
+                "subject": "Test Subject",
+                "message": "",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), initial_count)
+
+    def test_whitespace_only_message_rejected(self):
+        """Test that whitespace-only message is rejected."""
+        initial_count = ContactMessage.objects.count()
+
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Test User",
+                "email": "test@example.com",
+                "subject": "Test Subject",
+                "message": "   \n\t  ",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), initial_count)
+        # Whitespace-only is caught by required validation
+        self.assertContains(response, "This field is required")
+
+    def test_form_renders_with_errors_after_invalid_submission(self):
+        """Verify form re-renders with errors and preserved values."""
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "Valid Name",
+                "email": "invalid-email",
+                "subject": "Valid Subject",
+                "message": "Valid message",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Valid Name")  # Preserved value
+        self.assertContains(response, "Valid Subject")  # Preserved value
+        self.assertContains(response, "Valid message")  # Preserved value
+        self.assertContains(response, "Enter a valid email address")
+
+    def test_homepage_context_preserved_after_invalid_post(self):
+        """Verify homepage context (projects, skills, etc.) still present after invalid POST."""
+        # Create some test data
+        skill = Skill.objects.create(name="Python", category=SkillCategory.BACKEND)
+        project = Project.objects.create(
+            title="Test Project",
+            short_description="Test desc",
+            featured=True,
+        )
+        project.technologies.add(skill)
+
+        response = self.client.post(
+            reverse("portfolio:home"),
+            {
+                "name": "",
+                "email": "test@example.com",
+                "subject": "Test",
+                "message": "Test",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        # Verify context still exists
+        self.assertIn("featured_projects", response.context)
+        self.assertIn("skills", response.context)
+        self.assertIn("journey_entries", response.context)
+        self.assertIn("education", response.context)
+        self.assertIn("contact_form", response.context)

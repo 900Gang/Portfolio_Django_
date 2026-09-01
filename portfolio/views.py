@@ -1,12 +1,24 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
+from django.contrib import messages
 from .models import Project, Skill, JourneyEntry, Education
+from .forms import ContactForm
 
 
 def home(request):
     """
-    Homepage view displaying featured projects, skills, journey entries, and education.
+    Homepage view displaying featured projects, skills, journey entries, education,
+    and handling contact form submissions.
     """
+    if request.method == 'POST':
+        contact_form = ContactForm(request.POST)
+        if contact_form.is_valid():
+            contact_form.save()
+            messages.success(request, 'Your message has been sent successfully.')
+            return redirect('portfolio:home')
+    else:
+        contact_form = ContactForm()
+
     context = {
         'featured_projects': Project.objects.filter(featured=True).prefetch_related(
             'technologies'
@@ -14,6 +26,7 @@ def home(request):
         'skills': Skill.objects.all(),
         'journey_entries': JourneyEntry.objects.all()[:10],
         'education': Education.objects.all(),
+        'contact_form': contact_form,
     }
     return render(request, 'portfolio/home.html', context)
 
