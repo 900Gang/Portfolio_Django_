@@ -105,49 +105,65 @@
     </div>
 </section>
 
-{% if journey_entries %}
+<!-- Journey Section -->
 <section id="journey" class="journey section">
     <div class="section-header">
         <h2 class="section-title">Journey</h2>
     </div>
+    {% if journey_entries %}
     <ul class="timeline">
         {% for entry in journey_entries %}
         <li class="timeline-item">
             <div class="timeline-content">
                 <time class="timeline-date">{{ entry.date }}</time>
+                <span class="timeline-type badge badge-secondary">{{ entry.get_entry_type_display }}</span>
                 <h3 class="timeline-title">{{ entry.title }}</h3>
                 <p class="timeline-description">{{ entry.description|truncatewords:15 }}</p>
             </div>
         </li>
-        {% empty %}
-        <li>No journey entries recorded.</li>
         {% endfor %}
     </ul>
+    {% else %}
+    <div class="journey-empty">
+        <p class="journey-empty-text">No journey entries yet.</p>
+    </div>
+    {% endif %}
 </section>
-{% endif %}
 
-{% if education %}
+<!-- Education Section -->
 <section id="education" class="education section">
     <div class="section-header">
         <h2 class="section-title">Education</h2>
     </div>
+    {% if education %}
     <div class="education-cards">
         {% for edu in education %}
         <article class="education-card card">
             <div class="card-body">
                 <h3 class="education-degree">{{ edu.degree }}</h3>
                 <p class="education-institution">{{ edu.institution }}</p>
+                {% if edu.field_of_study %}
                 <p class="education-field">{{ edu.field_of_study }}</p>
+                {% endif %}
                 <time class="education-date">
-                    {{ edu.start_date }} -
-                    {% if edu.end_date %}{{ edu.end_date }}{% else %}Present{% endif %}
+                    {{ edu.start_date.year }}
+                    {% if edu.end_date %}
+                    – {{ edu.end_date.year }}
+                    {% else %}
+                    – Present
+                    {% endif %}
                 </time>
+                {% if edu.description %}
+                <div class="education-description">{{ edu.description|linebreaks }}</div>
+                {% endif %}
             </div>
         </article>
-        {% empty %}
-        <p>No education records.</p>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="education-empty">
+        <p class="education-empty-text">No education records.</p>
+    </div>
+    {% endif %}
 </section>
-{% endif %}
 {% endblock %}

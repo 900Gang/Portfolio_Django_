@@ -546,6 +546,10 @@
     margin-bottom: 0.5rem;
 }
 
+.timeline-type {
+    margin-bottom: 0.5rem;
+}
+
 .timeline-title {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
@@ -558,17 +562,96 @@
     margin: 0;
 }
 
+/* Journey Empty State */
+.journey-empty {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2rem var(--layout-page-padding);
+}
+
+.journey-empty-text {
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
 /* EDUCATION CARDS */
 .education-cards {
     display: grid;
     gap: 1.5rem;
     max-width: 800px;
+    margin: 0 auto;
 }
 
 @media (min-width: 768px) {
     .education-cards {
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     }
+}
+
+.education-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.education-degree {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.education-institution {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    margin: 0 0 0.25rem 0;
+}
+
+.education-field {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0 0 0.5rem 0;
+}
+
+.education-date {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+    margin: 0.75rem 0 0 0;
+    display: block;
+}
+
+.education-description {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-top: 0.75rem;
+    line-height: var(--line-height-relaxed);
+}
+
+.education-description p {
+    margin: 0.5rem 0;
+}
+
+.education-description p:first-child {
+    margin-top: 0;
+}
+
+.education-description p:last-child {
+    margin-bottom: 0;
+}
+
+/* Education Empty State */
+.education-empty {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2rem var(--layout-page-padding);
+}
+
+.education-empty-text {
+    color: var(--color-text-muted);
+    margin: 0;
 }
 
 /* FOOTER */

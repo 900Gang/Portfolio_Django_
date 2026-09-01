@@ -336,6 +336,54 @@ class HomePageViewTest(TestCase):
         self.assertContains(response, 'id="projects"')
         self.assertContains(response, "No featured projects yet. Check back soon!")
 
+    def test_homepage_journey_section_renders(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, 'id="journey"')
+        self.assertContains(response, "Journey")
+        self.assertContains(response, self.journey.title)
+        self.assertContains(response, "2025")
+        self.assertContains(response, self.journey.description)
+
+    def test_homepage_journey_displays_entry_type(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, "Learning")
+        self.assertContains(response, "badge")
+
+    def test_homepage_journey_empty_state_renders_without_entries(self):
+        JourneyEntry.objects.all().delete()
+
+        response = self.client.get(reverse("portfolio:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="journey"')
+        self.assertContains(response, "No journey entries yet.")
+
+    def test_homepage_education_section_renders(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, 'id="education"')
+        self.assertContains(response, "Education")
+        self.assertContains(response, self.education.degree)
+        self.assertContains(response, self.education.institution)
+
+    def test_homepage_education_displays_field_of_study(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, self.education.field_of_study)
+
+    def test_homepage_education_displays_current_status(self):
+        # Test completed education shows years
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, str(self.education.start_date.year))
+        self.assertContains(response, str(self.education.end_date.year))
+
+    def test_homepage_education_empty_state_renders_without_records(self):
+        Education.objects.all().delete()
+
+        response = self.client.get(reverse("portfolio:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="education"')
+        self.assertContains(response, "No education records.")
+
 
 class ProjectDetailViewTest(TestCase):
     def setUp(self):
