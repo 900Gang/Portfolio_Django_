@@ -2,7 +2,7 @@
 <article class="project-card card">
     {% if project.image %}
     <figure class="project-image">
-        <img src="{{ project.image.url }}" alt="{{ project.title }} project image" loading="lazy">
+        <img src="{{ project.image.url }}" alt="{{ project.title }} project screenshot" loading="lazy">
     </figure>
     {% else %}
     <div class="project-image project-image-fallback" aria-hidden="true">
@@ -11,9 +11,15 @@
     {% endif %}
 
     <div class="card-body project-card-body">
-        <h3 class="project-title">
-            <a href="{% url 'portfolio:project_detail' project.slug %}" class="project-title-link">{{ project.title }}</a>
-        </h3>
+        <header class="project-card-header">
+            <span class="project-type-badge">
+                {% if 'Major project' in project.short_description or 'Major project' in project.description %}Academic Project{% elif 'Personal project' in project.short_description or 'Personal project' in project.description %}Personal Project{% else %}Project{% endif %}
+            </span>
+            <h3 class="project-title">
+                <a href="{% url 'portfolio:project_detail' project.slug %}" class="project-title-link">{{ project.title }}</a>
+            </h3>
+        </header>
+
         <p class="project-description">{{ project.short_description }}</p>
 
         {% with project_technologies=project.technologies.all %}
@@ -27,7 +33,7 @@
         {% endwith %}
 
         <div class="project-actions" aria-label="Project links for {{ project.title }}">
-            <a href="{% url 'portfolio:project_detail' project.slug %}" class="btn btn-primary">View details</a>
+            <a href="{% url 'portfolio:project_detail' project.slug %}" class="btn btn-primary">View Project</a>
             {% if project.github_url %}
             <a href="{{ project.github_url }}" class="project-action-link" target="_blank" rel="noopener noreferrer">
                 GitHub <span class="visually-hidden">(opens in a new tab)</span>
