@@ -290,15 +290,15 @@ class HomePageViewTest(TestCase):
         self.assertEqual(len(response.context["education"]), 0)
         # Check that About section content is still present even with empty DB
         self.assertContains(response, "About Me")
-        self.assertContains(response, "Computer Science Engineering student")
+        self.assertContains(response, "Computer Science Engineering graduate")
 
     def test_homepage_about_section_present(self):
         response = self.client.get(reverse("portfolio:home"))
         self.assertContains(response, "About Me")
-        self.assertContains(response, "Computer Science Engineering student")
-        self.assertContains(response, "Web Development")
-        self.assertContains(response, "Backend Development")
-        self.assertContains(response, "Database Applications")
+        self.assertContains(response, "Computer Science Engineering graduate")
+        self.assertContains(response, "Full Stack Development")
+        self.assertContains(response, "Backend & APIs")
+        self.assertContains(response, "DevOps & Testing")
 
     def test_homepage_skills_section_present(self):
         response = self.client.get(reverse("portfolio:home"))
