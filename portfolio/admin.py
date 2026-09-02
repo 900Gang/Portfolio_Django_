@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Skill, Project, JourneyEntry, Education, ContactMessage
+from .models import Skill, Project, JourneyEntry, Education, ContactMessage, Certification, ProfessionalSkill
 
 
 @admin.register(Skill)
@@ -49,6 +49,24 @@ class ContactMessageAdmin(admin.ModelAdmin):
     ordering = ["-created_at"]
     readonly_fields = ["name", "email", "subject", "message", "created_at"]
     list_editable = ["is_read"]
+
+
+@admin.register(Certification)
+class CertificationAdmin(admin.ModelAdmin):
+    list_display = ["name", "issuer", "issue_year", "display_order", "is_visible"]
+    list_filter = ["is_visible", "issuer"]
+    search_fields = ["name", "issuer"]
+    ordering = ["display_order", "-issue_year"]
+    list_editable = ["display_order", "is_visible"]
+
+
+@admin.register(ProfessionalSkill)
+class ProfessionalSkillAdmin(admin.ModelAdmin):
+    list_display = ["name", "display_order", "is_visible"]
+    list_filter = ["is_visible"]
+    search_fields = ["name"]
+    ordering = ["display_order", "name"]
+    list_editable = ["display_order", "is_visible"]
 
     def has_add_permission(self, request):
         return False

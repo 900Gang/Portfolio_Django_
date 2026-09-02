@@ -654,6 +654,114 @@
     margin: 0;
 }
 
+/* CERTIFICATIONS SECTION */
+.certifications {
+    background-color: var(--color-bg-secondary);
+}
+
+.certifications-list {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 var(--layout-page-padding);
+}
+
+.certification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.certification-item:last-child {
+    border-bottom: none;
+}
+
+.certification-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.certification-name {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.certification-issuer {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.certification-date {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+.certification-link {
+    font-size: var(--font-size-sm);
+    color: var(--color-accent);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.certification-link:hover {
+    text-decoration: underline;
+}
+
+.certifications-empty {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2rem var(--layout-page-padding);
+}
+
+.certifications-empty-text {
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* PROFESSIONAL SKILLS SECTION */
+.professional-skills {
+    background-color: var(--color-bg);
+}
+
+.professional-skills-list {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 var(--layout-page-padding);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.professional-skill-item {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.professional-skills-empty {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2rem var(--layout-page-padding);
+}
+
+.professional-skills-empty-text {
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
 /* CONTACT SECTION */
 .contact {
     background-color: var(--color-bg-secondary);

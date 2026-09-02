@@ -1,9 +1,9 @@
 """
 Django management command to populate portfolio with real content.
-Removes test data and populates real skills, projects, and education.
+Removes test data and populates real skills, projects, education, certifications, and professional skills.
 """
 from django.core.management.base import BaseCommand
-from portfolio.models import Skill, Project, JourneyEntry, Education
+from portfolio.models import Skill, Project, JourneyEntry, Education, Certification, ProfessionalSkill
 from portfolio.models import SkillCategory, SkillStatus
 
 
@@ -169,11 +169,59 @@ Evaluated model performance through iterative experimentation and testing.''',
 
         self.stdout.write(self.style.SUCCESS(f'Created {len(education_data)} education records'))
 
-        # Step 5: Report Journey status
+        # Step 5: Populate Certifications
+        certifications_data = [
+            {
+                'name': 'Python for Data Science',
+                'issuer': 'NPTEL',
+                'issue_year': None,
+                'credential_url': '',
+                'display_order': 1,
+            },
+            {
+                'name': 'Python Bootcamp',
+                'issuer': 'Udemy',
+                'issue_year': None,
+                'credential_url': '',
+                'display_order': 2,
+            },
+            {
+                'name': 'Basic to Advanced SQL',
+                'issuer': 'Skill Nation',
+                'issue_year': None,
+                'credential_url': '',
+                'display_order': 3,
+            },
+        ]
+
+        for cert_data in certifications_data:
+            Certification.objects.create(**cert_data)
+
+        self.stdout.write(self.style.SUCCESS(f'Created {len(certifications_data)} certifications'))
+
+        # Step 6: Populate Professional Skills
+        professional_skills_data = [
+            ('Problem Solving', 1),
+            ('Communication', 2),
+            ('Team Collaboration', 3),
+            ('Adaptability', 4),
+            ('Quick Learning', 5),
+            ('Critical Thinking', 6),
+            ('Time Management', 7),
+        ]
+
+        for name, order in professional_skills_data:
+            ProfessionalSkill.objects.create(name=name, display_order=order)
+
+        self.stdout.write(self.style.SUCCESS(f'Created {len(professional_skills_data)} professional skills'))
+
+        # Step 7: Report Journey status
         self.stdout.write(self.style.WARNING('Journey entries not populated - no chronological journey data provided in resume'))
 
         self.stdout.write(self.style.SUCCESS('\n=== POPULATION COMPLETE ==='))
         self.stdout.write(f'Skills: {Skill.objects.count()}')
         self.stdout.write(f'Projects: {Project.objects.count()}')
         self.stdout.write(f'Education: {Education.objects.count()}')
+        self.stdout.write(f'Certifications: {Certification.objects.count()}')
+        self.stdout.write(f'Professional Skills: {ProfessionalSkill.objects.count()}')
         self.stdout.write(f'Journey Entries: {JourneyEntry.objects.count()} (intentionally empty)')

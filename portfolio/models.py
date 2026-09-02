@@ -151,3 +151,40 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.name} — {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+
+
+class Certification(models.Model):
+    """Model for professional certifications."""
+    name = models.CharField(max_length=200)
+    issuer = models.CharField(max_length=200)
+    issue_year = models.PositiveIntegerField(blank=True, null=True)
+    credential_url = models.URLField(blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+    is_visible = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "-issue_year", "name"]
+        verbose_name = "Certification"
+        verbose_name_plural = "Certifications"
+
+    def __str__(self):
+        return f"{self.name} — {self.issuer}"
+
+
+class ProfessionalSkill(models.Model):
+    """Model for professional/soft skills."""
+    name = models.CharField(max_length=100)
+    display_order = models.PositiveIntegerField(default=0)
+    is_visible = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "name"]
+        verbose_name = "Professional Skill"
+        verbose_name_plural = "Professional Skills"
+
+    def __str__(self):
+        return self.name

@@ -167,6 +167,55 @@
     {% endif %}
 </section>
 
+<!-- Certifications Section -->
+<section id="certifications" class="certifications section">
+    <div class="section-header">
+        <h2 class="section-title">Certifications</h2>
+    </div>
+    {% if certifications %}
+    <div class="certifications-list">
+        {% for cert in certifications %}
+        <div class="certification-item">
+            <div class="certification-info">
+                <h3 class="certification-name">{{ cert.name }}</h3>
+                <p class="certification-issuer">{{ cert.issuer }}</p>
+                {% if cert.issue_year %}
+                <time class="certification-date">{{ cert.issue_year }}</time>
+                {% endif %}
+            </div>
+            {% if cert.credential_url %}
+            <a href="{{ cert.credential_url }}" class="certification-link" target="_blank" rel="noopener noreferrer">
+                View Credential <span class="visually-hidden">(opens in a new tab)</span>
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="certifications-empty">
+        <p class="certifications-empty-text">No certifications listed.</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Professional Skills Section -->
+<section id="professional-skills" class="professional-skills section">
+    <div class="section-header">
+        <h2 class="section-title">Professional Skills</h2>
+    </div>
+    {% if professional_skills %}
+    <div class="professional-skills-list">
+        {% for skill in professional_skills %}
+        <span class="professional-skill-item">{{ skill.name }}</span>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="professional-skills-empty">
+        <p class="professional-skills-empty-text">No professional skills listed.</p>
+    </div>
+    {% endif %}
+</section>
+
 <!-- Contact Section -->
 <section id="contact" class="contact section">
     <div class="section-header">

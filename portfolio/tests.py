@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 from .models import Skill, Project, JourneyEntry, Education, ContactMessage
+from .models import Certification, ProfessionalSkill
 from .models import SkillCategory, SkillStatus, JourneyEntryType
 
 
@@ -678,3 +679,188 @@ class ContactFormTest(TestCase):
         self.assertIn("journey_entries", response.context)
         self.assertIn("education", response.context)
         self.assertIn("contact_form", response.context)
+
+
+class CertificationModelTest(TestCase):
+    """Tests for the Certification model."""
+
+    def test_create_certification(self):
+        """Test creating a certification record."""
+        cert = Certification.objects.create(
+            name="Python for Data Science",
+            issuer="NPTEL",
+            issue_year=2024,
+            credential_url="https://example.com/cert",
+            display_order=1,
+        )
+        self.assertEqual(cert.name, "Python for Data Science")
+        self.assertEqual(cert.issuer, "NPTEL")
+        self.assertEqual(cert.issue_year, 2024)
+        self.assertTrue(cert.is_visible)
+
+    def test_certification_str(self):
+        """Test certification string representation."""
+        cert = Certification.objects.create(
+            name="SQL Bootcamp", issuer="Udemy"
+        )
+        self.assertEqual(str(cert), "SQL Bootcamp — Udemy")
+
+    def test_certification_visibility(self):
+        """Test certification visibility field."""
+        cert = Certification.objects.create(
+            name="Hidden Cert", issuer="Test", is_visible=False
+        )
+        self.assertFalse(cert.is_visible)
+
+    def test_certification_ordering(self):
+        """Test certifications are ordered by display_order and issue_year."""
+        Certification.objects.create(
+            name="Cert A", issuer="Issuer A", issue_year=2022, display_order=2
+        )
+        Certification.objects.create(
+            name="Cert B", issuer="Issuer B", issue_year=2024, display_order=1
+        )
+        certs = list(Certification.objects.all())
+        self.assertEqual(certs[0].name, "Cert B")
+        self.assertEqual(certs[1].name, "Cert A")
+
+    def test_certification_optional_fields(self):
+        """Test that issue_year and credential_url are optional."""
+        cert = Certification.objects.create(
+            name="No Year Cert", issuer="Test Issuer"
+        )
+        self.assertIsNone(cert.issue_year)
+        self.assertEqual(cert.credential_url, "")
+
+
+class ProfessionalSkillModelTest(TestCase):
+    """Tests for the ProfessionalSkill model."""
+
+    def test_create_professional_skill(self):
+        """Test creating a professional skill record."""
+        skill = ProfessionalSkill.objects.create(
+            name="Problem Solving", display_order=1
+        )
+        self.assertEqual(skill.name, "Problem Solving")
+        self.assertTrue(skill.is_visible)
+
+    def test_professional_skill_str(self):
+        """Test professional skill string representation."""
+        skill = ProfessionalSkill.objects.create(name="Communication")
+        self.assertEqual(str(skill), "Communication")
+
+    def test_professional_skill_visibility(self):
+        """Test professional skill visibility field."""
+        skill = ProfessionalSkill.objects.create(
+            name="Hidden Skill", is_visible=False
+        )
+        self.assertFalse(skill.is_visible)
+
+    def test_professional_skill_ordering(self):
+        """Test professional skills are ordered by display_order then name."""
+        ProfessionalSkill.objects.create(name="Zebra", display_order=2)
+        ProfessionalSkill.objects.create(name="Alpha", display_order=1)
+        skills = list(ProfessionalSkill.objects.all())
+        self.assertEqual(skills[0].name, "Alpha")
+        self.assertEqual(skills[1].name, "Zebra")
+
+
+class HomepageCertificationsTest(TestCase):
+    """Tests for certifications section on homepage."""
+
+    def setUp(self):
+        self.cert1 = Certification.objects.create(
+            name="Python for Data Science",
+            issuer="NPTEL",
+            issue_year=2023,
+            credential_url="https://example.com/cert1",
+            display_order=1,
+            is_visible=True,
+        )
+        self.cert2 = Certification.objects.create(
+            name="SQL Bootcamp",
+            issuer="Udemy",
+            issue_year=2022,
+            display_order=2,
+            is_visible=True,
+        )
+        self.hidden_cert = Certification.objects.create(
+            name="Hidden Cert",
+            issuer="Hidden Issuer",
+            is_visible=False,
+        )
+
+    def test_certifications_section_renders(self):
+        """Test certifications section appears on homepage."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, 'id="certifications"')
+        self.assertContains(response, "Certifications")
+
+    def test_visible_certifications_displayed(self):
+        """Test only visible certifications are displayed."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, self.cert1.name)
+        self.assertContains(response, self.cert1.issuer)
+        self.assertContains(response, self.cert2.name)
+        self.assertContains(response, self.cert2.issuer)
+        self.assertNotContains(response, self.hidden_cert.name)
+
+    def test_certification_credential_links_displayed(self):
+        """Test certification credential links are rendered."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, self.cert1.credential_url)
+        self.assertContains(response, "View Credential")
+
+    def test_certifications_empty_state(self):
+        """Test empty state when no certifications."""
+        Certification.objects.all().delete()
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, 'id="certifications"')
+        self.assertContains(response, "No certifications listed.")
+
+    def test_homepage_context_includes_certifications(self):
+        """Test homepage context includes certifications."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertIn("certifications", response.context)
+        self.assertEqual(response.context["certifications"].count(), 2)
+
+
+class HomepageProfessionalSkillsTest(TestCase):
+    """Tests for professional skills section on homepage."""
+
+    def setUp(self):
+        self.skill1 = ProfessionalSkill.objects.create(
+            name="Problem Solving", display_order=1, is_visible=True
+        )
+        self.skill2 = ProfessionalSkill.objects.create(
+            name="Communication", display_order=2, is_visible=True
+        )
+        self.hidden_skill = ProfessionalSkill.objects.create(
+            name="Hidden Skill", is_visible=False
+        )
+
+    def test_professional_skills_section_renders(self):
+        """Test professional skills section appears on homepage."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, 'id="professional-skills"')
+        self.assertContains(response, "Professional Skills")
+
+    def test_visible_professional_skills_displayed(self):
+        """Test only visible professional skills are displayed."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, self.skill1.name)
+        self.assertContains(response, self.skill2.name)
+        self.assertNotContains(response, self.hidden_skill.name)
+
+    def test_professional_skills_empty_state(self):
+        """Test empty state when no professional skills."""
+        ProfessionalSkill.objects.all().delete()
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertContains(response, 'id="professional-skills"')
+        self.assertContains(response, "No professional skills listed.")
+
+    def test_homepage_context_includes_professional_skills(self):
+        """Test homepage context includes professional skills."""
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertIn("professional_skills", response.context)
+        self.assertEqual(response.context["professional_skills"].count(), 2)

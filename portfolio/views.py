@@ -1,14 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib import messages
-from .models import Project, Skill, JourneyEntry, Education
+from .models import Project, Skill, JourneyEntry, Education, Certification, ProfessionalSkill
 from .forms import ContactForm
 
 
 def home(request):
     """
     Homepage view displaying featured projects, skills, journey entries, education,
-    and handling contact form submissions.
+    certifications, professional skills, and handling contact form submissions.
     """
     if request.method == 'POST':
         contact_form = ContactForm(request.POST)
@@ -26,6 +26,8 @@ def home(request):
         'skills': Skill.objects.all(),
         'journey_entries': JourneyEntry.objects.all()[:10],
         'education': Education.objects.all(),
+        'certifications': Certification.objects.filter(is_visible=True),
+        'professional_skills': ProfessionalSkill.objects.filter(is_visible=True),
         'contact_form': contact_form,
     }
     return render(request, 'portfolio/home.html', context)
