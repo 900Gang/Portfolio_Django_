@@ -84,6 +84,23 @@ class Project(models.Model):
             return "Personal Project"
         return "Project"
 
+    @property
+    def has_image(self):
+        """
+        True only when an image is set *and* the file is actually present.
+
+        `bool(self.image)` is true for any non-empty path, so a record whose
+        file has been lost (or which was restored from a database backup
+        without its media directory) would otherwise render a broken <img>
+        instead of falling back to the placeholder.
+        """
+        if not self.image:
+            return False
+        try:
+            return self.image.storage.exists(self.image.name)
+        except (OSError, ValueError, NotImplementedError):
+            return False
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.title)

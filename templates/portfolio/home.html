@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Home - Portfolio{% endblock %}
+{% block title %}{{ site_owner }} — {{ site_role }}{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -14,6 +14,11 @@
         <div class="hero-actions">
             <a href="#projects" class="btn btn-primary">View Projects</a>
             <a href="#contact" class="btn btn-outline">Contact Me</a>
+            {% if resume_url %}
+            <a href="{{ resume_url }}" class="btn btn-outline" download>
+                Download Resume <span class="visually-hidden">(PDF)</span>
+            </a>
+            {% endif %}
         </div>
         <div class="hero-tech">
             <span class="tech-badge">Python</span>
@@ -105,12 +110,13 @@
     </div>
 </section>
 
-<!-- Journey Section -->
+<!-- Journey Section: omitted entirely when empty, rather than advertising
+     an empty state to visitors. The nav entry is hidden to match. -->
+{% if journey_entries %}
 <section id="journey" class="journey section">
     <div class="section-header">
         <h2 class="section-title">Journey</h2>
     </div>
-    {% if journey_entries %}
     <ul class="timeline">
         {% for entry in journey_entries %}
         <li class="timeline-item">
@@ -123,12 +129,8 @@
         </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <div class="journey-empty">
-        <p class="journey-empty-text">No journey entries yet.</p>
-    </div>
-    {% endif %}
 </section>
+{% endif %}
 
 <!-- Education Section -->
 <section id="education" class="education section">

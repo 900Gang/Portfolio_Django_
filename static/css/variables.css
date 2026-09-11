@@ -1,22 +1,43 @@
-:root {
-    /* Color System */
-    --color-bg: #ffffff;
-    --color-bg-secondary: #f8f9fa;
-    --color-surface: #ffffff;
-    --color-surface-elevated: #f8f9fa;
-    --color-text-primary: #212529;
-    --color-text-secondary: #495057;
-    --color-text-muted: #6c757d;
-    --color-border: #dee2e6;
-    --color-accent: #0d6efd;
-    --color-accent-hover: #0b5ed7;
-    --color-success: #198754;
-    --color-error: #dc3545;
-    --color-bg-alt: #f0f2f5;
+/* Design tokens.
+   Light values live on :root; dark mode redefines only the colour tokens, so
+   every component keeps one definition and both themes stay in step. */
 
-    /* Typography */
-    --font-family-sans-serif: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+:root {
+    /* Colour — a deliberate petrol accent on cool neutrals biased toward it.
+       (Previously the stock Bootstrap 5 palette.) */
+    --color-bg: #fcfdfc;
+    --color-bg-secondary: #f1f5f3;
+    --color-bg-alt: #e9efec;
+    --color-surface: #ffffff;
+    --color-surface-elevated: #f7faf9;
+
+    --color-text-primary: #13201e;
+    --color-text-secondary: #3a4a47;
+    --color-text-muted: #62736d;
+
+    --color-border: #dbe4e0;
+
+    --color-accent: #0d6b6e;
+    --color-accent-hover: #0a5356;
+
+    --color-success: #1a7a4f;
+    --color-error: #a33524;
+    --color-warning: #8a5a10;
+    --color-info: #1f5f7a;
+
+    /* Message + badge surfaces, tokenised so they follow the theme */
+    --color-success-bg: #dcefe5;
+    --color-success-fg: #0e4b30;
+    --color-success-border: #b6dcc8;
+    --color-error-bg: #f8e0dc;
+    --color-error-fg: #7d281a;
+    --color-error-border: #eebeb5;
+    --color-warning-bg: #f6e7c8;
+    --color-info-bg: #d9e9f1;
+
+    /* Typography — IBM Plex: Sans for text, Mono for labels and data */
+    --font-family-sans-serif: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 
     --font-weight-light: 300;
     --font-weight-normal: 400;
@@ -26,15 +47,20 @@
 
     --font-size-base: 1rem;
     --font-size-sm: 0.875rem;
+    --font-size-xs: 0.78rem;
     --font-size-lg: 1.125rem;
     --font-size-xl: 1.25rem;
     --font-size-2xl: 1.5rem;
     --font-size-3xl: 1.875rem;
     --font-size-4xl: 2.25rem;
+    --font-size-5xl: 3.25rem;
 
-    --line-height-tight: 1.2;
-    --line-height-normal: 1.5;
-    --line-height-relaxed: 1.75;
+    --line-height-tight: 1.15;
+    --line-height-normal: 1.55;
+    --line-height-relaxed: 1.7;
+
+    --letter-spacing-tight: -0.018em;
+    --letter-spacing-label: 0.09em;
 
     /* Layout */
     --layout-max-width: 1200px;
@@ -53,14 +79,56 @@
     --radius-lg: 0.5rem;
     --radius-pill: 9999px;
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 2px rgba(14, 32, 30, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(14, 32, 30, 0.09), 0 2px 4px -1px rgba(14, 32, 30, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(14, 32, 30, 0.1), 0 4px 6px -2px rgba(14, 32, 30, 0.05);
 
     --transition-fast: 150ms;
     --transition-normal: 250ms;
     --transition-slow: 350ms;
 
-    /* Focus Ring */
-    --focus-ring: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    --focus-ring: 0 0 0 3px rgba(13, 107, 110, 0.28);
+
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-bg: #0e1413;
+        --color-bg-secondary: #141c1a;
+        --color-bg-alt: #1a2321;
+        --color-surface: #17201e;
+        --color-surface-elevated: #1d2725;
+
+        --color-text-primary: #e7edea;
+        --color-text-secondary: #bac6c2;
+        --color-text-muted: #8b9a95;
+
+        --color-border: #2a3532;
+
+        --color-accent: #4fc2bb;
+        --color-accent-hover: #6fd3cd;
+
+        --color-success: #5bbd8a;
+        --color-error: #e0897a;
+        --color-warning: #d6a95f;
+        --color-info: #7fb4cc;
+
+        --color-success-bg: #14301f;
+        --color-success-fg: #8fd9b0;
+        --color-success-border: #23503a;
+        --color-error-bg: #341914;
+        --color-error-fg: #eda495;
+        --color-error-border: #5b2b22;
+        --color-warning-bg: #322611;
+        --color-info-bg: #16262f;
+
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+
+        --focus-ring: 0 0 0 3px rgba(79, 194, 187, 0.38);
+
+        color-scheme: dark;
+    }
 }

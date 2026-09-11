@@ -4,7 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Portfolio{% endblock %}</title>
+
+    <title>{% block title %}{{ site_owner }} — {{ site_role }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ site_description }}{% endblock %}">
+    <meta name="author" content="{{ site_owner }}">
+    <meta name="theme-color" content="#0d6b6e" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f1413" media="(prefers-color-scheme: dark)">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+    <!-- Link previews (LinkedIn, Slack, iMessage, X) -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="{{ site_owner }}">
+    <meta property="og:title" content="{% block og_title %}{{ site_owner }} — {{ site_role }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ site_description }}{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_owner }} — {{ site_role }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ site_description }}{% endblock %}">
+
+    <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="{% static 'css/variables.css' %}">
     <link rel="stylesheet" href="{% static 'css/reset.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">

@@ -350,14 +350,18 @@ class HomePageViewTest(TestCase):
         self.assertContains(response, "Learning")
         self.assertContains(response, "badge")
 
-    def test_homepage_journey_empty_state_renders_without_entries(self):
+    def test_homepage_journey_section_is_omitted_without_entries(self):
+        # Behaviour change (requested): an empty Journey section is hidden
+        # rather than rendering an empty state to visitors. The nav entry is
+        # hidden with it. Previously this asserted the empty state was shown.
         JourneyEntry.objects.all().delete()
 
         response = self.client.get(reverse("portfolio:home"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'id="journey"')
-        self.assertContains(response, "No journey entries yet.")
+        self.assertNotContains(response, 'id="journey"')
+        self.assertNotContains(response, "No journey entries yet.")
+        self.assertNotContains(response, 'href="#journey"')
 
     def test_homepage_education_section_renders(self):
         response = self.client.get(reverse("portfolio:home"))

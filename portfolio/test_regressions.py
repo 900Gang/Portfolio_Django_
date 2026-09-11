@@ -404,3 +404,202 @@ class StaticAssetTest(TestCase):
         base = (BASE_DIR / "templates" / "base.html").read_text()
         for name in re.findall(r"static 'css/([^']+)'", base):
             self.assertTrue((BASE_DIR / "static" / "css" / name).is_file(), name)
+
+
+# ---------------------------------------------------------------------------
+# Presentation pass: image fallback, empty-section handling, document head,
+# resume gating, and theme tokens.
+# ---------------------------------------------------------------------------
+
+
+class ProjectImageFallbackTest(TestCase):
+    """
+    Regression: `{% if project.image %}` is truthy for any stored path, so a
+    record whose file had been lost rendered a broken <img>. Both project
+    images on the live site were 404ing.
+    """
+
+    def setUp(self):
+        self.project = Project.objects.create(
+            title="Imaged", short_description="d", featured=True
+        )
+
+    def test_has_image_is_false_when_the_file_is_missing(self):
+        self.project.image.name = "projects/gone.png"
+        self.project.save()
+        self.assertTrue(bool(self.project.image))  # the path is still set
+        self.assertFalse(self.project.has_image)   # but the file is not there
+
+    def test_has_image_is_false_when_no_image_is_set(self):
+        self.assertFalse(self.project.has_image)
+
+    def test_has_image_is_true_when_the_file_exists(self):
+        import tempfile
+
+        from django.test import override_settings
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with override_settings(MEDIA_ROOT=tmp):
+                target = Path(tmp) / "projects"
+                target.mkdir(parents=True)
+                (target / "there.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+                self.project.image.name = "projects/there.png"
+                self.project.save()
+                self.assertTrue(self.project.has_image)
+
+    def test_missing_file_renders_the_placeholder_not_a_broken_image(self):
+        self.project.image.name = "projects/gone.png"
+        self.project.save()
+
+        for url in (
+            reverse("portfolio:home"),
+            reverse("portfolio:project_detail", kwargs={"slug": self.project.slug}),
+        ):
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                self.assertNotIn("projects/gone.png", html)
+                self.assertIn("project-image-fallback", html)
+
+
+class JourneySectionVisibilityTest(TestCase):
+    """The section and its nav entry are hidden when there is nothing to show."""
+
+    def test_hidden_when_there_are_no_entries(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertNotIn('id="journey"', html)
+        self.assertNotIn('href="#journey"', html)
+        self.assertNotIn("No journey entries yet.", html)
+
+    def test_shown_when_entries_exist(self):
+        JourneyEntry.objects.create(
+            date="2025-01-01", title="Started Django", description="d"
+        )
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn('id="journey"', html)
+        self.assertIn('href="#journey"', html)
+        self.assertIn("Started Django", html)
+
+    def test_nav_entry_tracks_the_section_on_detail_pages_too(self):
+        project = Project.objects.create(title="P", short_description="d")
+        url = reverse("portfolio:project_detail", kwargs={"slug": project.slug})
+        self.assertNotIn('href="#journey"', self.client.get(url).content.decode())
+
+        JourneyEntry.objects.create(date="2025-01-01", title="J", description="d")
+        self.assertIn('href="#journey"', self.client.get(url).content.decode())
+
+
+class DocumentHeadTest(TestCase):
+    """The head was a bare title and two meta tags; links previewed as nothing."""
+
+    def test_homepage_head_identifies_the_owner(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn("<title>Anand N — Software Engineer</title>", html)
+        self.assertNotIn("<title>Home - Portfolio</title>", html)
+
+    def test_homepage_has_description_and_link_preview_tags(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        for needle in (
+            'name="description"',
+            'property="og:title"',
+            'property="og:description"',
+            'property="og:type"',
+            'property="og:url"',
+            'name="twitter:card"',
+            'rel="canonical"',
+            'rel="icon"',
+            'name="theme-color"',
+        ):
+            with self.subTest(tag=needle):
+                self.assertIn(needle, html)
+
+    def test_detail_page_overrides_title_and_description(self):
+        project = Project.objects.create(
+            title="Hematology Screening",
+            short_description="Personal project classifying blood smear images.",
+        )
+        html = self.client.get(
+            reverse("portfolio:project_detail", kwargs={"slug": project.slug})
+        ).content.decode()
+        self.assertIn("<title>Hematology Screening — Anand N</title>", html)
+        self.assertIn("blood smear images", html)
+        self.assertIn('content="article"', html)
+
+    def test_favicon_file_exists(self):
+        self.assertTrue((BASE_DIR / "static" / "img" / "favicon.svg").is_file())
+
+
+class ResumeLinkTest(TestCase):
+    """The button appears only once the file is actually present, so the site
+    never ships a download link that 404s."""
+
+    def test_hidden_when_the_file_is_absent(self):
+        from django.test import override_settings
+
+        with override_settings(RESUME_STATIC_PATH="files/definitely-missing.pdf"):
+            html = self.client.get(reverse("portfolio:home")).content.decode()
+            self.assertNotIn("Download Resume", html)
+
+    def test_shown_when_the_file_is_present(self):
+        from django.test import override_settings
+
+        # favicon.svg is a file that certainly resolves through the finders.
+        with override_settings(RESUME_STATIC_PATH="img/favicon.svg"):
+            html = self.client.get(reverse("portfolio:home")).content.decode()
+            self.assertIn("Download Resume", html)
+            self.assertIn("img/favicon.svg", html)
+
+
+class ThemeTokenTest(TestCase):
+    """Colour lives in tokens only, and every colour token has a dark value."""
+
+    def _variables(self):
+        return (BASE_DIR / "static" / "css" / "variables.css").read_text()
+
+    def test_no_hardcoded_colours_outside_the_token_file(self):
+        offenders = []
+        for path in (BASE_DIR / "static" / "css").glob("*.css"):
+            if path.name == "variables.css":
+                continue
+            for number, line in enumerate(path.read_text().splitlines(), 1):
+                if re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(", line):
+                    offenders.append(f"{path.name}:{number}: {line.strip()}")
+        self.assertEqual(offenders, [])
+
+    def test_every_colour_token_is_redefined_for_dark_mode(self):
+        css = self._variables()
+        dark = css[css.index("prefers-color-scheme: dark"):]
+        light_block = css[: css.index("prefers-color-scheme: dark")]
+
+        light_tokens = set(re.findall(r"(--color-[a-z-]+):", light_block))
+        dark_tokens = set(re.findall(r"(--color-[a-z-]+):", dark))
+
+        self.assertTrue(light_tokens, "no colour tokens found")
+        self.assertEqual(
+            light_tokens - dark_tokens,
+            set(),
+            "colour tokens with no dark-mode value",
+        )
+
+    def test_dark_mode_is_declared(self):
+        css = self._variables()
+        self.assertIn("prefers-color-scheme: dark", css)
+        self.assertIn("color-scheme: dark", css)
+
+    def test_palette_is_no_longer_stock_bootstrap(self):
+        css = self._variables()
+        for bootstrap_default in ("#0d6efd", "#198754", "#dc3545", "#212529", "#dee2e6"):
+            with self.subTest(colour=bootstrap_default):
+                self.assertNotIn(bootstrap_default, css)
+
+    def test_fonts_are_declared_with_fallback_stacks(self):
+        css = self._variables()
+        self.assertIn("IBM Plex Sans", css)
+        self.assertIn("IBM Plex Mono", css)
+        # A webfont that fails to load must still land on a real stack.
+        self.assertIn("system-ui", css)
+        self.assertIn("monospace", css)
+
+    def test_stylesheet_link_for_the_webfont_is_present(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn("fonts.googleapis.com", html)
+        self.assertIn("IBM+Plex+Sans", html)

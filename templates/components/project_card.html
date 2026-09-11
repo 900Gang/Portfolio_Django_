@@ -1,6 +1,6 @@
 {% if project %}
 <article class="project-card card">
-    {% if project.image %}
+    {% if project.has_image %}
     <figure class="project-image">
         <img src="{{ project.image.url }}" alt="{{ project.title }} project screenshot" loading="lazy">
     </figure>

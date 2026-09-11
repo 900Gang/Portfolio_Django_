@@ -138,3 +138,9 @@ button:focus-visible {
     z-index: 1050;
     text-decoration: none;
 }
+/* Headings: explicit family + tightened tracking (typography pass) */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-sans-serif);
+    letter-spacing: var(--letter-spacing-tight);
+    text-wrap: balance;
+}

@@ -174,11 +174,11 @@
 }
 
 .status-dot-warning {
-    background-color: #ffc107;
+    background-color: var(--color-warning-bg);
 }
 
 .status-dot-info {
-    background-color: #17a2b8;
+    background-color: var(--color-info-bg);
 }
 
 /* Form Controls */
@@ -797,15 +797,15 @@
 }
 
 .alert-success {
-    background-color: #d1e7dd;
-    color: #0f5132;
-    border: 1px solid #badbcc;
+    background-color: var(--color-success-bg);
+    color: var(--color-success-fg);
+    border: 1px solid var(--color-success-border);
 }
 
 .alert-error {
-    background-color: #f8d7da;
-    color: #842029;
-    border: 1px solid #f5c2c7;
+    background-color: var(--color-error-bg);
+    color: var(--color-error-fg);
+    border: 1px solid var(--color-error-border);
 }
 
 .alert-close {
@@ -1519,4 +1519,75 @@
     height: 100%;
     object-fit: cover;
     display: block;
+}
+/* ==========================================================================
+   Typography pass
+   IBM Plex Sans carries text; IBM Plex Mono marks labels, badges and data
+   (dates, tech names, statuses) so the "engineering" register is typographic
+   rather than decorative.
+   ========================================================================== */
+
+.hero-title {
+    font-size: var(--font-size-5xl);
+    letter-spacing: var(--letter-spacing-tight);
+}
+
+.section-title,
+.project-detail-title {
+    letter-spacing: var(--letter-spacing-tight);
+    text-wrap: balance;
+}
+
+/* Eyebrows and section labels */
+.hero-eyebrow,
+.about-label,
+.skills-label {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+/* Data and machine-ish values */
+.tech-badge,
+.badge,
+.skill-status,
+.project-type-badge,
+.project-detail-type-badge,
+.timeline-date,
+.timeline-type,
+.education-date,
+.certification-date {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.01em;
+}
+
+/* Running text gets a comfortable measure rather than the full container */
+.hero-description,
+.about-intro,
+.contact-intro,
+.project-detail-summary {
+    max-width: 62ch;
+    line-height: var(--line-height-relaxed);
+}
+
+.hero-description,
+.about-intro,
+.contact-intro {
+    margin-inline: auto;
+}
+
+.project-detail-summary { margin-inline: 0; }
+
+/* Numeric columns line up */
+.education-date,
+.certification-date,
+.timeline-date {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+    .hero-title { font-size: var(--font-size-4xl); }
 }

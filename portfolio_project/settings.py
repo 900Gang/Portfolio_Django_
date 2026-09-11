@@ -82,6 +82,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'portfolio.context_processors.site',
             ],
         },
     },
@@ -146,6 +147,22 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Media files configuration
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Site identity, used for page titles and social/link previews.
+SITE_OWNER = get_str('SITE_OWNER', 'Anand N')
+SITE_ROLE = get_str('SITE_ROLE', 'Software Engineer')
+SITE_DESCRIPTION = get_str(
+    'SITE_DESCRIPTION',
+    'Full Stack Developer with a foundation in Python, Django, JavaScript and '
+    'backend development. Building web applications and exploring DevOps.',
+)
+# Absolute site URL, used for canonical and Open Graph tags.
+SITE_URL = get_str('SITE_URL', '')
+
+# Path inside the static files tree. The download button appears only once
+# this file actually exists.
+RESUME_STATIC_PATH = get_str('RESUME_STATIC_PATH', 'files/Anand_N_Resume.pdf')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
