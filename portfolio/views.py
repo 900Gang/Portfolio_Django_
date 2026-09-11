@@ -1,5 +1,5 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView
+from django.shortcuts import render, redirect
+from django.views.generic import DetailView
 from django.contrib import messages
 from .models import Project, Skill, JourneyEntry, Education, Certification, ProfessionalSkill
 from .forms import ContactForm

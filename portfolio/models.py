@@ -68,6 +68,22 @@ class Project(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def project_type(self):
+        """
+        Human label for the project's provenance.
+
+        Derived by matching marker phrases in the descriptions, which is how
+        both the card and detail templates used to classify projects inline.
+        Kept in one place so the two templates cannot drift apart.
+        """
+        haystack = f"{self.short_description} {self.description}"
+        if "Major project" in haystack:
+            return "Academic Project"
+        if "Personal project" in haystack:
+            return "Personal Project"
+        return "Project"
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.title)

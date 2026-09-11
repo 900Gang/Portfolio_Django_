@@ -10,23 +10,42 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import os
 from pathlib import Path
+
+from .env import get_bool, get_list, get_str, load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / '.env')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# DEBUG defaults to False so that an unconfigured deployment fails closed.
+DEBUG = get_bool('DEBUG', default=False)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6yq*5%0jf^#a59#8k7!&+&4c21$ss-ui&l+4=@qn&z)yj)7)r3'
+# In DEBUG a throwaway key keeps `runserver` working with no setup; outside
+# DEBUG an unset SECRET_KEY raises at import time rather than shipping a
+# publicly-known key.
+if DEBUG:
+    SECRET_KEY = get_str('SECRET_KEY', 'django-insecure-dev-only-do-not-use-in-production')
+else:
+    SECRET_KEY = get_str('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+ALLOWED_HOSTS = get_list('ALLOWED_HOSTS', 'localhost,127.0.0.1' if DEBUG else '')
 
-ALLOWED_HOSTS = []
+# Behind a TLS-terminating proxy these make sessions/CSRF cookies secure-only.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    CSRF_TRUSTED_ORIGINS = get_list('CSRF_TRUSTED_ORIGINS')
+    # Opt-in: a deployment that is not yet fully HTTPS should leave these off.
+    SECURE_SSL_REDIRECT = get_bool('SECURE_SSL_REDIRECT', default=True)
+    SECURE_HSTS_SECONDS = int(get_str('SECURE_HSTS_SECONDS', '0'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
+    SECURE_HSTS_PRELOAD = SECURE_HSTS_SECONDS > 0
 
 
 # Application definition

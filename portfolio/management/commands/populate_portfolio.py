@@ -1,23 +1,77 @@
 """
-Django management command to populate portfolio with real content.
-Removes test data and populates real skills, projects, education, certifications, and professional skills.
+Django management command to populate the portfolio with real content.
+
+Idempotent: every record is matched on its natural key and updated in place,
+so re-running the command refreshes content instead of duplicating it. The
+whole run is wrapped in a transaction, so a failure part-way leaves the
+database untouched rather than half-populated.
 """
 from django.core.management.base import BaseCommand
-from portfolio.models import Skill, Project, JourneyEntry, Education, Certification, ProfessionalSkill
+from django.db import transaction
+
+from portfolio.models import (
+    Certification,
+    Education,
+    JourneyEntry,
+    Project,
+    ProfessionalSkill,
+    Skill,
+)
 from portfolio.models import SkillCategory, SkillStatus
 
 
 class Command(BaseCommand):
     help = 'Populate portfolio with real content from resume'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--prune',
+            action='store_true',
+            help='Delete skills that are not part of the seed data.',
+        )
+
+    @transaction.atomic
     def handle(self, *args, **options):
         self.stdout.write('Populating portfolio with real content...')
 
-        # Step 1: Clear test data
-        self.stdout.write('Removing test skill data...')
-        Skill.objects.all().delete()
+        created, updated = self._populate_skills(prune=options['prune'])
+        self.stdout.write(self.style.SUCCESS(
+            f'Skills: {created} created, {updated} updated'
+        ))
 
-        # Step 2: Populate Skills
+        created, updated = self._populate_projects()
+        self.stdout.write(self.style.SUCCESS(
+            f'Projects: {created} created, {updated} updated'
+        ))
+
+        created, updated = self._populate_education()
+        self.stdout.write(self.style.SUCCESS(
+            f'Education: {created} created, {updated} updated'
+        ))
+
+        created, updated = self._populate_certifications()
+        self.stdout.write(self.style.SUCCESS(
+            f'Certifications: {created} created, {updated} updated'
+        ))
+
+        created, updated = self._populate_professional_skills()
+        self.stdout.write(self.style.SUCCESS(
+            f'Professional skills: {created} created, {updated} updated'
+        ))
+
+        self.stdout.write(self.style.WARNING(
+            'Journey entries not populated - no chronological journey data provided in resume'
+        ))
+
+        self.stdout.write(self.style.SUCCESS('\n=== POPULATION COMPLETE ==='))
+        self.stdout.write(f'Skills: {Skill.objects.count()}')
+        self.stdout.write(f'Projects: {Project.objects.count()}')
+        self.stdout.write(f'Education: {Education.objects.count()}')
+        self.stdout.write(f'Certifications: {Certification.objects.count()}')
+        self.stdout.write(f'Professional Skills: {ProfessionalSkill.objects.count()}')
+        self.stdout.write(f'Journey Entries: {JourneyEntry.objects.count()} (intentionally empty)')
+
+    def _populate_skills(self, prune=False):
         skills_data = [
             # Frontend
             ('HTML5', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 1),
@@ -70,17 +124,27 @@ class Command(BaseCommand):
             ('IoT', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 8),
         ]
 
+
+        created = updated = 0
         for name, category, status, order in skills_data:
-            Skill.objects.create(
+            # (name, category) is the model's unique constraint.
+            _, was_created = Skill.objects.update_or_create(
                 name=name,
                 category=category,
-                status=status,
-                order=order
+                defaults={'status': status, 'order': order},
             )
+            created, updated = (created + 1, updated) if was_created else (created, updated + 1)
 
-        self.stdout.write(self.style.SUCCESS(f'Created {len(skills_data)} skills'))
+        if prune:
+            seeded = {(name, category) for name, category, _, _ in skills_data}
+            stale = [s.pk for s in Skill.objects.all() if (s.name, s.category) not in seeded]
+            if stale:
+                Skill.objects.filter(pk__in=stale).delete()
+                self.stdout.write(self.style.WARNING(f'Pruned {len(stale)} stale skills'))
 
-        # Step 3: Populate Projects
+        return created, updated
+
+    def _populate_projects(self):
         projects_data = [
             {
                 'title': 'Early Identification of Learning Disabilities Using AI and IoT',
@@ -116,21 +180,35 @@ Evaluated model performance through iterative experimentation and testing.''',
             },
         ]
 
+
+        created = updated = 0
         for project_data in projects_data:
-            tech_names = project_data.pop('technologies')
-            project = Project.objects.create(**project_data)
+            fields = dict(project_data)
+            tech_names = fields.pop('technologies')
+            title = fields.pop('title')
 
-            # Add technologies
+            project, was_created = Project.objects.update_or_create(
+                title=title, defaults=fields,
+            )
+            created, updated = (created + 1, updated) if was_created else (created, updated + 1)
+
+            technologies = []
             for tech_name in tech_names:
-                try:
-                    skill = Skill.objects.get(name=tech_name)
-                    project.technologies.add(skill)
-                except Skill.DoesNotExist:
-                    self.stdout.write(self.style.WARNING(f'Skill "{tech_name}" not found for project "{project.title}"'))
+                # Skill names are unique per category, so a bare name can match
+                # more than one row; take the first deterministically.
+                skill = Skill.objects.filter(name=tech_name).first()
+                if skill is None:
+                    self.stdout.write(self.style.WARNING(
+                        f'Skill "{tech_name}" not found for project "{project.title}"'
+                    ))
+                    continue
+                technologies.append(skill)
+            # set() rather than add() so re-runs do not accumulate stale links.
+            project.technologies.set(technologies)
 
-            self.stdout.write(self.style.SUCCESS(f'Created project: {project.title}'))
+        return created, updated
 
-        # Step 4: Populate Education
+    def _populate_education(self):
         education_data = [
             {
                 'institution': 'College of Engineering, Muttathara',
@@ -164,12 +242,19 @@ Evaluated model performance through iterative experimentation and testing.''',
             },
         ]
 
+
+        created = updated = 0
         for edu_data in education_data:
-            Education.objects.create(**edu_data)
+            fields = dict(edu_data)
+            institution = fields.pop('institution')
+            degree = fields.pop('degree')
+            _, was_created = Education.objects.update_or_create(
+                institution=institution, degree=degree, defaults=fields,
+            )
+            created, updated = (created + 1, updated) if was_created else (created, updated + 1)
+        return created, updated
 
-        self.stdout.write(self.style.SUCCESS(f'Created {len(education_data)} education records'))
-
-        # Step 5: Populate Certifications
+    def _populate_certifications(self):
         certifications_data = [
             {
                 'name': 'Python for Data Science',
@@ -194,12 +279,19 @@ Evaluated model performance through iterative experimentation and testing.''',
             },
         ]
 
+
+        created = updated = 0
         for cert_data in certifications_data:
-            Certification.objects.create(**cert_data)
+            fields = dict(cert_data)
+            name = fields.pop('name')
+            issuer = fields.pop('issuer')
+            _, was_created = Certification.objects.update_or_create(
+                name=name, issuer=issuer, defaults=fields,
+            )
+            created, updated = (created + 1, updated) if was_created else (created, updated + 1)
+        return created, updated
 
-        self.stdout.write(self.style.SUCCESS(f'Created {len(certifications_data)} certifications'))
-
-        # Step 6: Populate Professional Skills
+    def _populate_professional_skills(self):
         professional_skills_data = [
             ('Problem Solving', 1),
             ('Communication', 2),
@@ -210,18 +302,11 @@ Evaluated model performance through iterative experimentation and testing.''',
             ('Time Management', 7),
         ]
 
+
+        created = updated = 0
         for name, order in professional_skills_data:
-            ProfessionalSkill.objects.create(name=name, display_order=order)
-
-        self.stdout.write(self.style.SUCCESS(f'Created {len(professional_skills_data)} professional skills'))
-
-        # Step 7: Report Journey status
-        self.stdout.write(self.style.WARNING('Journey entries not populated - no chronological journey data provided in resume'))
-
-        self.stdout.write(self.style.SUCCESS('\n=== POPULATION COMPLETE ==='))
-        self.stdout.write(f'Skills: {Skill.objects.count()}')
-        self.stdout.write(f'Projects: {Project.objects.count()}')
-        self.stdout.write(f'Education: {Education.objects.count()}')
-        self.stdout.write(f'Certifications: {Certification.objects.count()}')
-        self.stdout.write(f'Professional Skills: {ProfessionalSkill.objects.count()}')
-        self.stdout.write(f'Journey Entries: {JourneyEntry.objects.count()} (intentionally empty)')
+            _, was_created = ProfessionalSkill.objects.update_or_create(
+                name=name, defaults={'display_order': order},
+            )
+            created, updated = (created + 1, updated) if was_created else (created, updated + 1)
+        return created, updated

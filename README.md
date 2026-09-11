@@ -75,11 +75,30 @@ my_portfolio/
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `SECRET_KEY` | Django secret key |
-| `DEBUG` | Debug mode (True/False) |
-| `ALLOWED_HOSTS` | Comma-separated allowed hosts |
+Settings are read from the environment; a `.env` file at the project root is
+loaded automatically, and real environment variables take precedence over it.
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `SECRET_KEY` | When `DEBUG=False` | insecure dev key | Django secret key |
+| `DEBUG` | No | `False` | Debug mode (True/False) |
+| `ALLOWED_HOSTS` | When `DEBUG=False` | `localhost,127.0.0.1` in debug | Comma-separated allowed hosts |
+| `CSRF_TRUSTED_ORIGINS` | No | empty | Comma-separated origins, production only |
+| `SECURE_SSL_REDIRECT` | No | `True` in production | Redirect HTTP to HTTPS |
+| `SECURE_HSTS_SECONDS` | No | `0` | Enables HSTS when greater than zero |
+
+`DEBUG` defaults to `False` and `SECRET_KEY` is mandatory outside debug, so a
+misconfigured deployment fails at startup rather than serving insecurely.
+
+## Tests
+
+```bash
+python manage.py test
+```
+
+`portfolio/tests.py` holds the feature suite; `portfolio/test_regressions.py`
+holds tests pinning previously-fixed bugs (admin permissions, skill grouping,
+seed idempotency, query counts, and static-asset lints).
 
 ## License
 

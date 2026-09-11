@@ -67,9 +67,3 @@ class ProfessionalSkillAdmin(admin.ModelAdmin):
     search_fields = ["name"]
     ordering = ["display_order", "name"]
     list_editable = ["display_order", "is_visible"]
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return obj is None or obj.is_read is False or request.user.is_superuser

@@ -78,7 +78,7 @@
         <h2 class="section-title">Technical Skills</h2>
     </div>
     <div class="skills-content">
-        {% regroup skills by category as skills_by_category %}
+        {% regroup skills by get_category_display as skills_by_category %}
         {% if skills_by_category %}
         <div class="skills-grouped">
             {% for category_group in skills_by_category %}
@@ -238,65 +238,9 @@
         <form method="post" action="#contact" class="contact-form" novalidate>
             {% csrf_token %}
 
-            <div class="form-group">
-                <label for="{{ contact_form.name.id_for_label }}" class="form-label">
-                    Name
-                    <span class="form-required" aria-label="required">*</span>
-                </label>
-                {{ contact_form.name }}
-                {% if contact_form.name.errors %}
-                <div class="form-error">
-                    {% for error in contact_form.name.errors %}
-                    <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label for="{{ contact_form.email.id_for_label }}" class="form-label">
-                    Email
-                    <span class="form-required" aria-label="required">*</span>
-                </label>
-                {{ contact_form.email }}
-                {% if contact_form.email.errors %}
-                <div class="form-error">
-                    {% for error in contact_form.email.errors %}
-                    <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label for="{{ contact_form.subject.id_for_label }}" class="form-label">
-                    Subject
-                    <span class="form-required" aria-label="required">*</span>
-                </label>
-                {{ contact_form.subject }}
-                {% if contact_form.subject.errors %}
-                <div class="form-error">
-                    {% for error in contact_form.subject.errors %}
-                    <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label for="{{ contact_form.message.id_for_label }}" class="form-label">
-                    Message
-                    <span class="form-required" aria-label="required">*</span>
-                </label>
-                {{ contact_form.message }}
-                {% if contact_form.message.errors %}
-                <div class="form-error">
-                    {% for error in contact_form.message.errors %}
-                    <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
+            {% for field in contact_form %}
+            {% include "components/form_field.html" %}
+            {% endfor %}
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Send Message</button>

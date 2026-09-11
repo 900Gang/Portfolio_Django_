@@ -13,7 +13,7 @@
 
         <header class="project-detail-header">
             <span class="project-detail-type-badge">
-                {% if 'Major project' in project.short_description or 'Major project' in project.description %}Academic Project{% elif 'Personal project' in project.short_description or 'Personal project' in project.description %}Personal Project{% else %}Project{% endif %}
+                {{ project.project_type }}
             </span>
             <h1 class="project-detail-title">{{ project.title }}</h1>
             <p class="project-detail-summary">{{ project.short_description }}</p>

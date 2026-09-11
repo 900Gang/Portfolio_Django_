@@ -51,3 +51,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+// Dismissible flash messages.
+// The close button is rendered and styled but previously had no behaviour.
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.alert-close').forEach(button => {
+        button.addEventListener('click', function() {
+            const alert = button.closest('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        });
+    });
+});

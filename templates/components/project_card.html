@@ -13,7 +13,7 @@
     <div class="card-body project-card-body">
         <header class="project-card-header">
             <span class="project-type-badge">
-                {% if 'Major project' in project.short_description or 'Major project' in project.description %}Academic Project{% elif 'Personal project' in project.short_description or 'Personal project' in project.description %}Personal Project{% else %}Project{% endif %}
+                {{ project.project_type }}
             </span>
             <h3 class="project-title">
                 <a href="{% url 'portfolio:project_detail' project.slug %}" class="project-title-link">{{ project.title }}</a>
