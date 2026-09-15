@@ -219,7 +219,14 @@ SITE_AVAILABILITY = get_str('SITE_AVAILABILITY', 'Open to opportunities')
 
 # Path inside the static files tree. The download button appears only once
 # this file actually exists.
-RESUME_STATIC_PATH = get_str('RESUME_STATIC_PATH', 'files/Anand_Python_Dev_Final.pdf')
+# Two résumé variants are kept on disk — an AI/ML one and a software
+# engineering / full-stack one. The AI/ML variant is served, because it is the
+# one whose headline and skills match how the site positions itself; serving
+# the full-stack variant from an AI Developer page would contradict it.
+RESUME_STATIC_PATH = get_str(
+    'RESUME_STATIC_PATH',
+    'files/Resume_Anand_Final_ATS_Python_AI_ML.pdf',
+)
 # Filename the visitor's browser saves it as. The working filename on disk is
 # not what a recruiter should end up with in their downloads folder.
 RESUME_DOWNLOAD_NAME = get_str('RESUME_DOWNLOAD_NAME', 'Anand_N_Resume.pdf')

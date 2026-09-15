@@ -175,9 +175,23 @@ of them changes:
    longer in the seed, so a rename does not leave both versions on the page).
 3. Re-run `python manage.py make_og_image`.
 
-> **Known divergence:** the résumé PDF still leads with "Aspiring DevOps
-> Engineer | Python | Cloud | Automation", while the site and LinkedIn lead with
-> AI. Re-export the PDF to match.
+Two résumé variants are kept in `static/files/`:
+`Resume_Anand_Final_ATS_Python_AI_ML.pdf` (served — "Python Developer | AI/ML
+Enthusiast", matching how the site positions itself) and
+`Anand_SE_FSD_Dev_Final.pdf` ("Software Engineer | Full Stack Developer"). Only
+the one named by `RESUME_STATIC_PATH` is linked, but **every file under
+`static/` is collected and publicly reachable by URL**, linked or not.
+
+> **Known divergences** between the served PDF and this site, all in the PDF's
+> favour to fix:
+>
+> - The PDF has no Experience section, so the Yangtso Four Labs AI internship
+>   is missing from it entirely.
+> - B.Tech CGPA reads 6.84; LinkedIn and this site say 6.82.
+> - Class XII reads "Sree Narayana Guru Higher Secondary School — CGPA: 8.8";
+>   LinkedIn gives "SNGHSS Chempazhanthy — 88%" (a percentage, not a CGPA).
+> - The PDF lists 3 certifications; LinkedIn and this site carry 8, and the SQL
+>   course's issuer differs (Skill Nation vs LinkedIn).
 
 `RESUME_STATIC_PATH` is asserted by the test suite to point at a file that
 really exists, so swapping the PDF for one with a different filename fails the
