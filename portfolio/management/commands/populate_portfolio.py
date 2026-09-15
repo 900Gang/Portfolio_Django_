@@ -173,9 +173,16 @@ class Command(BaseCommand):
     def _populate_projects(self):
         # Bullets are the résumé's own, so the site and the CV a recruiter is
         # reading alongside it cannot tell different stories.
+        #
+        # Slugs are pinned rather than left to `Project.save()`. That derives a
+        # slug only when the field is blank, appending "-1", "-2"... on
+        # collision — so a suffix earned once, against rows that have since been
+        # deleted, sticks in the public URL and the sitemap forever. Stating them
+        # here makes the URLs deterministic and lets a re-run repair a drifted one.
         projects_data = [
             {
                 'title': 'Early Identification of Learning Disabilities Using AI and IoT',
+                'slug': 'early-identification-of-learning-disabilities-using-ai-and-iot',
                 'short_description': (
                     'Major project pairing ESP32 sensor hardware with a Python backend and '
                     'Firebase, streaming real-time physiological and behavioural data for '
@@ -199,6 +206,7 @@ Collaborated with a four-member team on system integration, debugging, testing, 
             },
             {
                 'title': 'AI-Driven Clinical Support for Hematology Screening',
+                'slug': 'ai-driven-clinical-support-for-hematology-screening',
                 'short_description': (
                     'Personal project: a Python machine-learning application that classifies '
                     'blood smear images automatically, from dataset preparation through to an '
