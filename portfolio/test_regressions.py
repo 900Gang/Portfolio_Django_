@@ -866,3 +866,28 @@ class StylesheetHygieneTest(TestCase):
             if path.is_file() and path.suffix in {".txt", ".log", ".bak"}
         ]
         self.assertEqual(offenders, [])
+
+
+class HttpMethodTest(TestCase):
+    """
+    Endpoints declare the methods they accept.
+
+    Flagged by static analysis (python:S3752): a view with no method
+    restriction answers PUT and DELETE by falling through to its GET branch,
+    which is both misleading and a needless surface.
+    """
+
+    def test_home_accepts_only_get_and_post(self):
+        url = reverse("portfolio:home")
+        self.assertEqual(self.client.get(url).status_code, 200)
+        for method in ("put", "delete", "patch"):
+            with self.subTest(method=method):
+                self.assertEqual(getattr(self.client, method)(url).status_code, 405)
+
+    def test_robots_is_read_only(self):
+        self.assertEqual(self.client.get("/robots.txt").status_code, 200)
+        for method in ("post", "put", "delete"):
+            with self.subTest(method=method):
+                self.assertEqual(
+                    getattr(self.client, method)("/robots.txt").status_code, 405
+                )

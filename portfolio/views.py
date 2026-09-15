@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.views.decorators.http import require_GET, require_http_methods
 from django.views.generic import DetailView
 
 from .forms import ContactForm
@@ -17,10 +18,15 @@ from .models import (
 )
 
 
+@require_http_methods(["GET", "HEAD", "POST"])
 def home(request):
     """
     The single-page portfolio: featured work, skills, journey, education,
     credentials, and the contact form.
+
+    Methods are declared explicitly. Without this, a PUT or DELETE to `/`
+    fell through to the GET branch and rendered the page rather than being
+    rejected with 405.
     """
     if request.method == 'POST':
         contact_form = ContactForm(request.POST)
@@ -87,6 +93,7 @@ class ProjectDetailView(DetailView):
         return context
 
 
+@require_GET
 def robots_txt(request):
     """
     Allow everything and point crawlers at the sitemap.
