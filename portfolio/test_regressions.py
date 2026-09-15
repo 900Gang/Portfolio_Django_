@@ -168,9 +168,13 @@ class SkillsGroupingTest(TestCase):
         headings = re.findall(r'skills-group-title">\s*(.*?)\s*</h3>', html, re.S)
 
         # "&" is HTML-escaped by the template engine, as it should be.
-        self.assertEqual(
-            sorted(headings), ["Backend", "Frontend", "Tools &amp; Workflow"]
+        expected = sorted(
+            SkillCategory(value).label.replace("&", "&amp;")
+            for value in (
+                SkillCategory.BACKEND, SkillCategory.FRONTEND, SkillCategory.TOOLS
+            )
         )
+        self.assertEqual(sorted(headings), expected)
         for raw in ("backend", "frontend", "tools"):
             self.assertNotIn(f'skills-group-title">\n                    {raw}', html)
 
@@ -242,7 +246,7 @@ class SeedCommandTest(TestCase):
         self.assertEqual(
             self._counts(),
             {
-                "Skill": 36,
+                "Skill": 38,
                 "Project": 2,
                 "Education": 3,
                 "Certification": 3,
@@ -493,7 +497,7 @@ class DocumentHeadTest(TestCase):
 
     def test_homepage_head_identifies_the_owner(self):
         html = self.client.get(reverse("portfolio:home")).content.decode()
-        self.assertIn("<title>Anand N — Software Engineer</title>", html)
+        self.assertIn(f"<title>{settings.SITE_OWNER} — {settings.SITE_ROLE}</title>", html)
         self.assertNotIn("<title>Home - Portfolio</title>", html)
 
     def test_homepage_has_description_and_link_preview_tags(self):
@@ -532,21 +536,41 @@ class ResumeLinkTest(TestCase):
     """The button appears only once the file is actually present, so the site
     never ships a download link that 404s."""
 
+    def test_the_configured_resume_actually_exists(self):
+        """Regression: the résumé was added to static/files/ under one name
+        while RESUME_STATIC_PATH still pointed at another, so the download
+        button stayed hidden and nothing anywhere said why."""
+        self.assertTrue(
+            (BASE_DIR / "static" / settings.RESUME_STATIC_PATH).is_file(),
+            f"RESUME_STATIC_PATH points at {settings.RESUME_STATIC_PATH!r}, "
+            f"which is not in the static tree",
+        )
+
+    def test_it_is_offered_under_a_presentable_filename(self):
+        """The working filename on disk is not what should land in a
+        recruiter's downloads folder."""
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn(f'download="{settings.RESUME_DOWNLOAD_NAME}"', html)
+        self.assertTrue(settings.RESUME_DOWNLOAD_NAME.endswith(".pdf"))
+
     def test_hidden_when_the_file_is_absent(self):
         from django.test import override_settings
 
         with override_settings(RESUME_STATIC_PATH="files/definitely-missing.pdf"):
             html = self.client.get(reverse("portfolio:home")).content.decode()
-            self.assertNotIn("Download Resume", html)
+            self.assertNotIn("definitely-missing.pdf", html)
+            self.assertNotIn("download=", html)
 
     def test_shown_when_the_file_is_present(self):
         from django.test import override_settings
 
         # favicon.svg is a file that certainly resolves through the finders.
+        # Asserted on the href rather than the button copy, so rewording the
+        # label is not a test failure.
         with override_settings(RESUME_STATIC_PATH="img/favicon.svg"):
             html = self.client.get(reverse("portfolio:home")).content.decode()
-            self.assertIn("Download Resume", html)
             self.assertIn("img/favicon.svg", html)
+            self.assertIn("download=", html)
 
 
 class ThemeTokenTest(TestCase):
@@ -603,3 +627,242 @@ class ThemeTokenTest(TestCase):
         html = self.client.get(reverse("portfolio:home")).content.decode()
         self.assertIn("fonts.googleapis.com", html)
         self.assertIn("IBM+Plex+Sans", html)
+
+
+# ---------------------------------------------------------------------------
+# Professional pass: crawler endpoints, link previews, theming, navigation
+# wiring, spam protection and error pages.
+# ---------------------------------------------------------------------------
+
+
+class CrawlerEndpointTest(TestCase):
+    """robots.txt and sitemap.xml exist and agree with each other."""
+
+    def setUp(self):
+        self.project = Project.objects.create(
+            title="Indexable Project",
+            short_description="Should appear in the sitemap.",
+        )
+
+    def test_robots_txt_points_at_the_sitemap(self):
+        response = self.client.get("/robots.txt")
+        body = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/plain")
+        self.assertIn("Disallow: /admin/", body)
+        self.assertIn("/sitemap.xml", body)
+
+    def test_sitemap_lists_home_and_every_project(self):
+        response = self.client.get("/sitemap.xml")
+        body = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(reverse("portfolio:home"), body)
+        self.assertIn(self.project.get_absolute_url(), body)
+
+    def test_sitemap_survives_a_project_with_no_explicit_slug(self):
+        """Regression: the sitemap 500'd because Project had no
+        get_absolute_url, which only shows up once a project exists."""
+        Project.objects.create(title="Another One", short_description="x")
+        self.assertEqual(self.client.get("/sitemap.xml").status_code, 200)
+
+
+class AbsoluteUrlTest(TestCase):
+    def test_project_url_is_defined_on_the_model(self):
+        project = Project.objects.create(title="Routed", short_description="x")
+        self.assertEqual(
+            project.get_absolute_url(),
+            reverse("portfolio:project_detail", kwargs={"slug": project.slug}),
+        )
+
+    def test_card_links_through_the_model_method(self):
+        project = Project.objects.create(
+            title="Routed", short_description="x", featured=True
+        )
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn(f'href="{project.get_absolute_url()}"', html)
+
+
+class LinkPreviewImageTest(TestCase):
+    """A portfolio is shared on LinkedIn and Slack; a bare preview card is a
+    wasted first impression."""
+
+    def test_og_image_file_exists_in_the_static_tree(self):
+        self.assertTrue(
+            (BASE_DIR / "static" / settings.OG_IMAGE_STATIC_PATH).is_file(),
+            "run `python manage.py make_og_image`",
+        )
+
+    def test_og_image_is_absolute_because_scrapers_do_not_resolve_relatives(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        match = re.search(r'<meta property="og:image" content="([^"]+)"', html)
+        self.assertIsNotNone(match, "no og:image tag")
+        self.assertRegex(match.group(1), r"^https?://")
+
+    def test_large_summary_card_is_requested_when_an_image_exists(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn('name="twitter:card" content="summary_large_image"', html)
+
+    def test_tags_are_dropped_when_the_image_is_missing(self):
+        from django.test import override_settings
+
+        with override_settings(OG_IMAGE_STATIC_PATH="img/not-generated-yet.png"):
+            html = self.client.get(reverse("portfolio:home")).content.decode()
+            self.assertNotIn("og:image", html)
+            self.assertIn('name="twitter:card" content="summary"', html)
+
+
+class StructuredDataTest(TestCase):
+    def test_homepage_publishes_a_person_graph(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn('type="application/ld+json"', html)
+        self.assertIn('"@type": "Person"', html)
+        self.assertIn(settings.SITE_OWNER, html)
+
+    def test_project_page_publishes_a_creativework_graph_instead(self):
+        project = Project.objects.create(title="Graphed", short_description="x")
+        html = self.client.get(project.get_absolute_url()).content.decode()
+        self.assertIn('"@type": "CreativeWork"', html)
+        # The Person graph belongs on the home page; here the person appears
+        # only as the nested author, without the profile fields.
+        self.assertNotIn('"jobTitle"', html)
+
+
+class ThemeToggleTest(TestCase):
+    """Dark mode is a manual choice as well as an OS one."""
+
+    def _variables(self):
+        return (BASE_DIR / "static" / "css" / "variables.css").read_text()
+
+    def test_toggle_control_is_rendered(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn('class="theme-toggle"', html)
+
+    def test_theme_script_runs_before_the_body_to_avoid_a_flash(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        script = html.index("js/theme.js")
+        self.assertLess(script, html.index("<body>"), "theme.js must be in <head>")
+        self.assertNotIn("js/theme.js\" defer", html)
+
+    def test_manual_choice_can_override_the_os_in_both_directions(self):
+        """A [data-theme="dark"] block alone cannot force light mode on a
+        machine whose OS is dark; the light escape hatch has to exist too."""
+        css = self._variables()
+        self.assertIn('[data-theme="dark"]', css)
+        self.assertIn(':not([data-theme="light"])', css)
+
+    def test_stored_preference_reads_are_guarded(self):
+        """localStorage throws in private mode and with site data blocked."""
+        js = (BASE_DIR / "static" / "js" / "theme.js").read_text()
+        self.assertIn("localStorage", js)
+        self.assertIn("catch", js)
+
+
+class NavigationWiringTest(TestCase):
+    def setUp(self):
+        JourneyEntry.objects.create(
+            date="2025-01-01", title="Entry", description="d"
+        )
+
+    def test_every_nav_anchor_resolves_to_a_section_on_the_page(self):
+        """A nav link to an id that does not exist is a dead link that no
+        amount of CSS will reveal."""
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        anchors = re.findall(r'class="nav-link"[^>]*>|href="#([a-z-]+)" class="nav-link"', html)
+        targets = re.findall(r'href="#([a-z-]+)" class="nav-link"', html)
+        self.assertTrue(targets, "no nav links found")
+        for target in targets:
+            with self.subTest(anchor=target):
+                self.assertIn(f'id="{target}"', html)
+
+    def test_active_state_is_driven_by_script_not_left_dead(self):
+        """Regression: .nav-link.active was styled but nothing ever set it."""
+        js = (BASE_DIR / "static" / "js" / "navigation.js").read_text()
+        css = (BASE_DIR / "static" / "css" / "components.css").read_text()
+        self.assertIn(".nav-link.active", css)
+        self.assertIn("IntersectionObserver", js)
+        self.assertIn("'active'", js)
+
+    def test_anchor_targets_clear_the_sticky_header(self):
+        """Without scroll padding, jumping to a section parks its heading
+        underneath the fixed nav bar."""
+        css = (BASE_DIR / "static" / "css" / "reset.css").read_text()
+        self.assertIn("scroll-padding-top", css)
+
+
+class ContactHoneypotTest(TestCase):
+    """Spam protection that costs a visitor nothing."""
+
+    def _payload(self, **overrides):
+        payload = {
+            "name": "Recruiter",
+            "email": "recruiter@example.com",
+            "subject": "Role",
+            "message": "We have an opening.",
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_a_genuine_submission_still_saves(self):
+        from .models import ContactMessage
+
+        response = self.client.post(reverse("portfolio:home"), self._payload())
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ContactMessage.objects.count(), 1)
+
+    def test_a_filled_trap_is_rejected_without_saving(self):
+        from .models import ContactMessage
+
+        response = self.client.post(
+            reverse("portfolio:home"), self._payload(website="http://spam.example")
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), 0)
+
+    def test_the_trap_is_hidden_from_people_and_from_screen_readers(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertIn('class="form-trap"', html)
+        self.assertIn('name="website"', html)
+        # Off-screen rather than display:none, which some bots skip.
+        css = (BASE_DIR / "static" / "css" / "components.css").read_text()
+        trap = css[css.index(".form-trap {"):]
+        self.assertIn("position: absolute", trap[: trap.index("}")])
+
+    def test_the_trap_is_not_counted_as_a_visible_required_field(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        self.assertEqual(html.count('class="form-group"'), 4)
+
+
+class ErrorPageTest(TestCase):
+    def test_missing_project_renders_the_branded_404(self):
+        response = self.client.get("/projects/no-such-project/")
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(
+            response, "This page doesn't exist", status_code=404
+        )
+
+    def test_500_template_does_not_depend_on_context_processors(self):
+        """handler500 renders with an empty context, so any {{ site_* }} in
+        the template would silently render as nothing."""
+        html = (BASE_DIR / "templates" / "500.html").read_text()
+        self.assertNotIn("{{", html)
+        self.assertNotIn("{%", html)
+
+
+class StylesheetHygieneTest(TestCase):
+    def test_no_orphaned_stylesheets_are_left_in_the_tree(self):
+        """Regression: utilities.css was 341 lines of rules no template used.
+        Every file under static/css must be linked by base.html."""
+        linked = set(
+            re.findall(r"static 'css/([^']+)'", (BASE_DIR / "templates" / "base.html").read_text())
+        )
+        on_disk = {path.name for path in (BASE_DIR / "static" / "css").glob("*.css")}
+        self.assertEqual(on_disk - linked, set(), "stylesheet on disk but never linked")
+
+    def test_no_session_scratch_files_are_served_from_static(self):
+        """Anything under static/ is published by collectstatic."""
+        offenders = [
+            path.name
+            for path in (BASE_DIR / "static").glob("*")
+            if path.is_file() and path.suffix in {".txt", ".log", ".bak"}
+        ]
+        self.assertEqual(offenders, [])

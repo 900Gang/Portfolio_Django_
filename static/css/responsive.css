@@ -1,126 +1,176 @@
-/* Responsive Breakpoints */
+/* ==========================================================================
+   Responsive behaviour and user preferences.
 
-/* NOTE: breakpoint values are written literally below. CSS custom
-   properties cannot be used inside a media feature value -- `@media
-   (min-width: var(--breakpoint-md))` is invalid and browsers discard the
-   entire at-rule, which silently disabled every rule in this file. */
+   Most of the layout is intrinsically responsive — fluid type via clamp(),
+   `auto-fit` grids, and flex wrapping — so this file only holds the things
+   that genuinely need a breakpoint, plus the preference media queries.
 
-/* Define breakpoints */
-:root {
-    --breakpoint-sm: 576px;
-    --breakpoint-md: 768px;
-    --breakpoint-lg: 992px;
-    --breakpoint-xl: 1200px;
-}
+   NOTE: breakpoint values are written literally. CSS custom properties
+   cannot appear in a media feature value — `@media (min-width: var(--bp))`
+   is invalid and the browser discards the entire at-rule, which once
+   silently disabled every rule in this file.
+   ========================================================================== */
 
-/* Base container width adjustments */
-.container {
-    width: 100%;
-    padding-left: var(--layout-page-padding);
-    padding-right: var(--layout-page-padding);
-    margin-left: auto;
-    margin-right: auto;
-}
+/* --- Mobile navigation ---------------------------------------------------
+   Below 900px the inline menu collapses into a panel dropped from the
+   header. It is positioned rather than display-toggled so it can animate,
+   and `visibility` keeps it out of the tab order while closed. */
+@media (max-width: 900px) {
+    .nav-toggle {
+        display: inline-flex;
+    }
 
-@media (min-width: 576px) {
-    .container {
-        max-width: 540px;
+    .nav-logo-role {
+        display: none;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: var(--space-2) var(--layout-page-padding) var(--space-5);
+        background-color: var(--color-bg);
+        border-bottom: 1px solid var(--color-border);
+        box-shadow: var(--shadow-lg);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-0.5rem);
+        transition:
+            opacity var(--transition-fast),
+            transform var(--transition-normal) var(--ease-out),
+            visibility var(--transition-normal);
+    }
+
+    .nav-menu-open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .nav-item {
+        border-bottom: 1px solid var(--color-rule);
+    }
+
+    .nav-item:last-child {
+        border-bottom: none;
+    }
+
+    .nav-link {
+        padding: var(--space-4) var(--space-2);
+        font-size: var(--font-size-base);
+        border-radius: 0;
+    }
+
+    .nav-link.active::after {
+        left: 0;
+        right: auto;
+        top: 50%;
+        bottom: auto;
+        width: 2px;
+        height: 1.2rem;
+        transform: translateY(-50%);
+    }
+
+    .nav-link.active {
+        padding-left: var(--space-4);
     }
 }
 
-@media (min-width: 768px) {
-    .container {
-        max-width: 720px;
+/* Above the mobile breakpoint the panel styles must not linger. */
+@media (min-width: 901px) {
+    .nav-menu {
+        opacity: 1;
+        visibility: visible;
     }
 }
 
-@media (min-width: 992px) {
-    .container {
-        max-width: 960px;
+/* --- Small phones --------------------------------------------------------- */
+@media (max-width: 480px) {
+    .hero-fact {
+        grid-template-columns: 1fr;
+        gap: var(--space-1);
+    }
+
+    .hero-actions .btn,
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .certification-item {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 
-@media (min-width: 1200px) {
-    .container {
-        max-width: 1140px;
-    }
-}
-
-/* Responsive typography */
-@media (max-width: 768px) {
-    h1 {
-        font-size: var(--font-size-3xl);
-    }
-
-    h2 {
-        font-size: var(--font-size-2xl);
-    }
-
-    h3 {
-        font-size: var(--font-size-lg);
-    }
-}
-
-/* Responsive spacing */
-@media (max-width: 576px) {
-    :root {
-        --layout-section-spacing: 2rem;
-        --layout-container-spacing: 1rem;
-        --layout-page-padding: 0.5rem;
-    }
-}
-
-/* Flex utilities for stacking on small screens */
-@media (max-width: 576px) {
-    .flex-sm-column {
-        flex-direction: column !important;
-    }
-
-    .flex-sm-wrap {
-        flex-wrap: wrap !important;
-    }
-
-    .gap-sm-2 {
-        gap: 0.5rem !important;
-    }
-
-    .gap-sm-3 {
-        gap: 0.75rem !important;
-    }
-}
-
-/* Grid utilities */
-@media (min-width: 768px) {
-    .grid-md-2 {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-
-    .grid-md-3 {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-}
-
-@media (min-width: 992px) {
-    .grid-lg-3 {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-
-    .grid-lg-4 {
-        grid-template-columns: repeat(4, 1fr) !important;
-    }
-}
-
-/* Reduced motion preference */
+/* --- Motion preference ----------------------------------------------------
+   Honour the OS setting, but keep short state transitions so hover and
+   focus still read as feedback rather than as instant jumps. */
 @media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.001ms !important;
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.001ms !important;
+        transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
 
-    /* Keep essential transitions for usability */
-    .btn, .link, .badge, .card {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .btn,
+    .link,
+    .badge,
+    .card,
+    .nav-link,
+    .project-card,
+    .theme-toggle {
         transition-duration: var(--transition-fast) !important;
+    }
+
+    /* Decorative movement is dropped entirely rather than sped up. */
+    .project-card:hover,
+    .highlight-item:hover {
+        transform: none !important;
+    }
+
+    .project-card:hover .project-image img {
+        transform: none !important;
+    }
+}
+
+/* --- Print ----------------------------------------------------------------
+   A recruiter printing the page should get the content, not the chrome. */
+@media print {
+    .site-header,
+    .site-footer,
+    .hero-actions,
+    .contact-form,
+    .skip-to-content,
+    .theme-toggle,
+    .nav-toggle {
+        display: none !important;
+    }
+
+    .section {
+        padding-block: var(--space-5);
+        break-inside: avoid;
+    }
+
+    .project-card,
+    .education-card {
+        break-inside: avoid;
+        box-shadow: none;
+    }
+
+    a[href^="http"]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        word-break: break-all;
     }
 }

@@ -1,48 +1,49 @@
-/* Base styles - extending the reset */
+/* ==========================================================================
+   Base — element-level typography, forms and page scaffolding.
+   Component classes live in components.css.
+   ========================================================================== */
 
-/* Headings */
-h1 {
-    font-size: var(--font-size-4xl);
-    font-weight: var(--font-weight-bold);
+/* --- Headings ---------------------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-sans-serif);
+    letter-spacing: var(--letter-spacing-tight);
+    text-wrap: balance;
 }
 
-h2 {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+h1 { font-size: var(--font-size-4xl); font-weight: var(--font-weight-bold); }
+h2 { font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold); }
+h3 { font-size: var(--font-size-xl);  font-weight: var(--font-weight-semibold); }
+h4 { font-size: var(--font-size-lg);  font-weight: var(--font-weight-semibold); }
+
+/* Body copy reads better slightly narrower than its container. */
+p {
+    text-wrap: pretty;
 }
 
-h3 {
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-semibold);
-}
-
-/* Body text */
-body {
-    font-size: var(--font-size-base);
-}
-
-/* Links - more specific than reset */
+/* --- Links -------------------------------------------------------------- */
 a {
     text-decoration-color: var(--color-accent);
-    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
 }
 
 a:hover {
     text-decoration-color: var(--color-accent-hover);
 }
 
-/* Images */
+/* --- Media -------------------------------------------------------------- */
 img {
     border-radius: var(--radius-md);
 }
 
-/* Form elements - base styling */
+/* --- Form elements ------------------------------------------------------ */
 input,
 select,
 textarea {
     display: block;
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--font-size-base);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -59,16 +60,13 @@ textarea:focus {
     box-shadow: var(--focus-ring);
 }
 
-/* Buttons - base styling */
+/* --- Buttons ------------------------------------------------------------
+   Variants (.btn-primary / .btn-secondary / .btn-outline) are defined once,
+   in components.css, alongside the .btn base class. */
 button {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-medium);
+    font: inherit;
     border: none;
-    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 button:focus-visible {
@@ -76,11 +74,7 @@ button:focus-visible {
     box-shadow: var(--focus-ring);
 }
 
-/* Button variants (.btn-primary / .btn-secondary / .btn-outline) live in
-   components.css alongside the .btn base class. They used to be duplicated
-   here verbatim; components.css loads later and won the cascade either way. */
-
-/* Utility classes */
+/* --- Accessibility helpers ---------------------------------------------- */
 .visually-hidden {
     position: absolute;
     width: 1px;
@@ -93,27 +87,6 @@ button:focus-visible {
     border: 0;
 }
 
-/* Global Layout */
-.page-wrapper {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.site-main {
-    flex: 1 0 auto;
-}
-
-/* Header */
-.site-header {
-    background-color: var(--header-bg);
-    border-bottom: 1px solid var(--header-border);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-/* Skip Link */
 .skip-to-content {
     position: absolute;
     left: -9999px;
@@ -124,23 +97,61 @@ button:focus-visible {
 }
 
 .skip-to-content:focus {
-    left: 1rem;
-    top: 1rem;
+    left: var(--space-4);
+    top: var(--space-4);
     width: auto;
     height: auto;
     overflow: auto;
-    background: var(--color-bg);
-    padding: 0.5rem 1rem;
+    background: var(--color-surface);
+    padding: var(--space-3) var(--space-5);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-lg);
     color: var(--color-text-primary);
     font-size: var(--font-size-base);
-    z-index: 1050;
+    z-index: 1100;
     text-decoration: none;
 }
-/* Headings: explicit family + tightened tracking (typography pass) */
-h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-family-sans-serif);
-    letter-spacing: var(--letter-spacing-tight);
-    text-wrap: balance;
+
+/* --- Page scaffolding ---------------------------------------------------- */
+.page-wrapper {
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+}
+
+.site-main {
+    flex: 1 0 auto;
+}
+
+/* The one horizontal container. Every section's content sits inside a
+   .shell, so the left edge is identical the whole way down the page. */
+.shell {
+    width: 100%;
+    max-width: var(--layout-max-width);
+    margin-inline: auto;
+    padding-inline: var(--layout-page-padding);
+}
+
+.shell-narrow {
+    max-width: var(--layout-narrow-width);
+}
+
+/* --- Header -------------------------------------------------------------- */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: var(--color-header-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+/* Set by navigation.js once the page has scrolled, so the header only
+   separates itself from the content when there is content behind it. */
+.site-header.is-stuck {
+    border-bottom-color: var(--color-border);
+    box-shadow: var(--shadow-sm);
 }
