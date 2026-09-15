@@ -268,6 +268,34 @@ class SeedCommandTest(TestCase):
         )
         self.assertEqual(before, after)
 
+    def test_seeded_slugs_carry_no_collision_suffix(self):
+        """
+        `Project.save()` derives a slug only when the field is blank, appending
+        "-1" on collision. A suffix earned once — against rows since deleted —
+        then stuck in the public URL and the sitemap permanently. The seed pins
+        the slugs, so re-running it repairs a drifted one.
+        """
+        call_command("populate_portfolio", stdout=io.StringIO())
+        self.assertEqual(
+            sorted(Project.objects.values_list("slug", flat=True)),
+            [
+                "ai-driven-clinical-support-for-hematology-screening",
+                "early-identification-of-learning-disabilities-using-ai-and-iot",
+            ],
+        )
+
+    def test_seeding_repairs_a_drifted_slug(self):
+        call_command("populate_portfolio", stdout=io.StringIO())
+        project = Project.objects.get(
+            title="AI-Driven Clinical Support for Hematology Screening"
+        )
+        Project.objects.filter(pk=project.pk).update(slug="something-stale-1")
+        call_command("populate_portfolio", stdout=io.StringIO())
+        project.refresh_from_db()
+        self.assertEqual(
+            project.slug, "ai-driven-clinical-support-for-hematology-screening"
+        )
+
     def test_prune_removes_skills_outside_the_seed(self):
         Skill.objects.create(name="Obsolete", category=SkillCategory.CONCEPTS)
         call_command("populate_portfolio", "--prune", stdout=io.StringIO())
