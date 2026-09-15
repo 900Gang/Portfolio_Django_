@@ -64,10 +64,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # Serves the collected static files straight from the app server, so a
-    # deployment needs no separate web server or CDN in front of it.
-    # Must sit immediately after SecurityMiddleware.
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # Serves the collected static files *and* admin-uploaded media straight
+    # from the app server, so a deployment needs no separate web server or CDN
+    # in front of it. Must sit immediately after SecurityMiddleware.
+    'portfolio_project.middleware.WhiteNoiseWithMediaMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -167,6 +167,12 @@ if not DEBUG:
 # Media files configuration
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# WhiteNoise scans its roots once at start-up unless told otherwise, which
+# would leave an image uploaded through the admin 404ing until the next
+# restart. The extra stat() per request is irrelevant at this site's traffic,
+# and an admin upload that silently does not appear is not.
+WHITENOISE_AUTOREFRESH = get_bool('WHITENOISE_AUTOREFRESH', default=True)
 
 # Site identity, used for page titles and social/link previews.
 # Positioning follows the résumé (static/files/): "Aspiring DevOps Engineer |

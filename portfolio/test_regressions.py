@@ -891,3 +891,62 @@ class HttpMethodTest(TestCase):
                 self.assertEqual(
                     getattr(self.client, method)("/robots.txt").status_code, 405
                 )
+
+
+class ProjectImageDeliveryTest(TestCase):
+    """
+    Project screenshots have to survive the whole path from repo to browser.
+
+    Three separate things had to be true and none of them were: the files had
+    to be in the repo (media/ was ignored wholesale), the seed had to attach
+    them (it never set `image`, and db.sqlite3 is not tracked, so a fresh
+    deploy had none), and the server had to serve MEDIA_ROOT (urls.py wires
+    media under DEBUG only, and WhiteNoise serves STATIC_ROOT). Each failed
+    silently, rendering the placeholder while looking correct locally.
+    """
+
+    def setUp(self):
+        call_command("populate_portfolio", stdout=io.StringIO())
+
+    def test_seed_attaches_screenshots_that_actually_exist(self):
+        projects = list(Project.objects.filter(featured=True))
+        self.assertTrue(projects, "no featured projects seeded")
+        for project in projects:
+            with self.subTest(project=project.title):
+                self.assertTrue(project.image, "seed attached no image")
+                self.assertTrue(
+                    project.has_image,
+                    f"{project.image.name} is recorded but not on disk",
+                )
+
+    def test_seeded_screenshots_are_exempt_from_the_media_gitignore(self):
+        """The files are useless to a deploy if git never carried them."""
+        ignore = (BASE_DIR / ".gitignore").read_text()
+        for project in Project.objects.exclude(image=""):
+            with self.subTest(project=project.title):
+                self.assertIn(
+                    f"!/media/{project.image.name}",
+                    ignore,
+                    f"{project.image.name} would be ignored, so a deploy "
+                    f"would not have it",
+                )
+
+    def test_media_is_reachable_without_debug(self):
+        from portfolio_project.middleware import WhiteNoiseWithMediaMiddleware
+
+        middleware = WhiteNoiseWithMediaMiddleware(lambda request: None)
+        for project in Project.objects.exclude(image=""):
+            with self.subTest(project=project.title):
+                self.assertIsNotNone(
+                    middleware.find_file(project.image.url),
+                    f"{project.image.url} is not served outside DEBUG",
+                )
+
+    def test_screenshots_are_small_enough_to_ship(self):
+        """They are above the fold on the home page; 900KB PNGs were not."""
+        for project in Project.objects.exclude(image=""):
+            with self.subTest(project=project.title):
+                size = project.image.size
+                self.assertLess(
+                    size, 400_000, f"{project.image.name} is {size / 1024:.0f}KB"
+                )
