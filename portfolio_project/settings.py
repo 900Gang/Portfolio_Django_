@@ -175,17 +175,21 @@ MEDIA_ROOT = BASE_DIR / 'media'
 WHITENOISE_AUTOREFRESH = get_bool('WHITENOISE_AUTOREFRESH', default=True)
 
 # Site identity, used for page titles and social/link previews.
-# Positioning follows the résumé (static/files/): "Aspiring DevOps Engineer |
-# Python | Cloud | Automation". A site that sells a different role from the CV
-# a recruiter is reading alongside it undercuts both.
+# Positioning is "AI Developer | Python | Machine Learning | Computer Vision",
+# which is what the two featured projects actually demonstrate: a TensorFlow /
+# Keras / OpenCV classification pipeline, and AI-based detection over live
+# sensor data. NOTE: the résumé in static/files/ still leads with "Aspiring
+# DevOps Engineer" — re-export it to match, or a recruiter reading both is
+# told two different stories.
 SITE_OWNER = get_str('SITE_OWNER', 'Anand N')
-SITE_ROLE = get_str('SITE_ROLE', 'Aspiring DevOps Engineer')
-SITE_TAGLINE = get_str('SITE_TAGLINE', 'Python · Cloud · Automation')
+SITE_ROLE = get_str('SITE_ROLE', 'AI Developer')
+SITE_TAGLINE = get_str('SITE_TAGLINE', 'Python · Machine Learning · Computer Vision')
 SITE_DESCRIPTION = get_str(
     'SITE_DESCRIPTION',
-    'Computer Science Engineering graduate with a strong foundation in Python, '
-    'Git and Linux, building practical DevOps skills across CI/CD, Docker, '
-    'Jenkins and AWS.',
+    'Computer Science Engineering graduate and Artificial Intelligence Intern '
+    'at Yangtso Four Labs, building AI and machine learning systems in Python '
+    '— image classification with TensorFlow, Keras and OpenCV, and real-time '
+    'AI over live sensor data.',
 )
 # Absolute site URL, used for canonical and Open Graph tags.
 SITE_URL = get_str('SITE_URL', '')
@@ -199,8 +203,15 @@ SITE_EMAIL = get_str('SITE_EMAIL', 'anandanand6776@gmail.com')
 SITE_PHONE = get_str('SITE_PHONE', '+91 7306922640')
 SITE_GITHUB_URL = get_str('SITE_GITHUB_URL', 'https://github.com/900Gang')
 SITE_LINKEDIN_URL = get_str('SITE_LINKEDIN_URL', 'https://linkedin.com/in/anand-n-anand-n')
-SITE_LOCATION = get_str('SITE_LOCATION', 'Kerala, India')
-SITE_FOCUS = get_str('SITE_FOCUS', 'DevOps, cloud and Python automation')
+SITE_LOCATION = get_str('SITE_LOCATION', 'Trivandrum, Kerala, India')
+# Current position. The strongest single credential on the page, so it sits in
+# the hero rather than only in the Journey timeline further down. Set to an
+# empty value when between roles — a stale "currently" line is worse than none.
+SITE_CURRENT = get_str(
+    'SITE_CURRENT',
+    'Artificial Intelligence Intern, Yangtso Four Labs',
+)
+SITE_FOCUS = get_str('SITE_FOCUS', 'AI, machine learning and Python development')
 
 # Shown as the availability pill in the hero. Set to an empty string to hide
 # it — a stale "open to work" badge is worse than none.

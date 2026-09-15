@@ -8,6 +8,7 @@ a future change cannot silently undo it.
 """
 import io
 import re
+from datetime import date
 from pathlib import Path
 
 from django.conf import settings
@@ -231,7 +232,7 @@ class SeedCommandTest(TestCase):
     def _counts(self):
         return {
             m.__name__: m.objects.count()
-            for m in (Skill, Project, Education, Certification, ProfessionalSkill)
+            for m in (Skill, Project, Education, Certification, ProfessionalSkill, JourneyEntry)
         }
 
     def test_seed_is_idempotent(self):
@@ -246,14 +247,14 @@ class SeedCommandTest(TestCase):
         self.assertEqual(
             self._counts(),
             {
-                "Skill": 38,
+                "Skill": 55,
                 "Project": 2,
                 "Education": 3,
-                "Certification": 3,
-                "ProfessionalSkill": 7,
+                "Certification": 8,
+                "ProfessionalSkill": 8,
+                "JourneyEntry": 5,
             },
         )
-        self.assertEqual(JourneyEntry.objects.count(), 0)
 
     def test_reseeding_does_not_accumulate_technology_links(self):
         out = io.StringIO()
@@ -271,6 +272,37 @@ class SeedCommandTest(TestCase):
         Skill.objects.create(name="Obsolete", category=SkillCategory.CONCEPTS)
         call_command("populate_portfolio", "--prune", stdout=io.StringIO())
         self.assertFalse(Skill.objects.filter(name="Obsolete").exists())
+
+    def test_prune_removes_renamed_certifications(self):
+        """A corrected name or issuer must replace the row, not join it."""
+        Certification.objects.create(name="Python Bootcamp", issuer="Udemy")
+        Certification.objects.create(name="Basic to Advanced SQL", issuer="Skill Nation")
+        call_command("populate_portfolio", "--prune", stdout=io.StringIO())
+        self.assertFalse(
+            Certification.objects.filter(name="Python Bootcamp").exists()
+        )
+        self.assertFalse(
+            Certification.objects.filter(issuer="Skill Nation").exists()
+        )
+        self.assertTrue(
+            Certification.objects.filter(
+                name="Basic to Advanced SQL", issuer="LinkedIn"
+            ).exists()
+        )
+
+    def test_prune_removes_renamed_education(self):
+        """Renaming a school must not leave the same schooling listed twice."""
+        Education.objects.create(
+            institution="Sree Narayana Guru Higher Secondary School",
+            degree="Higher Secondary Education (Class XII)",
+            start_date=date(2018, 6, 1),
+            end_date=date(2020, 5, 31),
+        )
+        call_command("populate_portfolio", "--prune", stdout=io.StringIO())
+        self.assertEqual(Education.objects.count(), 3)
+        self.assertTrue(
+            Education.objects.filter(institution="SNGHSS Chempazhanthy").exists()
+        )
 
 
 class QueryCountTest(TestCase):
