@@ -23,6 +23,7 @@ def site(request):
         'site_github_url': settings.SITE_GITHUB_URL,
         'site_linkedin_url': settings.SITE_LINKEDIN_URL,
         'site_location': settings.SITE_LOCATION,
+        'site_current': settings.SITE_CURRENT,
         'site_focus': settings.SITE_FOCUS,
         'site_availability': settings.SITE_AVAILABILITY,
         # Drives both the Journey section and its nav entry, so an empty

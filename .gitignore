@@ -57,3 +57,9 @@ build/
 
 # Local archives / scratch
 *.zip
+
+# Saved web pages. These are how a LinkedIn or résumé profile gets pulled in
+# for reference, and a single one carries contact details and the whole page
+# DOM — personal data that must not reach a commit, least of all a public one.
+*.mht
+*.mhtml

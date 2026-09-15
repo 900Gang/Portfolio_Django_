@@ -32,10 +32,10 @@
             <div class="hero-tech">
                 <span class="hero-tech-label">Stack</span>
                 <span class="tech-badge">Python</span>
-                <span class="tech-badge">Linux</span>
-                <span class="tech-badge">Docker</span>
-                <span class="tech-badge">CI/CD</span>
-                <span class="tech-badge">AWS</span>
+                <span class="tech-badge">TensorFlow</span>
+                <span class="tech-badge">Keras</span>
+                <span class="tech-badge">OpenCV</span>
+                <span class="tech-badge">Django</span>
                 <span class="tech-badge">Git</span>
             </div>
         </div>
@@ -47,6 +47,12 @@
             </div>
 
             <div class="hero-panel-body">
+                {% if site_current %}
+                <div class="hero-fact">
+                    <span class="hero-fact-key">Currently</span>
+                    <span class="hero-fact-value">{{ site_current }}</span>
+                </div>
+                {% endif %}
                 <div class="hero-fact">
                     <span class="hero-fact-key">Role</span>
                     <span class="hero-fact-value">{{ site_role }}</span>
@@ -94,25 +100,35 @@
         <div class="about-layout">
             <div class="about-content">
                 <p class="about-intro">
-                    Computer Science Engineering graduate with a strong foundation in Python,
-                    Git, Linux, and software development. Currently building practical
-                    knowledge in DevOps, including CI/CD, Docker, Jenkins, AWS, and virtual
-                    machines.
+                    I’m a B.Tech Computer Science graduate based in Kerala, India, currently
+                    an Artificial Intelligence Intern at Yangtso Four Labs. I build things
+                    across the stack — from scalable web applications to AI-driven IoT
+                    systems — and enjoy breaking monolithic ideas down into clean, efficient
+                    code.
                 </p>
                 <p class="about-intro">
-                    Experienced in developing Python-based applications and integrating
-                    real-time IoT systems with cloud services using Firebase. Strong
-                    understanding of software development fundamentals, problem-solving, and
-                    collaborative development, with a strong interest in DevOps and cloud
-                    engineering.
+                    On the AI side I work the full model lifecycle: preparing and processing
+                    image datasets, training and evaluating classifiers with TensorFlow and
+                    Keras, and wrapping them in an end-to-end prediction pipeline with
+                    OpenCV. Alongside the models I build the systems that feed them — Python
+                    backends, REST APIs and real-time pipelines streaming live ESP32 sensor
+                    data through Firebase into AI-based detection.
+                </p>
+                <p class="about-intro">
+                    Skilled in Python, Java, Flutter, JavaScript and SQL, and familiar with
+                    Git, Firebase and TensorFlow, with experience collaborating on
+                    four-person project teams. Short term, I want to embed myself in real
+                    production workflows and become genuinely expert at writing clean,
+                    scalable code; longer term, as I deepen my grasp of system design, I see
+                    myself moving toward a technical architect role.
                 </p>
             </div>
 
             <div class="about-highlights">
                 <div class="highlight-item">
                     <span class="highlight-index">01</span>
-                    <h3 class="highlight-title">DevOps &amp; Automation</h3>
-                    <p class="highlight-description">Building practical pipeline and deployment skills across CI/CD, Docker, Jenkins, AWS and virtual machines.</p>
+                    <h3 class="highlight-title">AI &amp; Machine Learning</h3>
+                    <p class="highlight-description">Image classification built end to end with TensorFlow, Keras and OpenCV — from dataset preparation to an automated prediction pipeline.</p>
                 </div>
                 <div class="highlight-item">
                     <span class="highlight-index">02</span>
@@ -121,8 +137,8 @@
                 </div>
                 <div class="highlight-item">
                     <span class="highlight-index">03</span>
-                    <h3 class="highlight-title">Cloud &amp; IoT Integration</h3>
-                    <p class="highlight-description">Integrating real-time IoT systems with cloud services, streaming ESP32 sensor data through Firebase.</p>
+                    <h3 class="highlight-title">Real-Time &amp; IoT Data</h3>
+                    <p class="highlight-description">Streaming live ESP32 sensor data through Firebase into an AI detection pipeline, over I2C and a real-time backend.</p>
                 </div>
             </div>
         </div>
@@ -213,7 +229,7 @@
             <li class="timeline-item">
                 <div class="timeline-content">
                     <div class="timeline-meta">
-                        <time class="timeline-date" datetime="{{ entry.date|date:'Y-m-d' }}">{{ entry.date }}</time>
+                        <time class="timeline-date" datetime="{{ entry.date|date:'Y-m-d' }}">{{ entry.date|date:'F Y' }}</time>
                         <span class="timeline-type badge badge-secondary">{{ entry.get_entry_type_display }}</span>
                     </div>
                     <h3 class="timeline-title">{{ entry.title }}</h3>

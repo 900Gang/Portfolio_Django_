@@ -299,9 +299,9 @@ class HomePageViewTest(TestCase):
         self.assertContains(response, "Computer Science Engineering graduate")
         # The three pillars, which track the résumé's professional summary.
         # Ampersands are escaped in the markup, as they should be.
-        self.assertContains(response, "DevOps &amp; Automation")
+        self.assertContains(response, "AI &amp; Machine Learning")
         self.assertContains(response, "Python Development")
-        self.assertContains(response, "Cloud &amp; IoT Integration")
+        self.assertContains(response, "Real-Time &amp; IoT Data")
 
     def test_homepage_skills_section_present(self):
         response = self.client.get(reverse("portfolio:home"))

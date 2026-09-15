@@ -23,10 +23,12 @@ class SkillCategory(models.TextChoices):
 
 # The order the groups are presented in, strongest first. `Meta.ordering`
 # sorts on the stored value, which is alphabetical and therefore arbitrary;
-# this is the editorial order the Skills section actually uses.
+# this is the editorial order the Skills section actually uses. Backend & Data
+# leads because it holds the AI stack (TensorFlow, Keras, OpenCV) the site is
+# positioned on; DevOps & Cloud stays, one rung down.
 SKILL_CATEGORY_DISPLAY_ORDER = [
-    SkillCategory.DEVOPS,
     SkillCategory.BACKEND,
+    SkillCategory.DEVOPS,
     SkillCategory.FRONTEND,
     SkillCategory.TESTING,
     SkillCategory.TOOLS,

@@ -95,12 +95,15 @@ except the section copy in `templates/portfolio/home.html`.
 | `Project` | Set `featured` to show it on the home page (max 6). Slug auto-generates from the title |
 | `Skill` | Grouped into DevOps & Cloud, Backend & Data, Web & Frontend, Testing & Process, Tools & Workflow and Core Concepts — mirroring the résumé's own groupings. Status (Learning / Building With / Used in Projects) renders as a coloured dot |
 | `Education`, `Certification`, `ProfessionalSkill` | `is_visible` / ordering fields control display |
-| `JourneyEntry` | The Journey section **and its nav link** are hidden entirely when there are no entries |
+| `JourneyEntry` | The Journey timeline **and its nav link** are hidden entirely when there are no entries. Dates render as month + year, so entries only need to be accurate to the month |
 | `ContactMessage` | Read-only in the admin; submissions are stored, not emailed |
 
 `python manage.py populate_portfolio` reloads the seed content. It is
 idempotent — every record is matched on its natural key and updated in place —
-and `--prune` removes skills that are no longer in the seed data.
+and `--prune` removes skills, professional skills, certifications and education
+records that are no longer in the seed data. Pruning matters whenever a natural
+key itself changes: records are matched on (name, category), (name, issuer) and
+(institution, degree), so a rename inserts a new row and strands the old one.
 
 ## Link Previews
 
@@ -157,17 +160,24 @@ phone row from the contact section, and the résumé button appears only once th
 file at `RESUME_STATIC_PATH` actually exists — so the site never ships a
 download link that 404s.
 
-### Keeping the site and the résumé in step
+### Keeping the site, the résumé and LinkedIn in step
 
-Site copy, skills, project technologies and the generated preview card are all
-derived from the résumé in `static/files/`. When the résumé changes:
+Site copy, skills, project technologies and the generated preview card are
+derived from two sources: the résumé in `static/files/` and the LinkedIn
+profile (experience, the journey dates, certifications and the About text).
+A recruiter usually has all three open at once, so they need to agree. When any
+of them changes:
 
 1. Update `SITE_ROLE` / `SITE_DESCRIPTION` / `SITE_FOCUS` if the positioning moved.
 2. Update the seed data in `portfolio/management/commands/populate_portfolio.py`
    and re-run `python manage.py populate_portfolio --prune` (`--prune` removes
-   skills and professional skills that are no longer in the seed, so a rename
-   does not leave both versions on the page).
+   skills, professional skills, certifications and education records that are no
+   longer in the seed, so a rename does not leave both versions on the page).
 3. Re-run `python manage.py make_og_image`.
+
+> **Known divergence:** the résumé PDF still leads with "Aspiring DevOps
+> Engineer | Python | Cloud | Automation", while the site and LinkedIn lead with
+> AI. Re-export the PDF to match.
 
 `RESUME_STATIC_PATH` is asserted by the test suite to point at a file that
 really exists, so swapping the PDF for one with a different filename fails the

@@ -20,7 +20,7 @@ from portfolio.models import (
     ProfessionalSkill,
     Skill,
 )
-from portfolio.models import SkillCategory, SkillStatus
+from portfolio.models import JourneyEntryType, SkillCategory, SkillStatus
 
 
 class Command(BaseCommand):
@@ -47,12 +47,12 @@ class Command(BaseCommand):
             f'Projects: {created} created, {updated} updated'
         ))
 
-        created, updated = self._populate_education()
+        created, updated = self._populate_education(prune=options['prune'])
         self.stdout.write(self.style.SUCCESS(
             f'Education: {created} created, {updated} updated'
         ))
 
-        created, updated = self._populate_certifications()
+        created, updated = self._populate_certifications(prune=options['prune'])
         self.stdout.write(self.style.SUCCESS(
             f'Certifications: {created} created, {updated} updated'
         ))
@@ -62,8 +62,9 @@ class Command(BaseCommand):
             f'Professional skills: {created} created, {updated} updated'
         ))
 
-        self.stdout.write(self.style.WARNING(
-            'Journey entries not populated - no chronological journey data provided in resume'
+        created, updated = self._populate_journey()
+        self.stdout.write(self.style.SUCCESS(
+            f'Journey entries: {created} created, {updated} updated'
         ))
 
         self.stdout.write(self.style.SUCCESS('\n=== POPULATION COMPLETE ==='))
@@ -72,13 +73,37 @@ class Command(BaseCommand):
         self.stdout.write(f'Education: {Education.objects.count()}')
         self.stdout.write(f'Certifications: {Certification.objects.count()}')
         self.stdout.write(f'Professional Skills: {ProfessionalSkill.objects.count()}')
-        self.stdout.write(f'Journey Entries: {JourneyEntry.objects.count()} (intentionally empty)')
+        self.stdout.write(f'Journey Entries: {JourneyEntry.objects.count()}')
 
     def _populate_skills(self, prune=False):
-        # Mirrors the résumé's own Technical Skills list, including which
-        # entries it marks "(Learning)". Nothing is claimed here that the
-        # résumé does not also claim.
+        # Sourced from the résumé's Technical Skills list and the LinkedIn
+        # profile's Skills section. LinkedIn's list is long and partly
+        # endorsement padding (Football, Malayalam, "GitHub Atom"); only
+        # entries with real backing in the projects or the résumé are carried
+        # over, and each keeps an honest status rather than being levelled up.
         skills_data = [
+            # Backend & Data — leads the section; holds the AI stack.
+            ('Python', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 1),
+            ('Machine Learning', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 2),
+            ('Deep Learning', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 3),
+            ('TensorFlow', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 4),
+            ('Keras', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 5),
+            ('OpenCV', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 6),
+            ('Pandas', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 7),
+            ('Django', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 8),
+            ('Django REST Framework', SkillCategory.BACKEND, SkillStatus.BUILDING_WITH, 9),
+            ('REST APIs', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 10),
+            ('SQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 11),
+            ('MySQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 12),
+            ('PostgreSQL', SkillCategory.BACKEND, SkillStatus.LEARNING, 13),
+            ('Firebase Realtime Database', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 14),
+            ('Java', SkillCategory.BACKEND, SkillStatus.BUILDING_WITH, 15),
+            ('C', SkillCategory.BACKEND, SkillStatus.BUILDING_WITH, 16),
+            ('Flask', SkillCategory.BACKEND, SkillStatus.LEARNING, 17),
+            ('FastAPI', SkillCategory.BACKEND, SkillStatus.LEARNING, 18),
+            ('Node.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 19),
+            ('Express.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 20),
+
             # DevOps & Cloud
             ('Linux', SkillCategory.DEVOPS, SkillStatus.BUILDING_WITH, 1),
             ('CI/CD', SkillCategory.DEVOPS, SkillStatus.BUILDING_WITH, 2),
@@ -87,24 +112,14 @@ class Command(BaseCommand):
             ('Jenkins', SkillCategory.DEVOPS, SkillStatus.LEARNING, 5),
             ('AWS', SkillCategory.DEVOPS, SkillStatus.LEARNING, 6),
 
-            # Backend & Data
-            ('Python', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 1),
-            ('SQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 2),
-            ('Django', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 3),
-            ('REST APIs', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 4),
-            ('MySQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 5),
-            ('Firebase Realtime Database', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 6),
-            ('TensorFlow', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 7),
-            ('Keras', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 8),
-            ('OpenCV', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 9),
-            ('Node.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 10),
-            ('Express.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 11),
-
             # Web & Frontend
             ('HTML', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 1),
             ('CSS', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 2),
             ('JavaScript', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 3),
-            ('React', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 4),
+            ('Bootstrap', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 4),
+            ('jQuery', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 5),
+            ('React', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 6),
+            ('Flutter', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 7),
 
             # Testing & Process
             ('SDLC', SkillCategory.TESTING, SkillStatus.BUILDING_WITH, 1),
@@ -119,6 +134,9 @@ class Command(BaseCommand):
             ('Git', SkillCategory.TOOLS, SkillStatus.USED_IN_PROJECTS, 1),
             ('GitHub', SkillCategory.TOOLS, SkillStatus.USED_IN_PROJECTS, 2),
             ('ESP32', SkillCategory.TOOLS, SkillStatus.USED_IN_PROJECTS, 3),
+            ('Power BI', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 4),
+            ('Tableau', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 5),
+            ('Excel', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 6),
 
             # Core Concepts
             ('Data Structures', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 1),
@@ -128,6 +146,8 @@ class Command(BaseCommand):
             ('Operating Systems', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 5),
             ('Computer Networks', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 6),
             ('IoT', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 7),
+            ('Embedded Systems', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 8),
+            ('Prompt Engineering', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 9),
         ]
 
 
@@ -243,34 +263,107 @@ Tested and evaluated the application through iterative experimentation.""",
 
         return created, updated
 
-    def _populate_education(self):
+    def _populate_journey(self):
+        """
+        The chronology, which the r\u00e9sum\u00e9 alone did not carry \u2014 the dates come
+        from the LinkedIn profile's Experience, Education and Projects
+        sections. Entries are dated at the point they *completed*, which is
+        what the timeline reads as; `order` separates the two that share a
+        month.
+        """
+        journey_data = [
+            {
+                'date': '2026-09-01',
+                'title': 'Artificial Intelligence Intern at Yangtso Four Labs',
+                'description': (
+                    'Joined Yangtso Four Labs in Bengaluru as an Artificial Intelligence '
+                    'Intern, moving from academic AI work into production workflows.'
+                ),
+                'entry_type': JourneyEntryType.EXPERIENCE,
+                'order': 1,
+            },
+            {
+                'date': '2026-05-31',
+                'title': 'Graduated B.Tech in Computer Science Engineering',
+                'description': (
+                    'Completed the B.Tech at College of Engineering Muttathara with a '
+                    'CGPA of 6.82/10.0 and no backlogs.'
+                ),
+                'entry_type': JourneyEntryType.MILESTONE,
+                'order': 1,
+            },
+            {
+                'date': '2026-05-31',
+                'title': 'Completed the learning-disabilities AI and IoT system',
+                'description': (
+                    'Five months building the major project with a four-person team: '
+                    'ESP32 sensor hardware, a Python backend and a real-time Firebase '
+                    'pipeline feeding AI-based detection.'
+                ),
+                'entry_type': JourneyEntryType.PROJECT,
+                'order': 2,
+            },
+            {
+                'date': '2026-03-31',
+                'title': 'Built AI-driven hematology screening',
+                'description': (
+                    'Personal project: a TensorFlow, Keras and OpenCV pipeline that '
+                    'classifies blood smear images, from dataset preparation through to '
+                    'automated prediction.'
+                ),
+                'entry_type': JourneyEntryType.PROJECT,
+                'order': 1,
+            },
+            {
+                'date': '2022-09-01',
+                'title': 'Started B.Tech at College of Engineering Muttathara',
+                'description': (
+                    'Began the Computer Science Engineering degree, building the '
+                    'foundation in data structures, DBMS, operating systems and networks.'
+                ),
+                'entry_type': JourneyEntryType.MILESTONE,
+                'order': 1,
+            },
+        ]
+
+        created = updated = 0
+        for entry_data in journey_data:
+            fields = dict(entry_data)
+            title = fields.pop('title')
+            _, was_created = JourneyEntry.objects.update_or_create(
+                title=title, defaults=fields,
+            )
+            created, updated = (created + 1, updated) if was_created else (created, updated + 1)
+        return created, updated
+
+    def _populate_education(self, prune=False):
         education_data = [
             {
                 'institution': 'College of Engineering, Muttathara',
                 'degree': 'Bachelor of Technology (B.Tech) in Computer Science Engineering',
                 'field_of_study': 'Computer Science Engineering',
-                'start_date': '2022-08-01',
+                'start_date': '2022-09-01',
                 'end_date': '2026-05-31',
                 'is_current': False,
-                'description': 'CGPA: 6.84\n\nRelevant Coursework: Data Structures, DBMS, Operating Systems, Computer Networks, Software Testing, Data Mining',
+                'description': 'CGPA: 6.82/10.0 — no current backlogs.\n\nRelevant Coursework: Data Structures, DBMS, Operating Systems, Computer Networks, Software Testing, Data Mining',
                 'order': 1,
             },
             {
-                'institution': 'Sree Narayana Guru Higher Secondary School',
+                'institution': 'SNGHSS Chempazhanthy',
                 'degree': 'Higher Secondary Education (Class XII)',
                 'field_of_study': 'Science',
                 'start_date': '2018-06-01',
-                'end_date': '2020-03-31',
+                'end_date': '2020-05-31',
                 'is_current': False,
-                'description': 'CGPA: 8.8',
+                'description': 'Percentage: 88%',
                 'order': 2,
             },
             {
                 'institution': 'Sree Narayana Public School',
                 'degree': 'Secondary Education (Class X)',
-                'field_of_study': 'General',
+                'field_of_study': 'CBSE',
                 'start_date': '2017-06-01',
-                'end_date': '2018-03-31',
+                'end_date': '2018-04-30',
                 'is_current': False,
                 'description': 'CGPA: 8.2',
                 'order': 3,
@@ -287,30 +380,82 @@ Tested and evaluated the application through iterative experimentation.""",
                 institution=institution, degree=degree, defaults=fields,
             )
             created, updated = (created + 1, updated) if was_created else (created, updated + 1)
+
+        if prune:
+            # Matched on (institution, degree), so renaming a school — as
+            # LinkedIn's "SNGHSS Chempazhanthy" does — adds a row rather than
+            # renaming one, leaving the same schooling listed twice.
+            seeded = {(e['institution'], e['degree']) for e in education_data}
+            stale = [e.pk for e in Education.objects.all()
+                     if (e.institution, e.degree) not in seeded]
+            if stale:
+                Education.objects.filter(pk__in=stale).delete()
+                self.stdout.write(self.style.WARNING(
+                    f'Pruned {len(stale)} stale education records'
+                ))
+
         return created, updated
 
-    def _populate_certifications(self):
+    def _populate_certifications(self, prune=False):
+        # The seven certifications listed on LinkedIn, plus the NPTEL course
+        # the résumé carries. Ordered strongest-first for an AI/Python role
+        # rather than in LinkedIn's own (reverse-chronological) order.
         certifications_data = [
             {
-                'name': 'Python for Data Science',
-                'issuer': 'NPTEL',
+                'name': 'The Complete Python Bootcamp From Zero to Hero in Python',
+                'issuer': 'Udemy',
                 'issue_year': None,
                 'credential_url': '',
                 'display_order': 1,
             },
             {
-                'name': 'Python Bootcamp',
+                'name': 'Python and Django Full Stack Web Developer Bootcamp',
                 'issuer': 'Udemy',
                 'issue_year': None,
                 'credential_url': '',
                 'display_order': 2,
             },
             {
-                'name': 'Basic to Advanced SQL',
-                'issuer': 'Skill Nation',
+                'name': 'Python for Data Science',
+                'issuer': 'NPTEL',
                 'issue_year': None,
                 'credential_url': '',
                 'display_order': 3,
+            },
+            {
+                'name': 'Basic to Advanced SQL',
+                'issuer': 'LinkedIn',
+                'issue_year': None,
+                'credential_url': '',
+                'display_order': 4,
+            },
+            {
+                'name': 'Basic to Advanced Power BI Certificate',
+                'issuer': 'LinkedIn',
+                'issue_year': None,
+                'credential_url': '',
+                'display_order': 5,
+            },
+            {
+                'name': 'Basic to Advanced Tableau Dashboard',
+                'issuer': 'LinkedIn',
+                'issue_year': None,
+                'credential_url': '',
+                'display_order': 6,
+            },
+            {
+                'name': 'Basic to Advanced Microsoft Excel',
+                'issuer': 'LinkedIn',
+                'issue_year': None,
+                'credential_url': '',
+                'display_order': 7,
+            },
+            {
+                'name': 'Basic to Advanced PowerPoint',
+                'issuer': 'LinkedIn',
+                'issue_year': None,
+                'credential_url': '',
+                'display_order': 8,
             },
         ]
 
@@ -324,6 +469,20 @@ Tested and evaluated the application through iterative experimentation.""",
                 name=name, issuer=issuer, defaults=fields,
             )
             created, updated = (created + 1, updated) if was_created else (created, updated + 1)
+
+        if prune:
+            # Certifications are matched on (name, issuer), so correcting
+            # either — "Python Bootcamp" to its full Udemy title, or the SQL
+            # course's issuer — inserts a new row and strands the old one.
+            seeded = {(c['name'], c['issuer']) for c in certifications_data}
+            stale = [c.pk for c in Certification.objects.all()
+                     if (c.name, c.issuer) not in seeded]
+            if stale:
+                Certification.objects.filter(pk__in=stale).delete()
+                self.stdout.write(self.style.WARNING(
+                    f'Pruned {len(stale)} stale certifications'
+                ))
+
         return created, updated
 
     def _populate_professional_skills(self, prune=False):
@@ -335,6 +494,7 @@ Tested and evaluated the application through iterative experimentation.""",
             ('Adaptability', 5),
             ('Time Management', 6),
             ('Critical Thinking', 7),
+            ('Leadership', 8),
         ]
 
 
