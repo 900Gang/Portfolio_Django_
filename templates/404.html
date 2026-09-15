@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Page not found — {{ site_owner }}{% endblock %}
+{% block meta_description %}The page you were looking for does not exist.{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="shell shell-narrow error-page">
+        <p class="eyebrow">Error 404</p>
+        <h1 class="section-title">This page doesn't exist</h1>
+        <p class="section-lede">
+            The link may be out of date, or the project may have been renamed.
+            Everything still lives on the home page.
+        </p>
+        <div class="hero-actions">
+            <a href="{% url 'portfolio:home' %}" class="btn btn-primary">Back to home</a>
+            <a href="{% url 'portfolio:home' %}#projects" class="btn btn-outline">See projects</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

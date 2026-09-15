@@ -1,8 +1,8 @@
 {% if project %}
-<article class="project-card card">
+<article class="project-card">
     {% if project.has_image %}
     <figure class="project-image">
-        <img src="{{ project.image.url }}" alt="{{ project.title }} project screenshot" loading="lazy">
+        <img src="{{ project.image.url }}" alt="Screenshot of {{ project.title }}" loading="lazy" decoding="async">
     </figure>
     {% else %}
     <div class="project-image project-image-fallback" aria-hidden="true">
@@ -12,11 +12,9 @@
 
     <div class="card-body project-card-body">
         <header class="project-card-header">
-            <span class="project-type-badge">
-                {{ project.project_type }}
-            </span>
+            <span class="project-type-badge">{{ project.project_type }}</span>
             <h3 class="project-title">
-                <a href="{% url 'portfolio:project_detail' project.slug %}" class="project-title-link">{{ project.title }}</a>
+                <a href="{{ project.get_absolute_url }}" class="project-title-link">{{ project.title }}</a>
             </h3>
         </header>
 
@@ -32,8 +30,9 @@
         {% endif %}
         {% endwith %}
 
+        {# The title already covers the card via a stretched hit area; these are the outbound links. #}
         <div class="project-actions" aria-label="Project links for {{ project.title }}">
-            <a href="{% url 'portfolio:project_detail' project.slug %}" class="btn btn-primary">View Project</a>
+            <a href="{{ project.get_absolute_url }}" class="arrow-link project-action-link">Case study</a>
             {% if project.github_url %}
             <a href="{{ project.github_url }}" class="project-action-link" target="_blank" rel="noopener noreferrer">
                 GitHub <span class="visually-hidden">(opens in a new tab)</span>

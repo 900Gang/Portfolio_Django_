@@ -1,31 +1,51 @@
-/* Design tokens.
-   Light values live on :root; dark mode redefines only the colour tokens, so
-   every component keeps one definition and both themes stay in step. */
+/* ==========================================================================
+   Design tokens.
+
+   Every colour in the project is defined here and nowhere else, so the two
+   themes cannot drift apart and a palette change is a one-file edit.
+   Light values live on :root. Dark values are declared twice on purpose:
+   once under prefers-color-scheme for visitors who never touch the toggle,
+   and once under [data-theme="dark"] so the manual toggle can override the
+   OS in *both* directions.
+   ========================================================================== */
 
 :root {
-    /* Colour — a deliberate petrol accent on cool neutrals biased toward it.
-       (Previously the stock Bootstrap 5 palette.) */
-    --color-bg: #fcfdfc;
-    --color-bg-secondary: #f1f5f3;
-    --color-bg-alt: #e9efec;
+    /* --- Ground and surfaces -------------------------------------------- */
+    --color-bg: #fbfcfb;
+    --color-bg-secondary: #f2f6f4;
+    --color-bg-alt: #e8efeb;
     --color-surface: #ffffff;
     --color-surface-elevated: #f7faf9;
+    --color-surface-sunken: #eff4f2;
 
-    --color-text-primary: #13201e;
+    /* --- Text ------------------------------------------------------------ */
+    --color-text-primary: #101a18;
     --color-text-secondary: #3a4a47;
-    --color-text-muted: #62736d;
+    --color-text-muted: #64756f;
+    --color-text-inverse: #f7faf9;
 
+    /* --- Lines ----------------------------------------------------------- */
     --color-border: #dbe4e0;
+    --color-border-strong: #c2d0cb;
+    --color-rule: #e4ebe8;
 
-    --color-accent: #0d6b6e;
-    --color-accent-hover: #0a5356;
+    /* --- Accent: petrol. The single hue the site is built around. -------- */
+    --color-accent: #0b6467;
+    --color-accent-hover: #084d50;
+    --color-accent-soft: #e0efee;
+    --color-accent-softer: #f0f7f7;
+    --color-on-accent: #ffffff;
 
+    /* --- Highlight: warm ochre, used sparingly for "featured" marks ------ */
+    --color-highlight: #9a6212;
+    --color-highlight-soft: #f7ecd8;
+
+    /* --- Semantic -------------------------------------------------------- */
     --color-success: #1a7a4f;
     --color-error: #a33524;
     --color-warning: #8a5a10;
     --color-info: #1f5f7a;
 
-    /* Message + badge surfaces, tokenised so they follow the theme */
     --color-success-bg: #dcefe5;
     --color-success-fg: #0e4b30;
     --color-success-border: #b6dcc8;
@@ -35,7 +55,19 @@
     --color-warning-bg: #f6e7c8;
     --color-info-bg: #d9e9f1;
 
-    /* Typography — IBM Plex: Sans for text, Mono for labels and data */
+    /* --- Effects that need alpha ----------------------------------------
+       Alpha colours have to be authored here rather than composed in the
+       component files, because the colour lint forbids raw rgba() outside
+       this file. Each one still gets a dark-mode value below. */
+    --color-header-bg: rgba(251, 252, 251, 0.82);
+    --color-scrim: rgba(16, 26, 24, 0.45);
+    --color-grid-line: rgba(11, 100, 103, 0.06);
+    --color-glow: rgba(11, 100, 103, 0.1);
+    --color-focus-ring: rgba(11, 100, 103, 0.3);
+    --color-shadow-ambient: rgba(14, 32, 30, 0.07);
+    --color-shadow-key: rgba(14, 32, 30, 0.1);
+
+    /* --- Typography ------------------------------------------------------ */
     --font-family-sans-serif: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 
@@ -45,69 +77,97 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
 
-    --font-size-base: 1rem;
+    /* Fluid scale: each step interpolates between its phone and desktop size,
+       so headings never need a per-breakpoint override. */
+    --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
-    --font-size-xs: 0.78rem;
-    --font-size-lg: 1.125rem;
-    --font-size-xl: 1.25rem;
-    --font-size-2xl: 1.5rem;
-    --font-size-3xl: 1.875rem;
-    --font-size-4xl: 2.25rem;
-    --font-size-5xl: 3.25rem;
+    --font-size-base: 1rem;
+    --font-size-lg: clamp(1.05rem, 0.99rem + 0.3vw, 1.175rem);
+    --font-size-xl: clamp(1.15rem, 1.05rem + 0.5vw, 1.375rem);
+    --font-size-2xl: clamp(1.35rem, 1.18rem + 0.85vw, 1.75rem);
+    --font-size-3xl: clamp(1.7rem, 1.38rem + 1.6vw, 2.5rem);
+    --font-size-4xl: clamp(2.1rem, 1.6rem + 2.5vw, 3.25rem);
+    --font-size-5xl: clamp(2.6rem, 1.75rem + 4.2vw, 4.75rem);
 
-    --line-height-tight: 1.15;
-    --line-height-normal: 1.55;
-    --line-height-relaxed: 1.7;
+    --line-height-tight: 1.08;
+    --line-height-snug: 1.3;
+    --line-height-normal: 1.6;
+    --line-height-relaxed: 1.75;
 
-    --letter-spacing-tight: -0.018em;
-    --letter-spacing-label: 0.09em;
+    --letter-spacing-tight: -0.022em;
+    --letter-spacing-normal: 0;
+    --letter-spacing-label: 0.12em;
 
-    /* Layout */
-    --layout-max-width: 1200px;
-    --layout-page-padding: 1rem;
-    --layout-section-spacing: 3rem;
-    --layout-container-spacing: 1.5rem;
+    /* --- Spacing: a 4px-based scale, referenced by name everywhere ------- */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 2.5rem;
+    --space-8: 3rem;
+    --space-9: 4rem;
+    --space-10: 5rem;
+    --space-11: 7rem;
 
-    /* Header */
-    --header-height: 4rem;
-    --header-bg: var(--color-bg);
-    --header-border: var(--color-border);
+    /* --- Layout ---------------------------------------------------------- */
+    --layout-max-width: 1120px;
+    --layout-narrow-width: 68ch;
+    --layout-page-padding: clamp(1.25rem, 5vw, 3rem);
+    --layout-section-spacing: clamp(4rem, 9vw, 7rem);
 
-    /* Components */
+    /* --- Header ---------------------------------------------------------- */
+    --header-height: 4.25rem;
+
+    /* --- Shape ----------------------------------------------------------- */
     --radius-sm: 0.25rem;
-    --radius-md: 0.375rem;
-    --radius-lg: 0.5rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1.125rem;
     --radius-pill: 9999px;
 
-    --shadow-sm: 0 1px 2px rgba(14, 32, 30, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(14, 32, 30, 0.09), 0 2px 4px -1px rgba(14, 32, 30, 0.05);
-    --shadow-lg: 0 10px 15px -3px rgba(14, 32, 30, 0.1), 0 4px 6px -2px rgba(14, 32, 30, 0.05);
+    --shadow-sm: 0 1px 2px var(--color-shadow-ambient);
+    --shadow-md: 0 2px 4px var(--color-shadow-ambient), 0 8px 16px -6px var(--color-shadow-key);
+    --shadow-lg: 0 4px 8px var(--color-shadow-ambient), 0 20px 36px -12px var(--color-shadow-key);
 
     --transition-fast: 150ms;
     --transition-normal: 250ms;
-    --transition-slow: 350ms;
+    --transition-slow: 400ms;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
-    --focus-ring: 0 0 0 3px rgba(13, 107, 110, 0.28);
+    --focus-ring: 0 0 0 3px var(--color-focus-ring);
 
     color-scheme: light;
 }
 
+/* Dark values, factored out so the two selectors below stay identical. */
 @media (prefers-color-scheme: dark) {
-    :root {
-        --color-bg: #0e1413;
-        --color-bg-secondary: #141c1a;
-        --color-bg-alt: #1a2321;
-        --color-surface: #17201e;
-        --color-surface-elevated: #1d2725;
+    :root:not([data-theme="light"]) {
+        --color-bg: #0c1211;
+        --color-bg-secondary: #121a19;
+        --color-bg-alt: #182120;
+        --color-surface: #141d1c;
+        --color-surface-elevated: #1a2423;
+        --color-surface-sunken: #0f1716;
 
-        --color-text-primary: #e7edea;
-        --color-text-secondary: #bac6c2;
-        --color-text-muted: #8b9a95;
+        --color-text-primary: #e8efec;
+        --color-text-secondary: #b6c3bf;
+        --color-text-muted: #869692;
+        --color-text-inverse: #0c1211;
 
-        --color-border: #2a3532;
+        --color-border: #26312f;
+        --color-border-strong: #384542;
+        --color-rule: #1e2827;
 
-        --color-accent: #4fc2bb;
-        --color-accent-hover: #6fd3cd;
+        --color-accent: #56c8c0;
+        --color-accent-hover: #7ad8d1;
+        --color-accent-soft: #12302f;
+        --color-accent-softer: #0f2726;
+        --color-on-accent: #04201f;
+
+        --color-highlight: #d7a758;
+        --color-highlight-soft: #2d2413;
 
         --color-success: #5bbd8a;
         --color-error: #e0897a;
@@ -123,12 +183,65 @@
         --color-warning-bg: #322611;
         --color-info-bg: #16262f;
 
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-
-        --focus-ring: 0 0 0 3px rgba(79, 194, 187, 0.38);
+        --color-header-bg: rgba(12, 18, 17, 0.82);
+        --color-scrim: rgba(0, 0, 0, 0.6);
+        --color-grid-line: rgba(86, 200, 192, 0.07);
+        --color-glow: rgba(86, 200, 192, 0.12);
+        --color-focus-ring: rgba(86, 200, 192, 0.4);
+        --color-shadow-ambient: rgba(0, 0, 0, 0.45);
+        --color-shadow-key: rgba(0, 0, 0, 0.55);
 
         color-scheme: dark;
     }
+}
+
+:root[data-theme="dark"] {
+    --color-bg: #0c1211;
+    --color-bg-secondary: #121a19;
+    --color-bg-alt: #182120;
+    --color-surface: #141d1c;
+    --color-surface-elevated: #1a2423;
+    --color-surface-sunken: #0f1716;
+
+    --color-text-primary: #e8efec;
+    --color-text-secondary: #b6c3bf;
+    --color-text-muted: #869692;
+    --color-text-inverse: #0c1211;
+
+    --color-border: #26312f;
+    --color-border-strong: #384542;
+    --color-rule: #1e2827;
+
+    --color-accent: #56c8c0;
+    --color-accent-hover: #7ad8d1;
+    --color-accent-soft: #12302f;
+    --color-accent-softer: #0f2726;
+    --color-on-accent: #04201f;
+
+    --color-highlight: #d7a758;
+    --color-highlight-soft: #2d2413;
+
+    --color-success: #5bbd8a;
+    --color-error: #e0897a;
+    --color-warning: #d6a95f;
+    --color-info: #7fb4cc;
+
+    --color-success-bg: #14301f;
+    --color-success-fg: #8fd9b0;
+    --color-success-border: #23503a;
+    --color-error-bg: #341914;
+    --color-error-fg: #eda495;
+    --color-error-border: #5b2b22;
+    --color-warning-bg: #322611;
+    --color-info-bg: #16262f;
+
+    --color-header-bg: rgba(12, 18, 17, 0.82);
+    --color-scrim: rgba(0, 0, 0, 0.6);
+    --color-grid-line: rgba(86, 200, 192, 0.07);
+    --color-glow: rgba(86, 200, 192, 0.12);
+    --color-focus-ring: rgba(86, 200, 192, 0.4);
+    --color-shadow-ambient: rgba(0, 0, 0, 0.45);
+    --color-shadow-key: rgba(0, 0, 0, 0.55);
+
+    color-scheme: dark;
 }

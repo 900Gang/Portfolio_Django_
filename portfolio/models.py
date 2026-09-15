@@ -1,14 +1,37 @@
 from django.db import models
+from django.urls import reverse
 from django.utils.text import slugify
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
 
 class SkillCategory(models.TextChoices):
-    FRONTEND = "frontend", "Frontend"
-    BACKEND = "backend", "Backend"
+    """
+    Skill groupings, mirroring how the résumé itself splits them.
+
+    DevOps and Testing used to live inside TOOLS, which left one seventeen-item
+    bucket holding version control, CI/CD and QA process side by side.
+    """
+
+    DEVOPS = "devops", "DevOps & Cloud"
+    BACKEND = "backend", "Backend & Data"
+    FRONTEND = "frontend", "Web & Frontend"
+    TESTING = "testing", "Testing & Process"
     TOOLS = "tools", "Tools & Workflow"
-    CONCEPTS = "concepts", "Concepts"
+    CONCEPTS = "concepts", "Core Concepts"
+
+
+# The order the groups are presented in, strongest first. `Meta.ordering`
+# sorts on the stored value, which is alphabetical and therefore arbitrary;
+# this is the editorial order the Skills section actually uses.
+SKILL_CATEGORY_DISPLAY_ORDER = [
+    SkillCategory.DEVOPS,
+    SkillCategory.BACKEND,
+    SkillCategory.FRONTEND,
+    SkillCategory.TESTING,
+    SkillCategory.TOOLS,
+    SkillCategory.CONCEPTS,
+]
 
 
 class SkillStatus(models.TextChoices):
@@ -67,6 +90,15 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        """
+        Canonical URL for this project.
+
+        Defined on the model so the sitemap, the admin's "view on site"
+        link and the templates all resolve the same route from one place.
+        """
+        return reverse('portfolio:project_detail', kwargs={'slug': self.slug})
 
     @property
     def project_type(self):

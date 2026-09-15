@@ -6,7 +6,7 @@
     </label>
     {{ field }}
     {% if field.errors %}
-    <div class="form-error">
+    <div class="form-error" role="alert">
         {% for error in field.errors %}
         <p>{{ error }}</p>
         {% endfor %}

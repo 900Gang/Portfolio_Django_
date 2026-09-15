@@ -1,0 +1,58 @@
+<!-- Rendered with an empty context by Django's handler500: no context processors here. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Something went wrong</title>
+    <style>
+        :root { color-scheme: light dark; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 2rem;
+            font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #101a18;
+            background: #fbfcfb;
+        }
+        main { max-width: 42ch; text-align: center; }
+        p.code {
+            font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #0b6467;
+            margin: 0 0 0.5rem;
+        }
+        h1 { font-size: 1.75rem; letter-spacing: -0.022em; margin: 0 0 0.75rem; }
+        p.body { color: #3a4a47; margin: 0 0 1.5rem; }
+        a {
+            display: inline-block;
+            padding: 0.7rem 1.35rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #ffffff;
+            background: #0b6467;
+            border-radius: 0.5rem;
+            text-decoration: none;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { color: #e8efec; background: #0c1211; }
+            p.code { color: #56c8c0; }
+            p.body { color: #b6c3bf; }
+            a { color: #04201f; background: #56c8c0; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <p class="code">Error 500</p>
+        <h1>Something went wrong</h1>
+        <p class="body">A server error stopped this page from loading. It has been logged — please try again shortly.</p>
+        <a href="/">Back to home</a>
+    </main>
+</body>
+</html>

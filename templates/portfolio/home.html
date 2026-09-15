@@ -3,104 +3,193 @@
 {% block title %}{{ site_owner }} — {{ site_role }}{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
+
+{# ── Hero ──────────────────────────────────────────────────────────────── #}
 <section id="home" class="hero section">
-    <div class="hero-content">
-        <p class="hero-eyebrow">Software Engineer | Full Stack Developer</p>
-        <h1 class="hero-title">Anand N</h1>
-        <p class="hero-description">
-            Full Stack Developer with a strong foundation in Python, Django, JavaScript, and backend development. Building web applications and exploring DevOps.
-        </p>
-        <div class="hero-actions">
-            <a href="#projects" class="btn btn-primary">View Projects</a>
-            <a href="#contact" class="btn btn-outline">Contact Me</a>
-            {% if resume_url %}
-            <a href="{{ resume_url }}" class="btn btn-outline" download>
-                Download Resume <span class="visually-hidden">(PDF)</span>
-            </a>
+    <div class="shell hero-grid">
+        <div class="hero-content">
+            {% if site_availability %}
+            <p class="hero-status">
+                <span class="hero-status-dot" aria-hidden="true"></span>{{ site_availability }}
+            </p>
             {% endif %}
+
+            <p class="hero-eyebrow">{{ site_role }}{% if site_tagline %} <span class="hero-eyebrow-sep">/</span> {{ site_tagline }}{% endif %}</p>
+            <h1 class="hero-title">{{ site_owner }}</h1>
+            <p class="hero-description">{{ site_description }}</p>
+
+            <div class="hero-actions">
+                <a href="#projects" class="btn btn-primary">View Projects</a>
+                <a href="#contact" class="btn btn-outline">Get in Touch</a>
+                {% if resume_url %}
+                <a href="{{ resume_url }}" class="btn btn-ghost" download="{{ resume_download_name }}">
+                    Download Résumé <span class="visually-hidden">(PDF)</span>
+                </a>
+                {% endif %}
+            </div>
+
+            {# Curated: the hero names the headline stack, the Skills section carries the full inventory. #}
+            <div class="hero-tech">
+                <span class="hero-tech-label">Stack</span>
+                <span class="tech-badge">Python</span>
+                <span class="tech-badge">Linux</span>
+                <span class="tech-badge">Docker</span>
+                <span class="tech-badge">CI/CD</span>
+                <span class="tech-badge">AWS</span>
+                <span class="tech-badge">Git</span>
+            </div>
         </div>
-        <div class="hero-tech">
-            <span class="tech-badge">Python</span>
-            <span class="tech-badge">Django</span>
-            <span class="tech-badge">JavaScript</span>
-            <span class="tech-badge">React</span>
-            <span class="tech-badge">MySQL</span>
-            <span class="tech-badge">Git</span>
-        </div>
+
+        <aside class="hero-panel" aria-label="At a glance">
+            <div class="hero-panel-head">
+                <span class="hero-panel-dot" aria-hidden="true"></span>
+                At a glance
+            </div>
+
+            <div class="hero-panel-body">
+                <div class="hero-fact">
+                    <span class="hero-fact-key">Role</span>
+                    <span class="hero-fact-value">{{ site_role }}</span>
+                </div>
+                <div class="hero-fact">
+                    <span class="hero-fact-key">Focus</span>
+                    <span class="hero-fact-value">{{ site_focus }}</span>
+                </div>
+                <div class="hero-fact">
+                    <span class="hero-fact-key">Location</span>
+                    <span class="hero-fact-value">{{ site_location }}</span>
+                </div>
+                <div class="hero-fact">
+                    <span class="hero-fact-key">Email</span>
+                    <span class="hero-fact-value"><a href="mailto:{{ site_email }}">{{ site_email }}</a></span>
+                </div>
+            </div>
+
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-value">{{ featured_projects|length }}</span>
+                    <span class="hero-stat-label">Featured</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value">{{ skills|length }}</span>
+                    <span class="hero-stat-label">Technologies</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value">{{ certifications|length }}</span>
+                    <span class="hero-stat-label">Certificates</span>
+                </div>
+            </div>
+        </aside>
     </div>
 </section>
 
-<!-- About Section -->
-<section id="about" class="about section">
-    <div class="about-content">
-        <div class="about-header">
-            <span class="about-label">About</span>
+{# ── About ─────────────────────────────────────────────────────────────── #}
+<section id="about" class="about section section-tinted">
+    <div class="shell">
+        <div class="section-head">
+            <span class="eyebrow about-label">01 — About</span>
             <h2 class="section-title">About Me</h2>
         </div>
-        <p class="about-intro">
-            Computer Science Engineering graduate with a strong foundation in Python, full-stack development, backend development, SQL, REST APIs, and software engineering fundamentals.
-        </p>
-        <div class="about-highlights">
-            <div class="highlight-item">
-                <h3 class="highlight-title">Full Stack Development</h3>
-                <p class="highlight-description">Building web applications using Python, Django, JavaScript, React, and modern web technologies.</p>
+
+        <div class="about-layout">
+            <div class="about-content">
+                <p class="about-intro">
+                    Computer Science Engineering graduate with a strong foundation in Python,
+                    Git, Linux, and software development. Currently building practical
+                    knowledge in DevOps, including CI/CD, Docker, Jenkins, AWS, and virtual
+                    machines.
+                </p>
+                <p class="about-intro">
+                    Experienced in developing Python-based applications and integrating
+                    real-time IoT systems with cloud services using Firebase. Strong
+                    understanding of software development fundamentals, problem-solving, and
+                    collaborative development, with a strong interest in DevOps and cloud
+                    engineering.
+                </p>
             </div>
-            <div class="highlight-item">
-                <h3 class="highlight-title">Backend & APIs</h3>
-                <p class="highlight-description">Developing server-side applications, REST APIs, and database-driven systems with Django and MySQL.</p>
-            </div>
-            <div class="highlight-item">
-                <h3 class="highlight-title">DevOps & Testing</h3>
-                <p class="highlight-description">Expanding knowledge in CI/CD, Docker, cloud platforms, and manual testing methodologies.</p>
+
+            <div class="about-highlights">
+                <div class="highlight-item">
+                    <span class="highlight-index">01</span>
+                    <h3 class="highlight-title">DevOps &amp; Automation</h3>
+                    <p class="highlight-description">Building practical pipeline and deployment skills across CI/CD, Docker, Jenkins, AWS and virtual machines.</p>
+                </div>
+                <div class="highlight-item">
+                    <span class="highlight-index">02</span>
+                    <h3 class="highlight-title">Python Development</h3>
+                    <p class="highlight-description">Python backends, data pipelines and prediction workflows, backed by SQL, REST APIs and Django.</p>
+                </div>
+                <div class="highlight-item">
+                    <span class="highlight-index">03</span>
+                    <h3 class="highlight-title">Cloud &amp; IoT Integration</h3>
+                    <p class="highlight-description">Integrating real-time IoT systems with cloud services, streaming ESP32 sensor data through Firebase.</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
+{# ── Projects ──────────────────────────────────────────────────────────── #}
 <section id="projects" class="projects section">
-    <div class="section-header">
-        <h2 class="section-title">Featured Projects</h2>
+    <div class="shell">
+        <div class="section-head">
+            <span class="eyebrow">02 — Work</span>
+            <h2 class="section-title">Featured Projects</h2>
+            <p class="section-lede">
+                Systems built end to end — from ESP32 sensor integration and real-time
+                data pipelines to model training and the Python that ties them together.
+            </p>
+        </div>
+
+        {% if featured_projects %}
+        <div class="projects-grid">
+            {% for project in featured_projects %}
+            {% include 'components/project_card.html' %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="projects-empty">
+            <p class="projects-empty-text">No featured projects yet. Check back soon!</p>
+            <a href="#about" class="btn btn-primary">Learn More About Me</a>
+        </div>
+        {% endif %}
     </div>
-    {% if featured_projects %}
-    <div class="projects-grid">
-        {% for project in featured_projects %}
-        {% include 'components/project_card.html' %}
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="projects-empty">
-        <p class="projects-empty-text">No featured projects yet. Check back soon!</p>
-        <a href="#about" class="btn btn-primary">Learn More About Me</a>
-    </div>
-    {% endif %}
 </section>
 
-<!-- Skills Section -->
-<section id="skills" class="skills section">
-    <div class="section-header">
-        <span class="skills-label">Skills</span>
-        <h2 class="section-title">Technical Skills</h2>
-    </div>
-    <div class="skills-content">
+{# ── Skills ────────────────────────────────────────────────────────────── #}
+<section id="skills" class="skills section section-tinted">
+    <div class="shell">
+        <div class="section-head">
+            <span class="eyebrow skills-label">03 — Skills</span>
+            <h2 class="section-title">Technical Skills</h2>
+            <p class="section-lede">
+                Grouped by area, with an honest marker of how far each one has been taken.
+            </p>
+        </div>
+
         {% regroup skills by get_category_display as skills_by_category %}
         {% if skills_by_category %}
+        <div class="skills-legend">
+            <span class="skills-legend-item"><span class="skills-legend-dot is-used" aria-hidden="true"></span>Used in projects</span>
+            <span class="skills-legend-item"><span class="skills-legend-dot is-building" aria-hidden="true"></span>Building with</span>
+            <span class="skills-legend-item"><span class="skills-legend-dot is-learning" aria-hidden="true"></span>Learning</span>
+        </div>
+
         <div class="skills-grouped">
             {% for category_group in skills_by_category %}
             <div class="skills-group">
-                <h3 class="skills-group-title">
-                    {{ category_group.grouper }}
-                </h3>
-                <div class="skills-grid">
+                <h3 class="skills-group-title">{{ category_group.grouper }}</h3>
+                <ul class="skills-grid">
                     {% for skill in category_group.list %}
-                    <article class="skill-card">
-                        <div class="skill-content">
-                            <h3 class="skill-name">{{ skill.name }}</h3>
+                    <li class="skill-card">
+                        <span class="skill-content">
+                            {# The dot carries status visually; the text stays for assistive tech and search. #}
                             <span class="skill-status badge badge-{{ skill.get_status_display|lower|slugify }}">{{ skill.get_status_display }}</span>
-                        </div>
-                    </article>
+                            <h3 class="skill-name">{{ skill.name }}</h3>
+                        </span>
+                    </li>
                     {% endfor %}
-                </div>
+                </ul>
             </div>
             {% endfor %}
         </div>
@@ -110,144 +199,199 @@
     </div>
 </section>
 
-<!-- Journey Section: omitted entirely when empty, rather than advertising
-     an empty state to visitors. The nav entry is hidden to match. -->
+{# Journey: omitted entirely when empty rather than showing visitors an empty state. #}
 {% if journey_entries %}
 <section id="journey" class="journey section">
-    <div class="section-header">
-        <h2 class="section-title">Journey</h2>
+    <div class="shell">
+        <div class="section-head">
+            <span class="eyebrow">04 — Journey</span>
+            <h2 class="section-title">Journey</h2>
+        </div>
+
+        <ul class="timeline">
+            {% for entry in journey_entries %}
+            <li class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-meta">
+                        <time class="timeline-date" datetime="{{ entry.date|date:'Y-m-d' }}">{{ entry.date }}</time>
+                        <span class="timeline-type badge badge-secondary">{{ entry.get_entry_type_display }}</span>
+                    </div>
+                    <h3 class="timeline-title">{{ entry.title }}</h3>
+                    <p class="timeline-description">{{ entry.description|truncatewords:25 }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
-    <ul class="timeline">
-        {% for entry in journey_entries %}
-        <li class="timeline-item">
-            <div class="timeline-content">
-                <time class="timeline-date">{{ entry.date }}</time>
-                <span class="timeline-type badge badge-secondary">{{ entry.get_entry_type_display }}</span>
-                <h3 class="timeline-title">{{ entry.title }}</h3>
-                <p class="timeline-description">{{ entry.description|truncatewords:15 }}</p>
-            </div>
-        </li>
-        {% endfor %}
-    </ul>
 </section>
 {% endif %}
 
-<!-- Education Section -->
-<section id="education" class="education section">
-    <div class="section-header">
-        <h2 class="section-title">Education</h2>
-    </div>
-    {% if education %}
-    <div class="education-cards">
-        {% for edu in education %}
-        <article class="education-card card">
-            <div class="card-body">
-                <h3 class="education-degree">{{ edu.degree }}</h3>
-                <p class="education-institution">{{ edu.institution }}</p>
-                {% if edu.field_of_study %}
-                <p class="education-field">{{ edu.field_of_study }}</p>
-                {% endif %}
-                <time class="education-date">
-                    {{ edu.start_date.year }}
-                    {% if edu.end_date %}
-                    – {{ edu.end_date.year }}
-                    {% else %}
-                    – Present
-                    {% endif %}
-                </time>
-                {% if edu.description %}
-                <div class="education-description">{{ edu.description|linebreaks }}</div>
-                {% endif %}
-            </div>
-        </article>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="education-empty">
-        <p class="education-empty-text">No education records.</p>
-    </div>
-    {% endif %}
-</section>
-
-<!-- Certifications Section -->
-<section id="certifications" class="certifications section">
-    <div class="section-header">
-        <h2 class="section-title">Certifications</h2>
-    </div>
-    {% if certifications %}
-    <div class="certifications-list">
-        {% for cert in certifications %}
-        <div class="certification-item">
-            <div class="certification-info">
-                <h3 class="certification-name">{{ cert.name }}</h3>
-                <p class="certification-issuer">{{ cert.issuer }}</p>
-                {% if cert.issue_year %}
-                <time class="certification-date">{{ cert.issue_year }}</time>
-                {% endif %}
-            </div>
-            {% if cert.credential_url %}
-            <a href="{{ cert.credential_url }}" class="certification-link" target="_blank" rel="noopener noreferrer">
-                View Credential <span class="visually-hidden">(opens in a new tab)</span>
-            </a>
-            {% endif %}
+{# ── Education ─────────────────────────────────────────────────────────── #}
+<section id="education" class="education section section-tinted">
+    <div class="shell">
+        <div class="section-head">
+            <span class="eyebrow">05 — Background</span>
+            <h2 class="section-title">Education</h2>
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="certifications-empty">
-        <p class="certifications-empty-text">No certifications listed.</p>
-    </div>
-    {% endif %}
-</section>
 
-<!-- Professional Skills Section -->
-<section id="professional-skills" class="professional-skills section">
-    <div class="section-header">
-        <h2 class="section-title">Professional Skills</h2>
-    </div>
-    {% if professional_skills %}
-    <div class="professional-skills-list">
-        {% for skill in professional_skills %}
-        <span class="professional-skill-item">{{ skill.name }}</span>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="professional-skills-empty">
-        <p class="professional-skills-empty-text">No professional skills listed.</p>
-    </div>
-    {% endif %}
-</section>
-
-<!-- Contact Section -->
-<section id="contact" class="contact section">
-    <div class="section-header">
-        <h2 class="section-title">Get In Touch</h2>
-    </div>
-    <div class="contact-content">
-        <p class="contact-intro">Have a question or opportunity? I'd love to hear from you. Fill out the form below and I'll get back to you as soon as possible.</p>
-
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                {{ message }}
-                <button class="alert-close" aria-label="Close message" type="button">&times;</button>
-            </div>
+        {% if education %}
+        <div class="education-cards">
+            {% for edu in education %}
+            <article class="education-card card">
+                <div class="card-body">
+                    <time class="education-date">
+                        {{ edu.start_date.year }} – {% if edu.end_date %}{{ edu.end_date.year }}{% else %}Present{% endif %}
+                    </time>
+                    <h3 class="education-degree">{{ edu.degree }}</h3>
+                    <p class="education-institution">{{ edu.institution }}</p>
+                    {% if edu.field_of_study %}
+                    <p class="education-field">{{ edu.field_of_study }}</p>
+                    {% endif %}
+                    {% if edu.description %}
+                    <div class="education-description">{{ edu.description|linebreaks }}</div>
+                    {% endif %}
+                </div>
+            </article>
             {% endfor %}
+        </div>
+        {% else %}
+        <div class="education-empty">
+            <p class="education-empty-text">No education records.</p>
         </div>
         {% endif %}
-
-        <form method="post" action="#contact" class="contact-form" novalidate>
-            {% csrf_token %}
-
-            {% for field in contact_form %}
-            {% include "components/form_field.html" %}
-            {% endfor %}
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Send Message</button>
-            </div>
-        </form>
     </div>
 </section>
+
+{# ── Certifications + professional skills ─────────────────────────────── #}
+<section id="certifications" class="certifications section">
+    <div class="shell">
+        <div class="section-head">
+            <span class="eyebrow">06 — Credentials</span>
+            <h2 class="section-title">Certifications</h2>
+        </div>
+
+        <div class="credentials-layout">
+            <div class="credentials-block">
+                {% if certifications %}
+                <div class="certifications-list">
+                    {% for cert in certifications %}
+                    <div class="certification-item">
+                        <div class="certification-info">
+                            <h3 class="certification-name">{{ cert.name }}</h3>
+                            <p class="certification-issuer">
+                                {{ cert.issuer }}{% if cert.issue_year %} · <time class="certification-date">{{ cert.issue_year }}</time>{% endif %}
+                            </p>
+                        </div>
+                        {% if cert.credential_url %}
+                        <a href="{{ cert.credential_url }}" class="certification-link" target="_blank" rel="noopener noreferrer">
+                            View Credential <span class="visually-hidden">(opens in a new tab)</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="certifications-empty">
+                    <p class="certifications-empty-text">No certifications listed.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <section id="professional-skills" class="professional-skills credentials-block">
+                <h3 class="credentials-column-title">Professional Skills</h3>
+                {% if professional_skills %}
+                <div class="professional-skills-list">
+                    {% for skill in professional_skills %}
+                    <span class="professional-skill-item">{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="professional-skills-empty">
+                    <p class="professional-skills-empty-text">No professional skills listed.</p>
+                </div>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+</section>
+
+{# ── Contact ───────────────────────────────────────────────────────────── #}
+<section id="contact" class="contact section section-tinted">
+    <div class="shell">
+        <div class="section-head">
+            <span class="eyebrow">07 — Contact</span>
+            <h2 class="section-title">Get In Touch</h2>
+        </div>
+
+        <div class="contact-layout">
+            <div class="contact-aside">
+                <p class="contact-intro">
+                    Have a question or opportunity? I'd love to hear from you. Use the form,
+                    or reach me directly on any of these.
+                </p>
+
+                <div class="contact-channels">
+                    <a class="contact-channel" href="mailto:{{ site_email }}">
+                        <span class="contact-channel-label">Email</span>
+                        <span class="contact-channel-value">{{ site_email }}</span>
+                    </a>
+                    <a class="contact-channel" href="{{ site_github_url }}" target="_blank" rel="noopener noreferrer">
+                        <span class="contact-channel-label">GitHub</span>
+                        <span class="contact-channel-value">{{ site_github_url|cut:"https://" }}<span class="visually-hidden"> (opens in a new tab)</span></span>
+                    </a>
+                    <a class="contact-channel" href="{{ site_linkedin_url }}" target="_blank" rel="noopener noreferrer">
+                        <span class="contact-channel-label">LinkedIn</span>
+                        <span class="contact-channel-value">{{ site_linkedin_url|cut:"https://" }}<span class="visually-hidden"> (opens in a new tab)</span></span>
+                    </a>
+                    {% if site_phone %}
+                    <a class="contact-channel" href="tel:{{ site_phone|cut:' ' }}">
+                        <span class="contact-channel-label">Phone</span>
+                        <span class="contact-channel-value">{{ site_phone }}</span>
+                    </a>
+                    {% endif %}
+                    <div class="contact-channel">
+                        <span class="contact-channel-label">Location</span>
+                        <span class="contact-channel-value">{{ site_location }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-content">
+                {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <span>{{ message }}</span>
+                        <button class="alert-close" aria-label="Close message" type="button">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post" action="#contact" class="contact-form" novalidate>
+                    {% csrf_token %}
+
+                    <div class="contact-form-row">
+                        {% with field=contact_form.name %}{% include "components/form_field.html" %}{% endwith %}
+                        {% with field=contact_form.email %}{% include "components/form_field.html" %}{% endwith %}
+                    </div>
+                    {% with field=contact_form.subject %}{% include "components/form_field.html" %}{% endwith %}
+                    {% with field=contact_form.message %}{% include "components/form_field.html" %}{% endwith %}
+
+                    {# Honeypot: off-screen and aria-hidden, so only a bot filling every input trips it. #}
+                    <div class="form-trap" aria-hidden="true">
+                        <label for="{{ contact_form.website.id_for_label }}">{{ contact_form.website.label }}</label>
+                        {{ contact_form.website }}
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                        <p class="form-note">I usually reply within a couple of days.</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock %}

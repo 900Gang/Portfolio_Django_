@@ -27,7 +27,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--prune',
             action='store_true',
-            help='Delete skills that are not part of the seed data.',
+            help='Delete skills and professional skills not in the seed data.',
         )
 
     @transaction.atomic
@@ -54,7 +54,7 @@ class Command(BaseCommand):
             f'Certifications: {created} created, {updated} updated'
         ))
 
-        created, updated = self._populate_professional_skills()
+        created, updated = self._populate_professional_skills(prune=options['prune'])
         self.stdout.write(self.style.SUCCESS(
             f'Professional skills: {created} created, {updated} updated'
         ))
@@ -72,56 +72,59 @@ class Command(BaseCommand):
         self.stdout.write(f'Journey Entries: {JourneyEntry.objects.count()} (intentionally empty)')
 
     def _populate_skills(self, prune=False):
+        # Mirrors the résumé's own Technical Skills list, including which
+        # entries it marks "(Learning)". Nothing is claimed here that the
+        # résumé does not also claim.
         skills_data = [
-            # Frontend
-            ('HTML5', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 1),
-            ('CSS3', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 2),
+            # DevOps & Cloud
+            ('Linux', SkillCategory.DEVOPS, SkillStatus.BUILDING_WITH, 1),
+            ('CI/CD', SkillCategory.DEVOPS, SkillStatus.BUILDING_WITH, 2),
+            ('Virtual Machines', SkillCategory.DEVOPS, SkillStatus.BUILDING_WITH, 3),
+            ('Docker', SkillCategory.DEVOPS, SkillStatus.LEARNING, 4),
+            ('Jenkins', SkillCategory.DEVOPS, SkillStatus.LEARNING, 5),
+            ('AWS', SkillCategory.DEVOPS, SkillStatus.LEARNING, 6),
+
+            # Backend & Data
+            ('Python', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 1),
+            ('SQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 2),
+            ('Django', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 3),
+            ('REST APIs', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 4),
+            ('MySQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 5),
+            ('Firebase Realtime Database', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 6),
+            ('TensorFlow', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 7),
+            ('Keras', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 8),
+            ('OpenCV', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 9),
+            ('Node.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 10),
+            ('Express.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 11),
+
+            # Web & Frontend
+            ('HTML', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 1),
+            ('CSS', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 2),
             ('JavaScript', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 3),
             ('React', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 4),
 
-            # Backend
-            ('Python', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 1),
-            ('Django', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 2),
-            ('REST APIs', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 3),
-            ('Node.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 4),
-            ('Express.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 5),
-
-            # Databases (using BACKEND category as there's no DATABASES category)
-            ('MySQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 6),
-            ('Firebase Realtime Database', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 7),
+            # Testing & Process
+            ('SDLC', SkillCategory.TESTING, SkillStatus.BUILDING_WITH, 1),
+            ('STLC', SkillCategory.TESTING, SkillStatus.BUILDING_WITH, 2),
+            ('Test Case Design', SkillCategory.TESTING, SkillStatus.BUILDING_WITH, 3),
+            ('Bug Reporting', SkillCategory.TESTING, SkillStatus.BUILDING_WITH, 4),
+            ('Defect Life Cycle', SkillCategory.TESTING, SkillStatus.BUILDING_WITH, 5),
+            ('Agile', SkillCategory.TESTING, SkillStatus.BUILDING_WITH, 6),
+            ('Manual Testing', SkillCategory.TESTING, SkillStatus.LEARNING, 7),
 
             # Tools & Workflow
             ('Git', SkillCategory.TOOLS, SkillStatus.USED_IN_PROJECTS, 1),
             ('GitHub', SkillCategory.TOOLS, SkillStatus.USED_IN_PROJECTS, 2),
-            ('Git Workflow', SkillCategory.TOOLS, SkillStatus.USED_IN_PROJECTS, 3),
+            ('ESP32', SkillCategory.TOOLS, SkillStatus.USED_IN_PROJECTS, 3),
 
-            # Testing (using TOOLS category)
-            ('Manual Testing', SkillCategory.TOOLS, SkillStatus.LEARNING, 4),
-            ('SDLC', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 5),
-            ('STLC', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 6),
-            ('Test Case Design', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 7),
-            ('Bug Reporting', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 8),
-            ('Defect Life Cycle', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 9),
-            ('Debugging', SkillCategory.TOOLS, SkillStatus.USED_IN_PROJECTS, 10),
-            ('Agile', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 11),
-
-            # DevOps (using TOOLS category)
-            ('Linux', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 12),
-            ('CI/CD', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 13),
-            ('Virtual Machines', SkillCategory.TOOLS, SkillStatus.BUILDING_WITH, 14),
-            ('Docker', SkillCategory.TOOLS, SkillStatus.LEARNING, 15),
-            ('Jenkins', SkillCategory.TOOLS, SkillStatus.LEARNING, 16),
-            ('AWS', SkillCategory.TOOLS, SkillStatus.LEARNING, 17),
-
-            # Concepts
+            # Core Concepts
             ('Data Structures', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 1),
             ('OOP', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 2),
             ('DBMS', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 3),
-            ('Operating Systems', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 4),
-            ('Computer Networks', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 5),
-            ('JSON', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 6),
-            ('AI & Machine Learning', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 7),
-            ('IoT', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 8),
+            ('JSON', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 4),
+            ('Operating Systems', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 5),
+            ('Computer Networks', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 6),
+            ('IoT', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 7),
         ]
 
 
@@ -145,38 +148,52 @@ class Command(BaseCommand):
         return created, updated
 
     def _populate_projects(self):
+        # Bullets are the résumé's own, so the site and the CV a recruiter is
+        # reading alongside it cannot tell different stories.
         projects_data = [
             {
                 'title': 'Early Identification of Learning Disabilities Using AI and IoT',
-                'short_description': 'Major project using ESP32, Firebase, and Python for real-time physiological and behavioral data processing to support AI-based learning disability detection.',
-                'description': '''Developed the Python backend for processing real-time physiological and behavioral data.
+                'short_description': (
+                    'Major project pairing ESP32 sensor hardware with a Python backend and '
+                    'Firebase, streaming real-time physiological and behavioural data for '
+                    'AI-based learning disability detection.'
+                ),
+                'description': """Developed the Python backend for processing real-time physiological and behavioral sensor data.
 
 Integrated ESP32 with MPU6050 and MAX30100 sensors using I2C communication.
 
-Implemented a real-time data pipeline to transmit sensor data to Firebase Realtime Database.
+Built a real-time data pipeline to transmit sensor data to Firebase Realtime Database.
 
-Contributed to preprocessing multimodal sensor data for AI-based learning disability detection.
+Worked with Git and GitHub for source-code management and collaborative development.
 
-Collaborated with a four-member team on system integration, debugging, testing, and deployment.''',
+Collaborated with a four-member team on system integration, debugging, testing, and deployment.""",
                 'featured': True,
                 'order': 1,
-                'technologies': ['Python', 'Firebase Realtime Database'],
+                'technologies': [
+                    'Python', 'ESP32', 'Firebase Realtime Database', 'Git', 'IoT', 'REST APIs',
+                ],
             },
             {
                 'title': 'AI-Driven Clinical Support for Hematology Screening',
-                'short_description': 'Personal project building a CNN-based deep learning model for automated blood smear image classification into four categories: Normal, Anemia, Thalassemia, and Sickle Cell Disease.',
-                'description': '''Built a CNN-based deep learning model for automated blood smear image classification.
+                'short_description': (
+                    'Personal project: a Python machine-learning application that classifies '
+                    'blood smear images automatically, from dataset preparation through to an '
+                    'end-to-end prediction pipeline.'
+                ),
+                'description': """Developed a Python-based machine learning application for automated blood smear classification.
 
-Performed image preprocessing, normalization, and dataset preparation.
+Prepared and processed image datasets for model training and evaluation.
 
-Implemented an automated prediction pipeline using Python.
+Implemented a Python prediction pipeline for automated disease classification.
 
-Classified blood smear images into four categories: Normal, Anemia, Thalassemia, Sickle Cell Disease.
+Used Git and GitHub for source-code management and project collaboration.
 
-Evaluated model performance through iterative experimentation and testing.''',
+Tested and evaluated the application through iterative experimentation.""",
                 'featured': True,
                 'order': 2,
-                'technologies': ['Python'],
+                'technologies': [
+                    'Python', 'TensorFlow', 'Keras', 'OpenCV', 'Git',
+                ],
             },
         ]
 
@@ -291,15 +308,15 @@ Evaluated model performance through iterative experimentation and testing.''',
             created, updated = (created + 1, updated) if was_created else (created, updated + 1)
         return created, updated
 
-    def _populate_professional_skills(self):
+    def _populate_professional_skills(self, prune=False):
         professional_skills_data = [
             ('Problem Solving', 1),
             ('Communication', 2),
             ('Team Collaboration', 3),
-            ('Adaptability', 4),
-            ('Quick Learning', 5),
-            ('Critical Thinking', 6),
-            ('Time Management', 7),
+            ('Quick Learner', 4),
+            ('Adaptability', 5),
+            ('Time Management', 6),
+            ('Critical Thinking', 7),
         ]
 
 
@@ -309,4 +326,17 @@ Evaluated model performance through iterative experimentation and testing.''',
                 name=name, defaults={'display_order': order},
             )
             created, updated = (created + 1, updated) if was_created else (created, updated + 1)
+
+        if prune:
+            # Without this, renaming an entry (e.g. "Quick Learning" ->
+            # "Quick Learner") leaves both versions on the page.
+            seeded = {name for name, _ in professional_skills_data}
+            stale = ProfessionalSkill.objects.exclude(name__in=seeded)
+            count = stale.count()
+            if count:
+                stale.delete()
+                self.stdout.write(self.style.WARNING(
+                    f'Pruned {count} stale professional skills'
+                ))
+
         return created, updated

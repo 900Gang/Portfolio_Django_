@@ -8,26 +8,36 @@
 {% block twitter_title %}{{ project.title }} — {{ site_owner }}{% endblock %}
 {% block twitter_description %}{{ project.short_description|striptags|truncatewords:30 }}{% endblock %}
 
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  "name": "{{ project.title|escapejs }}",
+  "description": "{{ project.short_description|striptags|escapejs }}",
+  "url": "{{ request.build_absolute_uri }}",
+  "author": {"@type": "Person", "name": "{{ site_owner|escapejs }}"},
+  "dateModified": "{{ project.updated_at|date:'c' }}"
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <article class="project-detail">
-    <div class="project-detail-container">
+    <div class="shell">
         <nav class="project-breadcrumb" aria-label="Breadcrumb">
-            <a href="{% url 'portfolio:home' %}#projects" class="project-breadcrumb-link">
-                ← Back to Projects
-            </a>
+            <a href="{% url 'portfolio:home' %}#projects" class="project-breadcrumb-link">&larr; Back to Projects</a>
         </nav>
 
         <header class="project-detail-header">
-            <span class="project-detail-type-badge">
-                {{ project.project_type }}
-            </span>
+            <span class="project-detail-type-badge">{{ project.project_type }}</span>
             <h1 class="project-detail-title">{{ project.title }}</h1>
             <p class="project-detail-summary">{{ project.short_description }}</p>
         </header>
 
         {% if project.has_image %}
         <figure class="project-detail-image">
-            <img src="{{ project.image.url }}" alt="{{ project.title }} project screenshot">
+            <img src="{{ project.image.url }}" alt="Screenshot of {{ project.title }}">
         </figure>
         {% else %}
         <div class="project-detail-image project-image-fallback" aria-hidden="true">
@@ -57,28 +67,33 @@
                 </section>
                 {% endif %}
 
-                {% if project.github_url or project.live_demo_url %}
                 <section class="project-detail-section" aria-labelledby="project-links-heading">
                     <h2 id="project-links-heading">Project Links</h2>
+                    {% if project.github_url or project.live_demo_url %}
                     <div class="project-detail-actions">
-                        {% if project.github_url %}
-                        <a href="{{ project.github_url }}" class="btn btn-outline" target="_blank" rel="noopener noreferrer">
-                            GitHub <span class="visually-hidden">(opens in a new tab)</span>
-                        </a>
-                        {% endif %}
                         {% if project.live_demo_url %}
                         <a href="{{ project.live_demo_url }}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
                             Live Demo <span class="visually-hidden">(opens in a new tab)</span>
                         </a>
                         {% endif %}
+                        {% if project.github_url %}
+                        <a href="{{ project.github_url }}" class="btn btn-outline" target="_blank" rel="noopener noreferrer">
+                            GitHub <span class="visually-hidden">(opens in a new tab)</span>
+                        </a>
+                        {% endif %}
                     </div>
-                </section>
-                {% else %}
-                <section class="project-detail-section" aria-labelledby="project-links-heading">
-                    <h2 id="project-links-heading">Project Links</h2>
+                    {% else %}
                     <p class="project-links-unavailable">No external links available for this project.</p>
+                    {% endif %}
                 </section>
-                {% endif %}
+
+                <section class="project-detail-section" aria-labelledby="project-contact-heading">
+                    <h2 id="project-contact-heading">Questions?</h2>
+                    <p class="project-links-unavailable">
+                        Happy to walk through the design decisions —
+                        <a href="{% url 'portfolio:home' %}#contact" class="link">get in touch</a>.
+                    </p>
+                </section>
             </aside>
         </div>
     </div>

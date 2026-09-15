@@ -39,6 +39,7 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
     X_FRAME_OPTIONS = 'DENY'
     CSRF_TRUSTED_ORIGINS = get_list('CSRF_TRUSTED_ORIGINS')
     # Opt-in: a deployment that is not yet fully HTTPS should leave these off.
@@ -57,11 +58,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     'portfolio',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Serves the collected static files straight from the app server, so a
+    # deployment needs no separate web server or CDN in front of it.
+    # Must sit immediately after SecurityMiddleware.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -144,24 +150,66 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# In production, hash every static filename and gzip/brotli it at collect
+# time, so assets can be cached forever and a deploy busts the cache by
+# itself. Left off in DEBUG, where `runserver` serves the source tree and a
+# manifest would require a collectstatic run before every page load.
+if not DEBUG:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+
 # Media files configuration
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Site identity, used for page titles and social/link previews.
+# Positioning follows the résumé (static/files/): "Aspiring DevOps Engineer |
+# Python | Cloud | Automation". A site that sells a different role from the CV
+# a recruiter is reading alongside it undercuts both.
 SITE_OWNER = get_str('SITE_OWNER', 'Anand N')
-SITE_ROLE = get_str('SITE_ROLE', 'Software Engineer')
+SITE_ROLE = get_str('SITE_ROLE', 'Aspiring DevOps Engineer')
+SITE_TAGLINE = get_str('SITE_TAGLINE', 'Python · Cloud · Automation')
 SITE_DESCRIPTION = get_str(
     'SITE_DESCRIPTION',
-    'Full Stack Developer with a foundation in Python, Django, JavaScript and '
-    'backend development. Building web applications and exploring DevOps.',
+    'Computer Science Engineering graduate with a strong foundation in Python, '
+    'Git and Linux, building practical DevOps skills across CI/CD, Docker, '
+    'Jenkins and AWS.',
 )
 # Absolute site URL, used for canonical and Open Graph tags.
 SITE_URL = get_str('SITE_URL', '')
 
+# Contact and social links. These are read by the site context processor and
+# rendered in the hero, contact section and footer, so they are configured in
+# one place instead of being repeated across templates.
+SITE_EMAIL = get_str('SITE_EMAIL', 'anandanand6776@gmail.com')
+# Already published in the downloadable résumé; set to an empty value to omit
+# it from the page.
+SITE_PHONE = get_str('SITE_PHONE', '+91 7306922640')
+SITE_GITHUB_URL = get_str('SITE_GITHUB_URL', 'https://github.com/900Gang')
+SITE_LINKEDIN_URL = get_str('SITE_LINKEDIN_URL', 'https://linkedin.com/in/anand-n-anand-n')
+SITE_LOCATION = get_str('SITE_LOCATION', 'Kerala, India')
+SITE_FOCUS = get_str('SITE_FOCUS', 'DevOps, cloud and Python automation')
+
+# Shown as the availability pill in the hero. Set to an empty string to hide
+# it — a stale "open to work" badge is worse than none.
+SITE_AVAILABILITY = get_str('SITE_AVAILABILITY', 'Open to opportunities')
+
 # Path inside the static files tree. The download button appears only once
 # this file actually exists.
-RESUME_STATIC_PATH = get_str('RESUME_STATIC_PATH', 'files/Anand_N_Resume.pdf')
+RESUME_STATIC_PATH = get_str('RESUME_STATIC_PATH', 'files/Anand_Python_Dev_Final.pdf')
+# Filename the visitor's browser saves it as. The working filename on disk is
+# not what a recruiter should end up with in their downloads folder.
+RESUME_DOWNLOAD_NAME = get_str('RESUME_DOWNLOAD_NAME', 'Anand_N_Resume.pdf')
+
+# Link-preview image, resolved the same way as the resume: absent file, no
+# tag. Regenerate with `python manage.py make_og_image`.
+OG_IMAGE_STATIC_PATH = get_str('OG_IMAGE_STATIC_PATH', 'img/og-image.png')
 
 
 # Default primary key field type

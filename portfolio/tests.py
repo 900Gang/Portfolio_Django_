@@ -25,7 +25,7 @@ class SkillModelTest(TestCase):
 
     def test_skill_str(self):
         skill = Skill.objects.create(name="Django", category=SkillCategory.BACKEND)
-        self.assertEqual(str(skill), "Django (Backend)")
+        self.assertEqual(str(skill), "Django (Backend & Data)")
 
     def test_skill_unique_constraint(self):
         Skill.objects.create(name="Python", category=SkillCategory.BACKEND)
@@ -297,9 +297,11 @@ class HomePageViewTest(TestCase):
         response = self.client.get(reverse("portfolio:home"))
         self.assertContains(response, "About Me")
         self.assertContains(response, "Computer Science Engineering graduate")
-        self.assertContains(response, "Full Stack Development")
-        self.assertContains(response, "Backend & APIs")
-        self.assertContains(response, "DevOps & Testing")
+        # The three pillars, which track the résumé's professional summary.
+        # Ampersands are escaped in the markup, as they should be.
+        self.assertContains(response, "DevOps &amp; Automation")
+        self.assertContains(response, "Python Development")
+        self.assertContains(response, "Cloud &amp; IoT Integration")
 
     def test_homepage_skills_section_present(self):
         response = self.client.get(reverse("portfolio:home"))
