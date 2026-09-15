@@ -20,7 +20,16 @@ db.sqlite3
 db.sqlite3-journal
 db.sqlite3.*
 /staticfiles/
-/media/
+
+# Admin-uploaded media is not tracked, with one exception: the screenshots for
+# the seeded projects. A fresh deploy runs `populate_portfolio` against an
+# empty database, so these have to be in the repo or every project card falls
+# back to the placeholder graphic.
+/media/*
+!/media/projects/
+/media/projects/*
+!/media/projects/learning-disabilities-ai-iot.webp
+!/media/projects/hematology-screening.webp
 
 # IDE / Editor
 .vscode/

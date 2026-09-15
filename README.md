@@ -187,6 +187,25 @@ separate web server or CDN is required. Outside `DEBUG`, assets are hashed and
 pre-compressed at collect time and served with immutable cache headers, so a
 deploy busts the cache by itself.
 
+### Media
+
+Project screenshots are `ImageField` uploads in `MEDIA_ROOT`, not static files,
+so they need two things stock Django does not give them in production:
+
+- `portfolio_project.middleware.WhiteNoiseWithMediaMiddleware` extends
+  WhiteNoise to serve `MEDIA_ROOT` under `MEDIA_URL`. Stock WhiteNoise serves
+  `STATIC_ROOT` only, and `urls.py` wires media up under `DEBUG` alone, so
+  without this every project card fell back to the placeholder on a deployed
+  site while looking correct locally.
+- The two seeded screenshots are committed (see the exception at the bottom of
+  `.gitignore`) and attached by `populate_portfolio`. `db.sqlite3` is not
+  tracked, so a fresh deploy seeds an empty database — the images have to be in
+  the repo *and* referenced by the seed, or the cards come up blank.
+
+`WHITENOISE_AUTOREFRESH` defaults to `True` so an image uploaded through the
+admin appears without a restart. Set it to `False` to trade that for slightly
+less filesystem work per request.
+
 Note that SQLite and locally-stored media are fine for a single instance but
 do not survive an ephemeral filesystem; on a platform with ephemeral storage,
 move `DATABASES` to Postgres and media to object storage.
@@ -197,7 +216,7 @@ move `DATABASES` to Postgres and media to object storage.
 python manage.py test
 ```
 
-150 tests across two files:
+156 tests across two files:
 
 - `portfolio/tests.py` — the feature suite: models, views, form validation,
   and every section's rendering and empty state.
@@ -206,7 +225,7 @@ python manage.py test
   grouping, seed idempotency, **constant query counts**, static-asset lints,
   colour-token discipline, crawler endpoints, link-preview tags, theme
   override behaviour, nav-anchor resolution, honeypot spam protection,
-  résumé wiring and error pages.
+  résumé wiring, project-image delivery and error pages.
 
 The query-count tests assert the home page and project page issue the same
 number of queries regardless of how much content exists, so an N+1 introduced

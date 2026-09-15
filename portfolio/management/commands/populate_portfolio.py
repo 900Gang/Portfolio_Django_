@@ -6,6 +6,9 @@ so re-running the command refreshes content instead of duplicating it. The
 whole run is wrapped in a transaction, so a failure part-way leaves the
 database untouched rather than half-populated.
 """
+from pathlib import Path
+
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -169,6 +172,7 @@ Worked with Git and GitHub for source-code management and collaborative developm
 Collaborated with a four-member team on system integration, debugging, testing, and deployment.""",
                 'featured': True,
                 'order': 1,
+                'image': 'projects/learning-disabilities-ai-iot.webp',
                 'technologies': [
                     'Python', 'ESP32', 'Firebase Realtime Database', 'Git', 'IoT', 'REST APIs',
                 ],
@@ -191,6 +195,7 @@ Used Git and GitHub for source-code management and project collaboration.
 Tested and evaluated the application through iterative experimentation.""",
                 'featured': True,
                 'order': 2,
+                'image': 'projects/hematology-screening.webp',
                 'technologies': [
                     'Python', 'TensorFlow', 'Keras', 'OpenCV', 'Git',
                 ],
@@ -203,6 +208,19 @@ Tested and evaluated the application through iterative experimentation.""",
             fields = dict(project_data)
             tech_names = fields.pop('technologies')
             title = fields.pop('title')
+
+            # The screenshot is attached only when the file is really in
+            # MEDIA_ROOT. A fresh deploy seeds an empty database, so without
+            # this the cards fall back to the placeholder even though the
+            # images are committed; and pointing the column at a missing file
+            # would be worse than leaving it blank.
+            image = fields.pop('image', '')
+            if image and (Path(settings.MEDIA_ROOT) / image).is_file():
+                fields['image'] = image
+            elif image:
+                self.stdout.write(self.style.WARNING(
+                    f'Image "{image}" not found in MEDIA_ROOT for "{title}"'
+                ))
 
             project, was_created = Project.objects.update_or_create(
                 title=title, defaults=fields,
