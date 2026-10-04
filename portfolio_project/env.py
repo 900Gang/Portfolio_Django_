@@ -1,8 +1,8 @@
 """
 Minimal .env loader and typed environment accessors.
 
-Deliberately dependency-free: the project ships only Django and Pillow, and a
-~40 line loader is cheaper to own than an extra runtime dependency.
+Deliberately dependency-free: a ~40 line loader is cheaper to own than an
+extra runtime dependency such as python-dotenv.
 Real environment variables always win over values in the .env file, so
 container/CI configuration overrides the local developer file.
 """

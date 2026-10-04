@@ -9,9 +9,9 @@ skills, and a contact form that stores messages.
 
 ## Tech Stack
 
-- **Backend**: Python 3.12, Django 5
+- **Backend**: Python 3.13 (pinned in `.python-version`), Django 5
 - **Frontend**: Hand-written HTML, CSS and vanilla JavaScript — no framework, no build step
-- **Database**: SQLite (development)
+- **Database**: SQLite by default; PostgreSQL when `DATABASE_URL` is set
 - **Static files**: WhiteNoise, with hashed + compressed assets in production
 - **Images**: Pillow (project screenshots, generated link-preview card)
 
@@ -133,6 +133,12 @@ loaded automatically, and real environment variables take precedence over it.
 | `ALLOWED_HOSTS` | `localhost,127.0.0.1` in debug | Comma-separated allowed hosts |
 | `SITE_URL` | empty | Absolute site URL, used for canonical tags and `og:image` |
 
+### Database
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | empty | e.g. `postgres://user:pass@host:5432/dbname`. Parsed by `dj-database-url` with persistent connections (`conn_max_age=600`); SSL is required when `DEBUG=False`. When unset, the project uses `db.sqlite3` at the project root |
+
 ### Security
 
 | Variable | Default | Description |
@@ -173,6 +179,8 @@ of them changes:
    and re-run `python manage.py populate_portfolio --prune` (`--prune` removes
    skills, professional skills, certifications and education records that are no
    longer in the seed, so a rename does not leave both versions on the page).
+   To update the live site, run it with `DATABASE_URL` set to the production
+   database — deploys no longer run it (see Deployment).
 3. Re-run `python manage.py make_og_image`.
 
 Two résumé variants are kept in `static/files/`:
@@ -199,12 +207,31 @@ build rather than silently hiding the download button.
 
 ## Deployment
 
+The live site runs on **Render** (web service, Singapore region) with a
+**Neon** PostgreSQL database in the same region. Render deploys every push to
+`main`.
+
+| Render setting | Value |
+|----------------|-------|
+| Build command | `./build.sh` (installs dependencies, `collectstatic`, `migrate`) |
+| Start command | `gunicorn portfolio_project.wsgi:application` |
+| Environment | `DATABASE_URL` (Neon **pooled** connection string), `SECRET_KEY`, `ALLOWED_HOSTS`, `SITE_URL`, `CSRF_TRUSTED_ORIGINS` |
+
+Environment changes only take effect on the next deploy — use **Save, rebuild
+and deploy**, not plain Save.
+
+`build.sh` deliberately does **not** run `populate_portfolio`. It used to, which
+meant every push reset any admin edit to a seeded record back to the seed. Seed
+a new database once by hand, and re-run it only when the seed data changes:
+
 ```bash
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py collectstatic --noinput
-gunicorn portfolio_project.wsgi   # or any WSGI server
+DATABASE_URL='<neon pooled string>' python manage.py migrate
+DATABASE_URL='<neon pooled string>' python manage.py populate_portfolio
+DATABASE_URL='<neon pooled string>' python manage.py createsuperuser
 ```
+
+On Render's free plan the service sleeps after about 15 minutes without
+traffic, so the first request after that takes 30–60 seconds.
 
 WhiteNoise serves the collected static files from the app server, so no
 separate web server or CDN is required. Outside `DEBUG`, assets are hashed and
@@ -222,17 +249,18 @@ so they need two things stock Django does not give them in production:
   without this every project card fell back to the placeholder on a deployed
   site while looking correct locally.
 - The two seeded screenshots are committed (see the exception at the bottom of
-  `.gitignore`) and attached by `populate_portfolio`. `db.sqlite3` is not
-  tracked, so a fresh deploy seeds an empty database — the images have to be in
+  `.gitignore`) and attached by `populate_portfolio`. The images have to be in
   the repo *and* referenced by the seed, or the cards come up blank.
 
 `WHITENOISE_AUTOREFRESH` defaults to `True` so an image uploaded through the
 admin appears without a restart. Set it to `False` to trade that for slightly
 less filesystem work per request.
 
-Note that SQLite and locally-stored media are fine for a single instance but
-do not survive an ephemeral filesystem; on a platform with ephemeral storage,
-move `DATABASES` to Postgres and media to object storage.
+Render's filesystem is ephemeral, which is why the database lives in Neon.
+Media has no such home yet: images uploaded through the admin are lost on the
+next deploy or sleep, and only the committed seed screenshots come back. Commit
+new screenshots to `media/projects/` and reference them from the seed, or move
+media to object storage.
 
 ## Tests
 
@@ -240,7 +268,7 @@ move `DATABASES` to Postgres and media to object storage.
 python manage.py test
 ```
 
-156 tests across two files:
+160 tests across two files:
 
 - `portfolio/tests.py` — the feature suite: models, views, form validation,
   and every section's rendering and empty state.
