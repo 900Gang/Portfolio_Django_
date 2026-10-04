@@ -101,8 +101,9 @@ WSGI_APPLICATION = 'portfolio_project.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# Database
+#
+# PostgreSQL (or any dj-database-url scheme) when DATABASE_URL is set, which is
+# what production uses; SQLite in the project root otherwise.
 
 DATABASE_URL = get_str('DATABASE_URL', '')
 
@@ -193,9 +194,8 @@ WHITENOISE_AUTOREFRESH = get_bool('WHITENOISE_AUTOREFRESH', default=True)
 # Positioning is "AI Developer | Python | Machine Learning | Computer Vision",
 # which is what the two featured projects actually demonstrate: a TensorFlow /
 # Keras / OpenCV classification pipeline, and AI-based detection over live
-# sensor data. NOTE: the résumé in static/files/ still leads with "Aspiring
-# DevOps Engineer" — re-export it to match, or a recruiter reading both is
-# told two different stories.
+# sensor data. The served résumé (RESUME_STATIC_PATH) is the AI/ML variant so
+# the two tell the same story; keep them in step when either changes.
 SITE_OWNER = get_str('SITE_OWNER', 'Anand N')
 SITE_ROLE = get_str('SITE_ROLE', 'AI Developer')
 SITE_TAGLINE = get_str('SITE_TAGLINE', 'Python · Machine Learning · Computer Vision')
