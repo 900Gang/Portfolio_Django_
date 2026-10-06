@@ -22,19 +22,22 @@
 </script>
 {% endblock %}
 
+{% block body_class %}has-stage-hero{% endblock %}
+
 {% block content %}
 <article class="project-detail">
-    <div class="shell">
-        <nav class="project-breadcrumb" aria-label="Breadcrumb">
-            <a href="{% url 'portfolio:home' %}#projects" class="project-breadcrumb-link">&larr; Back to Projects</a>
-        </nav>
-
-        <header class="project-detail-header">
+    <header class="project-detail-hero">
+        <div class="shell">
+            <nav class="project-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'portfolio:home' %}#projects" class="project-breadcrumb-link">{% include 'components/icon.html' with name='arrow-left' %} Back to projects</a>
+            </nav>
             <span class="project-detail-type-badge">{{ project.project_type }}</span>
             <h1 class="project-detail-title">{{ project.title }}</h1>
             <p class="project-detail-summary">{{ project.short_description }}</p>
-        </header>
+        </div>
+    </header>
 
+    <div class="shell project-detail-body">
         {% if project.has_image %}
         <figure class="project-detail-image">
             <img src="{{ project.image.url }}" alt="Screenshot of {{ project.title }}">
@@ -68,12 +71,12 @@
                 {% endif %}
 
                 <section class="project-detail-section" aria-labelledby="project-links-heading">
-                    <h2 id="project-links-heading">Project Links</h2>
+                    <h2 id="project-links-heading">Links</h2>
                     {% if project.github_url or project.live_demo_url %}
                     <div class="project-detail-actions">
                         {% if project.live_demo_url %}
                         <a href="{{ project.live_demo_url }}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
-                            Live Demo <span class="visually-hidden">(opens in a new tab)</span>
+                            Live demo <span class="visually-hidden">(opens in a new tab)</span>
                         </a>
                         {% endif %}
                         {% if project.github_url %}

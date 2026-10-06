@@ -1,54 +1,69 @@
-<!-- Rendered with an empty context by Django's handler500: no context processors here. -->
+<!-- Rendered with an empty context by Django's handler500: no context processors and no template tags here. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Something went wrong</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap">
     <style>
-        :root { color-scheme: light dark; }
+        :root { color-scheme: dark; }
         body {
             margin: 0;
             min-height: 100vh;
             display: grid;
             place-items: center;
             padding: 2rem;
-            font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
             line-height: 1.6;
-            color: #101a18;
-            background: #fbfcfb;
+            color: #f2efea;
+            background: #070707;
         }
         main { max-width: 42ch; text-align: center; }
-        p.code {
-            font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
-            font-size: 0.78rem;
+        .big {
+            margin: 0;
+            font-family: 'Anton', Impact, sans-serif;
+            font-size: clamp(6rem, 30vw, 14rem);
+            line-height: 0.85;
+            color: #c8161d;
+        }
+        .code {
+            margin: 1rem 0 0.5rem;
+            font-family: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+            font-size: 0.75rem;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: #0b6467;
-            margin: 0 0 0.5rem;
+            color: #ef3b42;
         }
-        h1 { font-size: 1.75rem; letter-spacing: -0.022em; margin: 0 0 0.75rem; }
-        p.body { color: #3a4a47; margin: 0 0 1.5rem; }
+        h1 {
+            margin: 0 0 0.75rem;
+            font-family: 'Anton', Impact, sans-serif;
+            font-weight: 400;
+            font-size: 2.5rem;
+            line-height: 0.95;
+            text-transform: uppercase;
+        }
+        .body { margin: 0 0 1.75rem; color: #b9b3ad; }
         a {
             display: inline-block;
-            padding: 0.7rem 1.35rem;
-            font-size: 0.875rem;
-            font-weight: 600;
+            padding: 0.9rem 1.5rem;
+            font-family: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
             color: #ffffff;
-            background: #0b6467;
-            border-radius: 0.5rem;
+            background: #d61f26;
             text-decoration: none;
         }
-        @media (prefers-color-scheme: dark) {
-            body { color: #e8efec; background: #0c1211; }
-            p.code { color: #56c8c0; }
-            p.body { color: #b6c3bf; }
-            a { color: #04201f; background: #56c8c0; }
-        }
+        a:hover { background: #b9181e; }
+        a:focus-visible { outline: 2px solid #ef3b42; outline-offset: 3px; }
     </style>
 </head>
 <body>
     <main>
+        <p class="big" aria-hidden="true">500</p>
         <p class="code">Error 500</p>
         <h1>Something went wrong</h1>
         <p class="body">A server error stopped this page from loading. It has been logged — please try again shortly.</p>

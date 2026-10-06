@@ -384,3 +384,34 @@ class EmptyDatabaseTest(TestCase):
         self.assertNotIn('class="ticker"', html)
         self.assertNotIn('id="journey"', html)
         self.assertEqual(html.count('data-count="0">00</dd>'), 3)
+
+
+class ProjectPageTest(TestCase):
+    def setUp(self):
+        self.project = Project.objects.create(
+            title="Hematology", short_description="Blood smear classifier."
+        )
+
+    def _html(self):
+        return self.client.get(self.project.get_absolute_url()).content.decode()
+
+    def test_title_sits_in_the_dark_hero_band(self):
+        html = self._html()
+        start = html.index('class="project-detail-hero"')
+        band = html[start:html.index("</header>", start)]
+        self.assertIn('<h1 class="project-detail-title">Hematology</h1>', band)
+        self.assertIn('<body class="has-stage-hero">', html)
+
+    def test_back_link_returns_to_the_projects_section(self):
+        self.assertIn('href="/#projects" class="project-breadcrumb-link"', self._html())
+
+
+class ErrorPagesTest(TestCase):
+    def test_404_shows_the_code_large(self):
+        response = self.client.get("/projects/missing/")
+        self.assertContains(response, 'class="error-code"', status_code=404)
+
+    def test_500_uses_the_new_palette(self):
+        html = (BASE_DIR / "templates" / "500.html").read_text()
+        self.assertIn("#070707", html)
+        self.assertIn("Anton", html)
