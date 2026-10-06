@@ -1,0 +1,16 @@
+{% load portfolio_extras %}
+{% with ticker=skills|ticker_skills %}
+{% if ticker %}
+<div class="ticker" role="region" aria-label="Core technologies">
+    <div class="ticker-track">
+        <ul class="ticker-list">
+            {% for skill in ticker %}<li class="ticker-item">{{ skill.name }}</li>{% endfor %}
+        </ul>
+        {# A second copy makes the loop seamless; it is the same list, so assistive tech skips it. #}
+        <ul class="ticker-list" aria-hidden="true">
+            {% for skill in ticker %}<li class="ticker-item">{{ skill.name }}</li>{% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endwith %}

@@ -160,3 +160,103 @@ class LinkPreviewCommandTest(SimpleTestCase):
                     "make_og_image", "--photo", str(Path(tmp) / "nope.jpg"),
                     "--output", str(Path(tmp) / "og.png"), stdout=io.StringIO(),
                 )
+
+
+class HeroTest(TestCase):
+    """The first screen: portrait, giant role word, detection box, stats."""
+
+    def _hero(self):
+        html = home_html(self.client)
+        start = html.index('<section id="home"')
+        return html[start:html.index("</section>", start)]
+
+    def test_portrait_files_exist_in_the_static_tree(self):
+        """A missing file would make {% static %} raise under the manifest
+        storage in production, taking the whole home page down."""
+        for width in (480, 768):
+            with self.subTest(width=width):
+                self.assertTrue((BASE_DIR / "static" / "img" / f"portrait-{width}.webp").is_file())
+
+    def test_portrait_is_responsive_and_loaded_first(self):
+        img = re.search(r'<img class="hero-portrait"[^>]*>', self._hero(), re.S).group(0)
+        self.assertRegex(img, r'srcset="[^"]*portrait-480\.webp 480w, [^"]*portrait-768\.webp 768w"')
+        self.assertIn('fetchpriority="high"', img)
+        self.assertIn('width="768" height="1344"', img)
+        self.assertNotIn('loading="lazy"', img)
+        self.assertIn(f'alt="Portrait of {settings.SITE_OWNER}"', img)
+
+    def test_decorative_layers_are_hidden_from_assistive_tech(self):
+        hero = self._hero()
+        self.assertIn('class="hero-word-wrap" aria-hidden="true"', hero)
+        self.assertIn('class="hero-detect" aria-hidden="true"', hero)
+
+    def test_detection_label_uses_the_owner_handle(self):
+        handle = "_".join(settings.SITE_OWNER.lower().split())
+        self.assertIn(f"{handle} · ", self._hero())
+
+    def test_one_h1_and_it_is_the_name(self):
+        html = home_html(self.client)
+        self.assertEqual(html.count("<h1"), 1)
+        self.assertIn(f'<h1 class="hero-title">{settings.SITE_OWNER}</h1>', html)
+
+    def test_stats_count_the_objects_the_page_renders(self):
+        for i in range(2):
+            Project.objects.create(title=f"P{i}", short_description="d", featured=True)
+        for i in range(3):
+            Skill.objects.create(name=f"S{i}", category=SkillCategory.BACKEND)
+        Certification.objects.create(name="C", issuer="I")
+        hero = self._hero()
+        for value in (2, 3, 1):
+            with self.subTest(value=value):
+                self.assertIn(f'data-count="{value}">0{value}</dd>', hero)
+
+    def test_a_long_role_cannot_cause_horizontal_scrolling(self):
+        css = (BASE_DIR / "static" / "css" / "sections.css").read_text()
+        hero_rule = re.search(r"^\.hero \{([^}]*)\}", css, re.M).group(1)
+        self.assertIn("overflow: hidden", hero_rule)
+        word_rule = re.search(r"^\.hero-word \{([^}]*)\}", css, re.M).group(1)
+        self.assertIn("white-space: nowrap", word_rule)
+        with override_settings(SITE_ROLE="Machine Learning Engineer"):
+            self.assertIn(
+                '<p class="hero-word">Machine Learning Engineer</p>', home_html(self.client)
+            )
+
+    def test_hero_rules_use_only_stage_colours(self):
+        """In the light theme the page turns light but the hero stays dark, so
+        hero rules must never use the page's text, ground or accent tokens."""
+        css = (BASE_DIR / "static" / "css" / "sections.css").read_text()
+        rules = re.findall(r"^(\.hero[^{]*)\{([^}]*)\}", css, re.M)
+        self.assertTrue(rules, "no hero rules found")
+        for selector, body in rules:
+            with self.subTest(selector=selector.strip()):
+                self.assertNotRegex(body, r"var\(--color-(text-|accent\)|bg\)|surface|border)")
+
+
+class TickerTest(TestCase):
+    """The red band of technologies under the hero."""
+
+    def test_used_in_projects_come_first_and_the_list_is_capped(self):
+        from .templatetags.portfolio_extras import ticker_skills
+
+        skills = [Skill(name=f"L{i}", status=SkillStatus.LEARNING) for i in range(10)]
+        skills += [Skill(name=f"U{i}", status=SkillStatus.USED_IN_PROJECTS) for i in range(10)]
+        picked = [skill.name for skill in ticker_skills(skills)]
+        self.assertEqual(len(picked), 16)
+        self.assertEqual(picked[:10], [f"U{i}" for i in range(10)])
+
+    def test_empty_input_gives_an_empty_ticker(self):
+        from .templatetags.portfolio_extras import ticker_skills
+
+        self.assertEqual(ticker_skills([]), [])
+
+    def test_second_copy_is_hidden_from_assistive_tech(self):
+        Skill.objects.create(
+            name="TensorFlow", category=SkillCategory.BACKEND,
+            status=SkillStatus.USED_IN_PROJECTS,
+        )
+        html = home_html(self.client)
+        self.assertEqual(html.count('class="ticker-list"'), 2)
+        self.assertIn('class="ticker-list" aria-hidden="true"', html)
+
+    def test_no_band_without_skills(self):
+        self.assertNotIn('class="ticker"', home_html(self.client))
