@@ -7,8 +7,7 @@
     <title>{% block title %}{{ site_owner }} — {{ site_role }}{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}{{ site_description }}{% endblock %}">
     <meta name="author" content="{{ site_owner }}">
-    <meta name="theme-color" content="#fbfcfb" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0c1211" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#070707">
     <link rel="canonical" href="{{ request.build_absolute_uri }}">
 
     <!-- Link previews (LinkedIn, Slack, iMessage, X) -->
@@ -30,13 +29,13 @@
 
     <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
 
-    <!-- Resolve the stored theme before first paint. Deferring this would
-         show a light-theme flash to a dark-mode visitor. -->
+    <!-- Resolve the stored theme before first paint, so a visitor who chose
+         the light theme never sees a dark frame first. -->
     <script src="{% static 'js/theme.js' %}"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="{% static 'css/variables.css' %}">
     <link rel="stylesheet" href="{% static 'css/reset.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
@@ -61,7 +60,7 @@
 
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <a href="#main-content" class="skip-to-content">Skip to main content</a>
 
     <div class="page-wrapper">

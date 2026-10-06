@@ -634,10 +634,16 @@ class ResumeLinkTest(TestCase):
 
 
 class ThemeTokenTest(TestCase):
-    """Colour lives in tokens only, and every colour token has a dark value."""
+    """Colour lives in tokens only, and every colour token exists in both themes."""
 
     def _variables(self):
         return (BASE_DIR / "static" / "css" / "variables.css").read_text()
+
+    def _blocks(self):
+        """(dark, light): dark is everything before the light-theme selector."""
+        css = self._variables()
+        split = css.index(':root[data-theme="light"]')
+        return css[:split], css[split:]
 
     def test_no_hardcoded_colours_outside_the_token_file(self):
         offenders = []
@@ -649,25 +655,28 @@ class ThemeTokenTest(TestCase):
                     offenders.append(f"{path.name}:{number}: {line.strip()}")
         self.assertEqual(offenders, [])
 
-    def test_every_colour_token_is_redefined_for_dark_mode(self):
-        css = self._variables()
-        dark = css[css.index("prefers-color-scheme: dark"):]
-        light_block = css[: css.index("prefers-color-scheme: dark")]
-
-        light_tokens = set(re.findall(r"(--color-[a-z-]+):", light_block))
+    def test_every_colour_token_is_defined_in_both_themes(self):
+        dark, light = self._blocks()
         dark_tokens = set(re.findall(r"(--color-[a-z-]+):", dark))
+        light_tokens = set(re.findall(r"(--color-[a-z-]+):", light))
+        self.assertTrue(dark_tokens, "no colour tokens found")
+        self.assertEqual(dark_tokens ^ light_tokens, set(), "token missing from one theme")
 
-        self.assertTrue(light_tokens, "no colour tokens found")
-        self.assertEqual(
-            light_tokens - dark_tokens,
-            set(),
-            "colour tokens with no dark-mode value",
-        )
+    def test_dark_is_the_default_and_light_is_explicit(self):
+        dark, light = self._blocks()
+        self.assertIn("color-scheme: dark", dark)
+        self.assertIn("color-scheme: light", light)
+        # Dark is the brand look for everyone; the OS preference is not followed.
+        self.assertNotIn("prefers-color-scheme", self._variables())
 
-    def test_dark_mode_is_declared(self):
-        css = self._variables()
-        self.assertIn("prefers-color-scheme: dark", css)
-        self.assertIn("color-scheme: dark", css)
+    def test_stage_tokens_are_identical_in_both_themes(self):
+        """The hero, nav and quote card stay dark in the light theme, because
+        the portrait only works on black."""
+        dark, light = self._blocks()
+        pattern = r"(--color-(?:stage|on-stage)[a-z-]*):\s*([^;]+);"
+        dark_stage = dict(re.findall(pattern, dark))
+        self.assertTrue(dark_stage, "no stage tokens found")
+        self.assertEqual(dark_stage, dict(re.findall(pattern, light)))
 
     def test_palette_is_no_longer_stock_bootstrap(self):
         css = self._variables()
@@ -677,8 +686,9 @@ class ThemeTokenTest(TestCase):
 
     def test_fonts_are_declared_with_fallback_stacks(self):
         css = self._variables()
-        self.assertIn("IBM Plex Sans", css)
-        self.assertIn("IBM Plex Mono", css)
+        for family in ('"Anton"', '"Archivo"', '"IBM Plex Mono"'):
+            with self.subTest(family=family):
+                self.assertIn(family, css)
         # A webfont that fails to load must still land on a real stack.
         self.assertIn("system-ui", css)
         self.assertIn("monospace", css)
@@ -686,7 +696,9 @@ class ThemeTokenTest(TestCase):
     def test_stylesheet_link_for_the_webfont_is_present(self):
         html = self.client.get(reverse("portfolio:home")).content.decode()
         self.assertIn("fonts.googleapis.com", html)
-        self.assertIn("IBM+Plex+Sans", html)
+        self.assertIn("family=Anton", html)
+        self.assertIn("family=Archivo", html)
+        self.assertIn("IBM+Plex+Mono", html)
 
 
 # ---------------------------------------------------------------------------
@@ -788,10 +800,13 @@ class StructuredDataTest(TestCase):
 
 
 class ThemeToggleTest(TestCase):
-    """Dark mode is a manual choice as well as an OS one."""
+    """Dark by default; light is a manual choice that persists."""
 
     def _variables(self):
         return (BASE_DIR / "static" / "css" / "variables.css").read_text()
+
+    def _theme_js(self):
+        return (BASE_DIR / "static" / "js" / "theme.js").read_text()
 
     def test_toggle_control_is_rendered(self):
         html = self.client.get(reverse("portfolio:home")).content.decode()
@@ -800,19 +815,20 @@ class ThemeToggleTest(TestCase):
     def test_theme_script_runs_before_the_body_to_avoid_a_flash(self):
         html = self.client.get(reverse("portfolio:home")).content.decode()
         script = html.index("js/theme.js")
-        self.assertLess(script, html.index("<body>"), "theme.js must be in <head>")
+        self.assertLess(script, html.index("<body"), "theme.js must be in <head>")
         self.assertNotIn("js/theme.js\" defer", html)
 
-    def test_manual_choice_can_override_the_os_in_both_directions(self):
-        """A [data-theme="dark"] block alone cannot force light mode on a
-        machine whose OS is dark; the light escape hatch has to exist too."""
-        css = self._variables()
-        self.assertIn('[data-theme="dark"]', css)
-        self.assertIn(':not([data-theme="light"])', css)
+    def test_light_theme_is_an_explicit_override(self):
+        self.assertIn(':root[data-theme="light"]', self._variables())
+
+    def test_dark_is_the_default_without_a_stored_choice(self):
+        js = self._theme_js()
+        self.assertIn("DEFAULT_THEME = 'dark'", js)
+        self.assertNotIn("prefers-color-scheme", js)
 
     def test_stored_preference_reads_are_guarded(self):
         """localStorage throws in private mode and with site data blocked."""
-        js = (BASE_DIR / "static" / "js" / "theme.js").read_text()
+        js = self._theme_js()
         self.assertIn("localStorage", js)
         self.assertIn("catch", js)
 
