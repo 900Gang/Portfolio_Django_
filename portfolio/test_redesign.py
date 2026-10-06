@@ -70,3 +70,93 @@ class ChromeTest(TestCase):
         self.assertIn('class="nav-status"', home_html(self.client))
         with override_settings(SITE_AVAILABILITY=""):
             self.assertNotIn('class="nav-status"', home_html(self.client))
+
+
+class HandleFilterTest(SimpleTestCase):
+    """The label on the hero's detection box, derived from SITE_OWNER."""
+
+    def test_lowercases_and_joins_words_with_underscores(self):
+        from .templatetags.portfolio_extras import handle
+
+        self.assertEqual(handle("Anand N"), "anand_n")
+        self.assertEqual(handle("  Mary   Ann Lee "), "mary_ann_lee")
+        self.assertEqual(handle(""), "")
+
+
+class PortraitCommandTest(SimpleTestCase):
+    """make_portrait exports the hero photo at the widths the template serves."""
+
+    def _source(self, folder, size=(800, 1400)):
+        path = Path(folder) / "source.jpg"
+        Image.new("RGB", size, (40, 40, 40)).save(path, "JPEG")
+        return path
+
+    def test_writes_both_widths_as_webp_keeping_the_aspect_ratio(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = self._source(tmp)
+            call_command("make_portrait", str(source), "--output-dir", tmp, stdout=io.StringIO())
+            for width in (480, 768):
+                with self.subTest(width=width):
+                    with Image.open(Path(tmp) / f"portrait-{width}.webp") as image:
+                        self.assertEqual(image.format, "WEBP")
+                        self.assertEqual(image.size, (width, round(1400 * width / 800)))
+
+    def test_missing_source_is_a_clear_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(CommandError, "does not exist"):
+                call_command(
+                    "make_portrait", str(Path(tmp) / "nope.jpg"),
+                    "--output-dir", tmp, stdout=io.StringIO(),
+                )
+
+
+class LinkPreviewCommandTest(SimpleTestCase):
+    """make_og_image draws the card in the new palette, with an optional headshot."""
+
+    def test_renders_at_open_graph_size_on_the_dark_ground(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "og.png"
+            call_command("make_og_image", "--output", str(out), stdout=io.StringIO())
+            with Image.open(out) as image:
+                self.assertEqual(image.size, (1200, 630))
+                self.assertEqual(image.convert("RGB").getpixel((4, 4)), (7, 7, 7))
+
+    def test_places_the_headshot_on_the_right_when_given_one(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            photo = Path(tmp) / "head.jpg"
+            Image.new("RGB", (400, 400), (0, 120, 255)).save(photo, "JPEG", quality=95)
+            out = Path(tmp) / "og.png"
+            call_command(
+                "make_og_image", "--photo", str(photo), "--output", str(out),
+                stdout=io.StringIO(),
+            )
+            with Image.open(out) as image:
+                # Right edge of the photo, clear of the detection box.
+                red, _green, blue = image.convert("RGB").getpixel((1200 - 72 - 30, 315))
+                self.assertGreater(blue, 200)
+                self.assertLess(red, 40)
+
+    def test_footer_line_never_runs_into_the_headshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            photo = Path(tmp) / "head.jpg"
+            Image.new("RGB", (400, 400), (0, 120, 255)).save(photo, "JPEG", quality=95)
+            out = Path(tmp) / "og.png"
+            call_command(
+                "make_og_image", "--photo", str(photo), "--output", str(out),
+                stdout=io.StringIO(),
+            )
+            with Image.open(out) as image:
+                rgb = image.convert("RGB")
+                # The photo's left edge, level with the footer text.
+                for x in range(662, 720, 3):
+                    for y in range(538, 550):
+                        red, _green, blue = rgb.getpixel((x, y))
+                        self.assertTrue(blue > 200 and red < 40, (x, y, rgb.getpixel((x, y))))
+
+    def test_missing_photo_is_a_clear_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(CommandError, "does not exist"):
+                call_command(
+                    "make_og_image", "--photo", str(Path(tmp) / "nope.jpg"),
+                    "--output", str(Path(tmp) / "og.png"), stdout=io.StringIO(),
+                )
