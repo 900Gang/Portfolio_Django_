@@ -1,176 +1,97 @@
 /* ==========================================================================
-   Responsive behaviour and user preferences.
-
-   Most of the layout is intrinsically responsive — fluid type via clamp(),
-   `auto-fit` grids, and flex wrapping — so this file only holds the things
-   that genuinely need a breakpoint, plus the preference media queries.
-
-   NOTE: breakpoint values are written literally. CSS custom properties
-   cannot appear in a media feature value — `@media (min-width: var(--bp))`
-   is invalid and the browser discards the entire at-rule, which once
-   silently disabled every rule in this file.
+   Responsive — the mobile menu, page-wide small-screen overrides and print.
+   Section-specific breakpoints sit next to their section in sections.css.
    ========================================================================== */
 
-/* --- Mobile navigation ---------------------------------------------------
-   Below 900px the inline menu collapses into a panel dropped from the
-   header. It is positioned rather than display-toggled so it can animate,
-   and `visibility` keeps it out of the tab order while closed. */
+/* While the mobile menu is open the page behind it does not scroll. */
+.menu-open {
+    overflow: hidden;
+}
+
 @media (max-width: 900px) {
     .nav-toggle {
-        display: inline-flex;
+        display: inline-grid;
+    }
+
+    .nav-status-text {
+        display: none;
+    }
+
+    .nav-logo,
+    .nav-actions {
+        position: relative;
+        z-index: calc(var(--z-overlay) + 1);
+    }
+
+    .nav-menu {
+        position: fixed;
+        inset: 0;
+        z-index: var(--z-overlay);
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: var(--space-1);
+        padding: var(--header-height) var(--shell-pad) var(--space-7);
+        background: var(--color-stage-overlay);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity var(--dur-base) ease, visibility 0s linear var(--dur-base);
+    }
+
+    .nav-menu.nav-menu-open {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity var(--dur-base) ease;
+    }
+
+    .nav-link {
+        font-family: var(--font-display);
+        font-size: clamp(2.25rem, 9vw, 3.5rem);
+        letter-spacing: var(--tracking-display);
+        color: var(--color-on-stage);
+    }
+}
+
+@media (max-width: 560px) {
+    .contact-form-row {
+        grid-template-columns: 1fr;
     }
 
     .nav-logo-role {
         display: none;
     }
-
-    .nav-menu {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0;
-        padding: var(--space-2) var(--layout-page-padding) var(--space-5);
-        background-color: var(--color-bg);
-        border-bottom: 1px solid var(--color-border);
-        box-shadow: var(--shadow-lg);
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-0.5rem);
-        transition:
-            opacity var(--transition-fast),
-            transform var(--transition-normal) var(--ease-out),
-            visibility var(--transition-normal);
-    }
-
-    .nav-menu-open {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    .nav-item {
-        border-bottom: 1px solid var(--color-rule);
-    }
-
-    .nav-item:last-child {
-        border-bottom: none;
-    }
-
-    .nav-link {
-        padding: var(--space-4) var(--space-2);
-        font-size: var(--font-size-base);
-        border-radius: 0;
-    }
-
-    .nav-link.active::after {
-        left: 0;
-        right: auto;
-        top: 50%;
-        bottom: auto;
-        width: 2px;
-        height: 1.2rem;
-        transform: translateY(-50%);
-    }
-
-    .nav-link.active {
-        padding-left: var(--space-4);
-    }
 }
 
-/* Above the mobile breakpoint the panel styles must not linger. */
-@media (min-width: 901px) {
-    .nav-menu {
-        opacity: 1;
-        visibility: visible;
-    }
-}
-
-/* --- Small phones --------------------------------------------------------- */
-@media (max-width: 480px) {
-    .hero-fact {
-        grid-template-columns: 1fr;
-        gap: var(--space-1);
-    }
-
-    .hero-actions .btn,
-    .form-actions .btn {
-        width: 100%;
-    }
-
-    .certification-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-}
-
-/* --- Motion preference ----------------------------------------------------
-   Honour the OS setting, but keep short state transitions so hover and
-   focus still read as feedback rather than as instant jumps. */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-
-    html {
-        scroll-behavior: auto;
-    }
-
-    .btn,
-    .link,
-    .badge,
-    .card,
-    .nav-link,
-    .project-card,
-    .theme-toggle {
-        transition-duration: var(--transition-fast) !important;
-    }
-
-    /* Decorative movement is dropped entirely rather than sped up. */
-    .project-card:hover,
-    .highlight-item:hover {
-        transform: none !important;
-    }
-
-    .project-card:hover .project-image img {
-        transform: none !important;
-    }
-}
-
-/* --- Print ----------------------------------------------------------------
-   A recruiter printing the page should get the content, not the chrome. */
 @media print {
+    body::after,
     .site-header,
-    .site-footer,
-    .hero-actions,
+    .ticker,
+    .hero-figure,
+    .hero-word-wrap,
     .contact-form,
-    .skip-to-content,
-    .theme-toggle,
-    .nav-toggle {
+    .quote-cta {
         display: none !important;
     }
 
+    .hero,
+    .project-detail-hero,
+    .quote-card {
+        min-height: 0;
+        background: none !important;
+    }
+
+    .hero *,
+    .project-detail-hero *,
+    .quote-card * {
+        color: black !important;
+    }
+
     .section {
-        padding-block: var(--space-5);
-        break-inside: avoid;
+        padding-block: 1.5rem;
     }
 
-    .project-card,
-    .education-card {
-        break-inside: avoid;
-        box-shadow: none;
-    }
-
-    a[href^="http"]::after {
-        content: " (" attr(href) ")";
-        font-size: 0.8em;
-        word-break: break-all;
+    a {
+        color: inherit;
+        text-decoration: underline;
     }
 }

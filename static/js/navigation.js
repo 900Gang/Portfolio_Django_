@@ -1,10 +1,10 @@
 /**
- * Site behaviour: mobile menu, theme button, scroll spy, sticky-header
- * state, and dismissible flash messages.
+ * Site behaviour: mobile menu, theme button, header state, scroll spy, and
+ * dismissible flash messages.
  *
- * Everything degrades to a working page without JavaScript — the menu links
- * are ordinary anchors, the theme follows the OS, and flash messages simply
- * stay on screen.
+ * Everything degrades to a working page without JavaScript: the menu links
+ * are ordinary anchors, the theme stays dark, and flash messages simply stay
+ * on screen.
  */
 (function () {
     'use strict';
@@ -27,34 +27,27 @@
             return;
         }
 
-        function close() {
-            menu.classList.remove('nav-menu-open');
-            toggle.setAttribute('aria-expanded', 'false');
+        function setOpen(open) {
+            menu.classList.toggle('nav-menu-open', open);
+            toggle.setAttribute('aria-expanded', String(open));
+            document.documentElement.classList.toggle('menu-open', open);
         }
 
         toggle.addEventListener('click', function (event) {
             event.stopPropagation();
-            var open = toggle.getAttribute('aria-expanded') === 'true';
-            toggle.setAttribute('aria-expanded', String(!open));
-            menu.classList.toggle('nav-menu-open', !open);
+            setOpen(toggle.getAttribute('aria-expanded') !== 'true');
         });
 
         // Choosing a destination should dismiss the panel covering it.
         menu.addEventListener('click', function (event) {
             if (event.target.closest('.nav-link')) {
-                close();
-            }
-        });
-
-        document.addEventListener('click', function (event) {
-            if (!toggle.contains(event.target) && !menu.contains(event.target)) {
-                close();
+                setOpen(false);
             }
         });
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' && menu.classList.contains('nav-menu-open')) {
-                close();
+                setOpen(false);
                 toggle.focus();
             }
         });
@@ -63,7 +56,7 @@
         // menu that is now the desktop bar.
         window.addEventListener('resize', function () {
             if (window.innerWidth > MOBILE_BREAKPOINT) {
-                close();
+                setOpen(false);
             }
         });
     }
@@ -87,25 +80,47 @@
         });
     }
 
-    /* --- Sticky header state --------------------------------------------- */
+    /* --- Header state -----------------------------------------------------
+       is-stuck: a solid bar once the page has scrolled. is-hidden: tucked
+       away while scrolling down past the first screen, back on any scroll
+       up. Never hidden while the mobile menu is open. */
     function initHeader() {
         var header = document.querySelector('.site-header');
         if (!header) {
             return;
         }
 
+        var HIDE_AFTER = 480;
+        var lastY = window.scrollY;
+        var ticking = false;
+
         function update() {
-            header.classList.toggle('is-stuck', window.scrollY > 8);
+            var y = window.scrollY;
+            var menuOpen = document.querySelector('.nav-menu.nav-menu-open');
+            header.classList.toggle('is-stuck', y > 8);
+            if (menuOpen || y < HIDE_AFTER || y < lastY) {
+                header.classList.remove('is-hidden');
+            } else if (y > lastY + 4) {
+                header.classList.add('is-hidden');
+            }
+            lastY = y;
+            ticking = false;
         }
 
         update();
-        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('scroll', function () {
+            if (!ticking) {
+                ticking = true;
+                window.requestAnimationFrame(update);
+            }
+        }, { passive: true });
     }
 
     /* --- Scroll spy -------------------------------------------------------
        Marks the nav link for whichever section currently owns the top of the
        viewport. IntersectionObserver rather than a scroll handler, so the
-       work happens off the main scroll path. */
+       work happens off the main scroll path. Off the home page the links are
+       "/#section" and there is nothing to spy on. */
     function initScrollSpy() {
         var links = Array.prototype.slice.call(
             document.querySelectorAll('.nav-link[href^="#"]')
@@ -162,8 +177,6 @@
             });
             select();
         }, {
-            // A band just below the header: a section counts as current once
-            // its top clears the nav and until it leaves the upper viewport.
             rootMargin: '-20% 0px -70% 0px',
             threshold: 0
         });

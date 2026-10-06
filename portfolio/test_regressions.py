@@ -546,10 +546,10 @@ class JourneySectionVisibilityTest(TestCase):
     def test_nav_entry_tracks_the_section_on_detail_pages_too(self):
         project = Project.objects.create(title="P", short_description="d")
         url = reverse("portfolio:project_detail", kwargs={"slug": project.slug})
-        self.assertNotIn('href="#journey"', self.client.get(url).content.decode())
+        self.assertNotIn('#journey" class="nav-link"', self.client.get(url).content.decode())
 
         JourneyEntry.objects.create(date="2025-01-01", title="J", description="d")
-        self.assertIn('href="#journey"', self.client.get(url).content.decode())
+        self.assertIn('#journey" class="nav-link"', self.client.get(url).content.decode())
 
 
 class DocumentHeadTest(TestCase):

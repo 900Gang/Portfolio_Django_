@@ -1,23 +1,27 @@
+{# Off the home page the section links point back to it ("/#about"); on the home page they stay in-page ("#about"). #}
+{% url 'portfolio:home' as home_url %}
+{% if request.path == home_url %}{% firstof "" as nav_base %}{% else %}{% firstof home_url as nav_base %}{% endif %}
 <nav class="site-navigation" aria-label="Primary">
     <div class="nav-container">
-        <a href="{% url 'portfolio:home' %}" class="nav-logo">
-            {{ site_owner }}<span class="nav-logo-role">{{ site_role }}</span>
-        </a>
+        <a href="{{ home_url }}" class="nav-logo">{{ site_owner }}<span class="nav-logo-role">{{ site_role }}</span></a>
 
         <ul class="nav-menu" id="primary-menu">
-            <li class="nav-item"><a href="#home" class="nav-link">Home</a></li>
-            <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
-            <li class="nav-item"><a href="#projects" class="nav-link">Projects</a></li>
-            <li class="nav-item"><a href="#skills" class="nav-link">Skills</a></li>
+            <li class="nav-item"><a href="{{ nav_base }}#home" class="nav-link">Home</a></li>
+            <li class="nav-item"><a href="{{ nav_base }}#about" class="nav-link">About</a></li>
+            <li class="nav-item"><a href="{{ nav_base }}#projects" class="nav-link">Projects</a></li>
+            <li class="nav-item"><a href="{{ nav_base }}#skills" class="nav-link">Skills</a></li>
             {% if has_journey_entries %}
-            <li class="nav-item"><a href="#journey" class="nav-link">Journey</a></li>
+            <li class="nav-item"><a href="{{ nav_base }}#journey" class="nav-link">Journey</a></li>
             {% endif %}
-            <li class="nav-item"><a href="#education" class="nav-link">Education</a></li>
-            <li class="nav-item"><a href="#certifications" class="nav-link">Certifications</a></li>
-            <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
+            <li class="nav-item"><a href="{{ nav_base }}#education" class="nav-link">Credentials</a></li>
+            <li class="nav-item"><a href="{{ nav_base }}#contact" class="nav-link">Contact</a></li>
         </ul>
 
         <div class="nav-actions">
+            {% if site_availability %}
+            <span class="nav-status"><span class="nav-status-dot" aria-hidden="true"></span><span class="nav-status-text">{{ site_availability }}</span></span>
+            {% endif %}
+
             {# Labelled from JavaScript, which knows the resolved theme. #}
             <button type="button" class="theme-toggle" aria-label="Switch colour theme">
                 <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
