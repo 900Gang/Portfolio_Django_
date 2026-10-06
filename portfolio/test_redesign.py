@@ -311,3 +311,76 @@ class ProcessSectionTest(TestCase):
         html = home_html(self.client)
         self.assertIn('href="#process" class="nav-link"', html)
         self.assertIn('<section id="process"', html)
+
+
+class SkillsAndJourneyTest(TestCase):
+    def test_skill_status_is_a_dot_plus_text_for_assistive_tech(self):
+        Skill.objects.create(
+            name="Keras", category=SkillCategory.BACKEND, status=SkillStatus.USED_IN_PROJECTS
+        )
+        html = home_html(self.client)
+        self.assertIn('<span class="skill-dot is-used_in_projects" aria-hidden="true"></span>', html)
+        self.assertIn('<span class="visually-hidden">(Used in Projects)</span>', html)
+
+    def test_journey_entries_sit_on_a_timeline(self):
+        JourneyEntry.objects.create(date="2025-03-01", title="Joined lab", description="d")
+        html = home_html(self.client)
+        self.assertIn('<ol class="timeline">', html)
+        self.assertIn("March 2025", html)
+
+
+class CredentialsTest(TestCase):
+    def test_quote_card_renders_the_agreed_line(self):
+        html = home_html(self.client)
+        self.assertIn("A model is only as good as the data it learns from.", html)
+        self.assertIn('href="#contact" class="quote-cta"', html)
+
+    def test_certifications_live_inside_the_education_section(self):
+        html = home_html(self.client)
+        education = html.index('<section id="education"')
+        certifications = html.index('id="certifications"')
+        contact = html.index('<section id="contact"')
+        self.assertLess(education, certifications)
+        self.assertLess(certifications, contact)
+
+
+class ContactTest(TestCase):
+    def _contact(self):
+        html = home_html(self.client)
+        return html[html.index('<section id="contact"'):]
+
+    def test_eyebrow_and_heading(self):
+        contact = self._contact()
+        self.assertIn("07 — Get In Touch", contact)
+        self.assertIn("Let's work", contact)
+
+    def test_channel_icons_are_decorative(self):
+        self.assertGreaterEqual(
+            self._contact().count('class="icon" viewBox="0 0 24 24" aria-hidden="true"'), 4
+        )
+
+    def test_phone_row_only_when_configured(self):
+        self.assertIn('href="tel:', self._contact())
+        with override_settings(SITE_PHONE=""):
+            self.assertNotIn('href="tel:', self._contact())
+
+
+class EmptyDatabaseTest(TestCase):
+    """A fresh deploy, before seeding, still renders a complete page."""
+
+    def test_every_section_renders_its_empty_state(self):
+        response = self.client.get(reverse("portfolio:home"))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        for text in (
+            "No featured projects yet. Check back soon!",
+            "No skills listed.",
+            "No education records.",
+            "No certifications listed.",
+            "No professional skills listed.",
+        ):
+            with self.subTest(text=text):
+                self.assertIn(text, html)
+        self.assertNotIn('class="ticker"', html)
+        self.assertNotIn('id="journey"', html)
+        self.assertEqual(html.count('data-count="0">00</dd>'), 3)
