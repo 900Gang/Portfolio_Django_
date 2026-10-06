@@ -332,3 +332,180 @@
     font-family: var(--font-body);
     font-size: 0.6em;
 }
+
+/* --- About --------------------------------------------------------------- */
+.about-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-8);
+}
+
+.about-statement {
+    margin: 0 0 var(--space-6);
+    font-size: var(--text-statement);
+    font-weight: var(--weight-medium);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+}
+
+.about-body p {
+    max-width: 62ch;
+    color: var(--color-text-secondary);
+}
+
+.about-highlights {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+.highlight-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-2) var(--space-5);
+    padding-block: var(--space-5);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.highlight-index {
+    grid-row: span 2;
+    font-family: var(--font-display);
+    font-size: var(--text-display-sm);
+    line-height: 1;
+    color: var(--color-accent);
+}
+
+.highlight-title {
+    margin: 0;
+    font-size: var(--text-md);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.highlight-description {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+@media (max-width: 900px) {
+    .about-layout {
+        grid-template-columns: 1fr;
+        gap: var(--space-7);
+    }
+}
+
+/* --- Projects ------------------------------------------------------------- */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-6);
+}
+
+.projects-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-5);
+    padding: var(--space-7);
+    border: var(--border-width) dashed var(--color-border-strong);
+}
+
+.projects-empty-text {
+    margin: 0;
+    color: var(--color-text-secondary);
+}
+
+@media (max-width: 760px) {
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Process: how I build -------------------------------------------------- */
+.process-steps {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* The red line that runs behind the four icons on wide screens. */
+.process-steps::before {
+    content: "";
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    left: 28px;
+    height: var(--border-width);
+    background: var(--color-accent);
+}
+
+.process-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.process-icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    font-size: 1.25rem;
+    color: var(--color-accent);
+    background: var(--color-bg);
+    border: var(--border-width) solid var(--color-accent);
+    border-radius: 50%;
+}
+
+.process-number {
+    margin-top: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-muted);
+}
+
+.process-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-regular);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--color-text-primary);
+}
+
+.process-text {
+    max-width: 28ch;
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+@media (max-width: 900px) {
+    .process-steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        row-gap: var(--space-7);
+    }
+
+    .process-steps::before {
+        display: none;
+    }
+}
+
+@media (max-width: 560px) {
+    .process-steps {
+        grid-template-columns: 1fr;
+    }
+}

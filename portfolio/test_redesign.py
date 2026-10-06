@@ -260,3 +260,54 @@ class TickerTest(TestCase):
 
     def test_no_band_without_skills(self):
         self.assertNotIn('class="ticker"', home_html(self.client))
+
+
+class AboutAndProjectsTest(TestCase):
+    def test_about_leads_with_a_statement_and_keeps_the_highlights(self):
+        html = home_html(self.client)
+        self.assertIn('class="about-statement"', html)
+        titles = re.findall(r'class="highlight-title">(.*?)</h3>', html)
+        self.assertEqual(
+            titles,
+            ["AI &amp; Machine Learning", "Python Development", "Real-Time &amp; IoT Data"],
+        )
+
+    def test_project_cards_are_numbered_in_order(self):
+        for i in range(2):
+            Project.objects.create(title=f"P{i}", short_description="d", featured=True, order=i)
+        numbers = re.findall(
+            r'class="project-number" aria-hidden="true">(\d+)<', home_html(self.client)
+        )
+        self.assertEqual(numbers, ["01", "02"])
+
+    def test_card_shows_at_most_four_technologies(self):
+        project = Project.objects.create(title="Many", short_description="d", featured=True)
+        project.technologies.set(
+            [Skill.objects.create(name=f"T{i}", category=SkillCategory.BACKEND) for i in range(6)]
+        )
+        html = home_html(self.client)
+        card = html[html.index('class="project-card"'):]
+        card = card[: card.index("</article>")]
+        self.assertEqual(card.count('class="tech-badge"'), 4)
+
+
+class ProcessSectionTest(TestCase):
+    def test_four_steps_render_in_order(self):
+        titles = re.findall(r'class="process-title">(.*?)</h3>', home_html(self.client))
+        self.assertEqual(titles, ["Data", "Train", "Evaluate", "Deploy"])
+
+    def test_step_copy_matches_the_spec(self):
+        html = home_html(self.client)
+        for line in (
+            "Collect, clean and label image and sensor data.",
+            "Build and train models with TensorFlow and Keras.",
+            "Measure accuracy, inspect failure cases, iterate.",
+            "Wrap models in Python pipelines and real-time backends.",
+        ):
+            with self.subTest(line=line):
+                self.assertIn(line, html)
+
+    def test_process_is_linked_from_the_nav(self):
+        html = home_html(self.client)
+        self.assertIn('href="#process" class="nav-link"', html)
+        self.assertIn('<section id="process"', html)

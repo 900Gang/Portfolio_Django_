@@ -8,88 +8,9 @@
 {% include 'portfolio/sections/hero.html' %}
 {% include 'portfolio/sections/ticker.html' %}
 
-{# ── About ─────────────────────────────────────────────────────────────── #}
-<section id="about" class="about section section-tinted">
-    <div class="shell">
-        <div class="section-head">
-            <span class="eyebrow about-label">01 — About</span>
-            <h2 class="section-title">About Me</h2>
-        </div>
-
-        <div class="about-layout">
-            <div class="about-content">
-                <p class="about-intro">
-                    I’m a B.Tech Computer Science graduate based in Kerala, India, currently
-                    an Artificial Intelligence Intern at Yangtso Four Labs. I build things
-                    across the stack — from scalable web applications to AI-driven IoT
-                    systems — and enjoy breaking monolithic ideas down into clean, efficient
-                    code.
-                </p>
-                <p class="about-intro">
-                    On the AI side I work the full model lifecycle: preparing and processing
-                    image datasets, training and evaluating classifiers with TensorFlow and
-                    Keras, and wrapping them in an end-to-end prediction pipeline with
-                    OpenCV. Alongside the models I build the systems that feed them — Python
-                    backends, REST APIs and real-time pipelines streaming live ESP32 sensor
-                    data through Firebase into AI-based detection.
-                </p>
-                <p class="about-intro">
-                    Skilled in Python, Java, Flutter, JavaScript and SQL, and familiar with
-                    Git, Firebase and TensorFlow, with experience collaborating on
-                    four-person project teams. Short term, I want to embed myself in real
-                    production workflows and become genuinely expert at writing clean,
-                    scalable code; longer term, as I deepen my grasp of system design, I see
-                    myself moving toward a technical architect role.
-                </p>
-            </div>
-
-            <div class="about-highlights">
-                <div class="highlight-item">
-                    <span class="highlight-index">01</span>
-                    <h3 class="highlight-title">AI &amp; Machine Learning</h3>
-                    <p class="highlight-description">Image classification built end to end with TensorFlow, Keras and OpenCV — from dataset preparation to an automated prediction pipeline.</p>
-                </div>
-                <div class="highlight-item">
-                    <span class="highlight-index">02</span>
-                    <h3 class="highlight-title">Python Development</h3>
-                    <p class="highlight-description">Python backends, data pipelines and prediction workflows, backed by SQL, REST APIs and Django.</p>
-                </div>
-                <div class="highlight-item">
-                    <span class="highlight-index">03</span>
-                    <h3 class="highlight-title">Real-Time &amp; IoT Data</h3>
-                    <p class="highlight-description">Streaming live ESP32 sensor data through Firebase into an AI detection pipeline, over I2C and a real-time backend.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-{# ── Projects ──────────────────────────────────────────────────────────── #}
-<section id="projects" class="projects section">
-    <div class="shell">
-        <div class="section-head">
-            <span class="eyebrow">02 — Work</span>
-            <h2 class="section-title">Featured Projects</h2>
-            <p class="section-lede">
-                Systems built end to end — from ESP32 sensor integration and real-time
-                data pipelines to model training and the Python that ties them together.
-            </p>
-        </div>
-
-        {% if featured_projects %}
-        <div class="projects-grid">
-            {% for project in featured_projects %}
-            {% include 'components/project_card.html' %}
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="projects-empty">
-            <p class="projects-empty-text">No featured projects yet. Check back soon!</p>
-            <a href="#about" class="btn btn-primary">Learn More About Me</a>
-        </div>
-        {% endif %}
-    </div>
-</section>
+{% include 'portfolio/sections/about.html' %}
+{% include 'portfolio/sections/projects.html' %}
+{% include 'portfolio/sections/process.html' %}
 
 {# ── Skills ────────────────────────────────────────────────────────────── #}
 <section id="skills" class="skills section section-tinted">
