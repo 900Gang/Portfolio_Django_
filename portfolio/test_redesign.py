@@ -544,3 +544,75 @@ class FinalReviewFixesTest(TestCase):
         js = (BASE_DIR / "static" / "js" / "navigation.js").read_text()
         self.assertIn("inert", js)
         self.assertIn("'main, .site-footer'", js)
+
+
+class DeferredMinorsTest(TestCase):
+    """The four minor findings deferred from the redesign review."""
+
+    def _css(self, name):
+        return (BASE_DIR / "static" / "css" / name).read_text()
+
+    # 1. Header with JavaScript off ---------------------------------------
+    def test_header_is_only_transparent_when_script_can_make_it_solid(self):
+        """Only navigation.js adds .is-stuck, so without it a transparent header
+        would sit on top of body copy for the whole page."""
+        theme = (BASE_DIR / "static" / "js" / "theme.js").read_text()
+        css = self._css("components.css")
+        self.assertIn("classList.add('js')", theme)
+        self.assertIn(".js .has-stage-hero .site-header:not(.is-stuck) {", css)
+        self.assertNotRegex(css, r"(?m)^\.has-stage-hero \.site-header:not\(\.is-stuck\)")
+
+    # 2. Long role word -----------------------------------------------------
+    def test_an_overflowing_role_word_is_clipped_evenly_on_both_sides(self):
+        """A nowrap line wider than its box ignores text-align: center; flex
+        centring splits the overflow between both edges."""
+        rule = re.search(r"(?m)^\.hero-word-wrap \{([^}]*)\}", self._css("sections.css")).group(1)
+        self.assertIn("display: flex", rule)
+        self.assertIn("justify-content: center", rule)
+
+    # 3. Project number and quote wording ---------------------------------
+    def test_featured_project_page_shows_its_card_number(self):
+        first = Project.objects.create(title="First", short_description="d", featured=True, order=0)
+        second = Project.objects.create(title="Second", short_description="d", featured=True, order=1)
+        for project, number in ((first, "01"), (second, "02")):
+            with self.subTest(project=project.title):
+                html = self.client.get(project.get_absolute_url()).content.decode()
+                self.assertIn(f'<span class="project-detail-number" aria-hidden="true">{number}</span>', html)
+
+    def test_project_number_matches_the_home_page_card(self):
+        Project.objects.create(title="Later", short_description="d", featured=True, order=5)
+        target = Project.objects.create(title="Target", short_description="d", featured=True, order=5)
+        cards = re.findall(
+            r'class="project-number" aria-hidden="true">(\d+)<.*?class="project-title-link">([^<]+)<',
+            home_html(self.client), re.S,
+        )
+        expected = dict((title, number) for number, title in cards)["Target"]
+        html = self.client.get(target.get_absolute_url()).content.decode()
+        self.assertIn(f'aria-hidden="true">{expected}</span>', html)
+
+    def test_unfeatured_project_page_has_no_number(self):
+        project = Project.objects.create(title="Side", short_description="d")
+        html = self.client.get(project.get_absolute_url()).content.decode()
+        self.assertNotIn("project-detail-number", html)
+
+    def test_quote_link_uses_the_spec_wording(self):
+        html = home_html(self.client)
+        self.assertIn("Let's create something", html)
+        self.assertNotIn("Let's build something", html)
+
+    # 4. Portrait shape ---------------------------------------------------
+    def test_make_portrait_warns_when_the_photo_shape_differs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            square = Path(tmp) / "square.jpg"
+            Image.new("RGB", (800, 800), (40, 40, 40)).save(square, "JPEG")
+            err = io.StringIO()
+            call_command("make_portrait", str(square), "--output-dir", tmp, stdout=io.StringIO(), stderr=err)
+            self.assertIn("4:7", err.getvalue())
+
+    def test_make_portrait_is_quiet_for_the_expected_shape(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tall = Path(tmp) / "tall.jpg"
+            Image.new("RGB", (768, 1344), (40, 40, 40)).save(tall, "JPEG")
+            err = io.StringIO()
+            call_command("make_portrait", str(tall), "--output-dir", tmp, stdout=io.StringIO(), stderr=err)
+            self.assertEqual(err.getvalue(), "")
