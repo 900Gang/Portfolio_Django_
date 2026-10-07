@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Motion — keyframes, the hero intro and scroll reveals.
+
+   Every "hidden until revealed" state is scoped under .motion-ready, which
+   theme.js adds to <html> only when the visitor has not asked for reduced
+   motion, and withdraws if motion.js never runs. Without the class —
+   JavaScript off, reduced motion, or a failed script — everything renders in
+   its final, visible state. Only transform and opacity are animated.
+   ========================================================================== */
+
+@keyframes hero-rise {
+    from { opacity: 0; transform: translateY(22%); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes portrait-in {
+    from { opacity: 0; transform: scale(1.05); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes detect-in {
+    from { opacity: 0; transform: scale(1.3); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes ticker-scroll {
+    to { transform: translateX(-50%); }
+}
+
+/* --- Ticker: always moving, paused while hovered --------------------------- */
+.ticker-track {
+    animation: ticker-scroll 48s linear infinite;
+}
+
+.ticker:hover .ticker-track {
+    animation-play-state: paused;
+}
+
+/* --- Hero intro: about two seconds, once per page load --------------------- */
+.motion-ready .hero-word {
+    animation: hero-rise var(--dur-slow) var(--ease-out) both;
+}
+
+.motion-ready .hero-portrait {
+    animation: portrait-in 1000ms var(--ease-out) 250ms both;
+}
+
+.motion-ready .hero-detect {
+    animation: detect-in 450ms var(--ease-out) 1150ms both;
+}
+
+.motion-ready .hero-detect-label {
+    animation: fade-in 250ms ease 1450ms both;
+}
+
+.motion-ready .hero-intro > *,
+.motion-ready .hero-aside > * {
+    animation: fade-up 700ms var(--ease-out) both;
+}
+
+.motion-ready .hero-intro > :nth-child(1) { animation-delay: 450ms; }
+.motion-ready .hero-intro > :nth-child(2) { animation-delay: 530ms; }
+.motion-ready .hero-intro > :nth-child(3) { animation-delay: 610ms; }
+.motion-ready .hero-intro > :nth-child(4) { animation-delay: 690ms; }
+.motion-ready .hero-intro > :nth-child(5) { animation-delay: 770ms; }
+.motion-ready .hero-intro > :nth-child(6) { animation-delay: 850ms; }
+.motion-ready .hero-aside > :nth-child(1) { animation-delay: 900ms; }
+.motion-ready .hero-aside > :nth-child(2) { animation-delay: 1000ms; }
+
+/* --- Scroll reveals ---------------------------------------------------------- */
+.motion-ready [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+    transition-delay: var(--reveal-delay, 0ms);
+}
+
+.motion-ready [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+}
+
+/* --- Reduced motion ----------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .ticker-track {
+        width: auto;
+        animation: none;
+    }
+
+    .ticker-list {
+        flex-wrap: wrap;
+    }
+
+    .ticker-list[aria-hidden="true"] {
+        display: none;
+    }
+}

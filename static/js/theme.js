@@ -8,6 +8,9 @@
  * portrait only works on black. The OS colour-scheme preference is
  * deliberately not consulted. Light is an explicit choice made with the
  * toggle, and it persists.
+ *
+ * It also sets the motion flag described below, for the same reason: it has
+ * to be in place before the first frame.
  */
 (function () {
     var STORAGE_KEY = 'portfolio-theme';
@@ -28,6 +31,21 @@
     }
 
     apply(stored() || DEFAULT_THEME);
+
+    // Motion flag, set before first paint so the hero intro starts from its
+    // hidden state instead of flashing its final state first. motion.css
+    // scopes every hidden state under this class. If motion.js has not run
+    // within three seconds (blocked or failed), the flag is withdrawn so
+    // revealed content can never stay invisible.
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduceMotion) {
+        document.documentElement.classList.add('motion-ready');
+        window.setTimeout(function () {
+            if (!window.portfolioMotion) {
+                document.documentElement.classList.remove('motion-ready');
+            }
+        }, 3000);
+    }
 
     // Exposed so navigation.js can drive the toggle without duplicating the
     // storage key or the resolution rules.

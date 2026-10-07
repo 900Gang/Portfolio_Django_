@@ -415,3 +415,75 @@ class ErrorPagesTest(TestCase):
         html = (BASE_DIR / "templates" / "500.html").read_text()
         self.assertIn("#070707", html)
         self.assertIn("Anton", html)
+
+
+def _strip_keyframes(css):
+    """Remove every @keyframes block (balanced braces) from a stylesheet."""
+    out, position = [], 0
+    while True:
+        start = css.find("@keyframes", position)
+        if start == -1:
+            out.append(css[position:])
+            return "".join(out)
+        out.append(css[position:start])
+        depth, index = 0, css.index("{", start)
+        while True:
+            if css[index] == "{":
+                depth += 1
+            elif css[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            index += 1
+        position = index + 1
+
+
+class MotionTest(TestCase):
+    """Motion must never cost a visitor content or comfort."""
+
+    def _css(self):
+        return (BASE_DIR / "static" / "css" / "motion.css").read_text()
+
+    def test_reduced_motion_switches_animation_off(self):
+        css = self._css()
+        block = css[css.index("@media (prefers-reduced-motion: reduce)"):]
+        self.assertIn("animation-duration: 0.01ms !important", block)
+        self.assertIn("transition-duration: 0.01ms !important", block)
+
+    def test_hidden_states_only_apply_once_motion_is_ready(self):
+        """With JavaScript off, or motion.js blocked, nothing may stay hidden."""
+        css = _strip_keyframes(self._css())
+        hidden = [
+            selector
+            for selector, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css)
+            if re.search(r"opacity:\s*0\s*;", body)
+        ]
+        self.assertTrue(hidden, "expected at least one hidden-before-reveal rule")
+        for selector in hidden:
+            for part in selector.split(","):
+                with self.subTest(selector=part.strip()):
+                    self.assertIn(".motion-ready", part)
+
+    def test_keyframes_animate_only_transform_and_opacity(self):
+        frames = re.findall(
+            r"@keyframes\s+([\w-]+)\s*\{((?:[^{}]*\{[^{}]*\})*)\s*\}", self._css()
+        )
+        self.assertTrue(frames, "no keyframes found")
+        for name, body in frames:
+            with self.subTest(keyframes=name):
+                self.assertLessEqual(
+                    set(re.findall(r"([a-z-]+)\s*:", body)), {"opacity", "transform"}
+                )
+
+    def test_motion_flag_is_withdrawn_if_motion_js_never_runs(self):
+        theme = (BASE_DIR / "static" / "js" / "theme.js").read_text()
+        motion = (BASE_DIR / "static" / "js" / "motion.js").read_text()
+        self.assertIn("motion-ready", theme)
+        self.assertIn("prefers-reduced-motion: reduce", theme)
+        self.assertIn("window.portfolioMotion", theme)
+        self.assertIn("window.portfolioMotion = true", motion)
+
+    def test_motion_assets_are_wired_into_every_page(self):
+        html = home_html(self.client)
+        self.assertIn("css/motion.css", html)
+        self.assertIn('js/motion.js" defer', html)
