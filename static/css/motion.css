@@ -8,9 +8,11 @@
    its final, visible state. Only transform and opacity are animated.
    ========================================================================== */
 
+/* Transform only: the giant word is the page's largest element, and Chrome
+   never counts an element that first paints at opacity 0 as the LCP. */
 @keyframes hero-rise {
-    from { opacity: 0; transform: translateY(22%); }
-    to { opacity: 1; transform: none; }
+    from { transform: translateY(22%); }
+    to { transform: none; }
 }
 
 @keyframes portrait-in {

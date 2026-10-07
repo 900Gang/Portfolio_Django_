@@ -66,6 +66,18 @@ class ChromeTest(TestCase):
         self.assertIn(".site-header.is-hidden", css)
         self.assertIn(".site-header:focus-within", css)
 
+    def test_availability_text_gives_way_before_the_nav_runs_out_of_room(self):
+        """At laptop widths the eight links plus the availability text overflow
+        the bar; the text collapses to its dot first."""
+        css = (BASE_DIR / "static" / "css" / "responsive.css").read_text()
+        widths = [
+            int(width)
+            for width, body in re.findall(r"@media \(max-width: (\d+)px\) \{(.*?)\n\}", css, re.S)
+            if ".nav-status-text" in body
+        ]
+        self.assertTrue(widths, "nav-status-text is never hidden")
+        self.assertGreaterEqual(max(widths), 1200)
+
     def test_availability_shows_in_the_nav_only_when_set(self):
         self.assertIn('class="nav-status"', home_html(self.client))
         with override_settings(SITE_AVAILABILITY=""):
@@ -474,6 +486,16 @@ class MotionTest(TestCase):
                 self.assertLessEqual(
                     set(re.findall(r"([a-z-]+)\s*:", body)), {"opacity", "transform"}
                 )
+
+    def test_largest_hero_text_paints_on_the_first_frame(self):
+        """Chrome never counts an element that first paints at opacity 0 as
+        the LCP, so the giant role word rises with transform only; a fade
+        there made a late text update the LCP at about 3.4s on mobile."""
+        css = self._css()
+        frames = dict(re.findall(r"@keyframes\s+([\w-]+)\s*\{((?:[^{}]*\{[^{}]*\})*)\s*\}", css))
+        word_rule = re.search(r"\.motion-ready \.hero-word \{([^}]*)\}", css).group(1)
+        animation = re.search(r"animation:\s*([\w-]+)", word_rule).group(1)
+        self.assertNotIn("opacity", frames[animation])
 
     def test_motion_flag_is_withdrawn_if_motion_js_never_runs(self):
         theme = (BASE_DIR / "static" / "js" / "theme.js").read_text()

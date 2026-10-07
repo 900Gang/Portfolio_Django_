@@ -8,6 +8,14 @@
     overflow: hidden;
 }
 
+/* Eight links plus the availability text overflow the bar below about
+   1200px; the text gives way to its dot first. */
+@media (max-width: 1200px) {
+    .nav-status-text {
+        display: none;
+    }
+}
+
 @media (max-width: 900px) {
     .nav-toggle {
         display: inline-grid;
