@@ -1,157 +1,169 @@
 /* ==========================================================================
-   Base — element-level typography, forms and page scaffolding.
-   Component classes live in components.css.
+   Base — element typography, page scaffolding and shared layout primitives.
    ========================================================================== */
 
-/* --- Headings ---------------------------------------------------------- */
-h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-family-sans-serif);
-    letter-spacing: var(--letter-spacing-tight);
-    text-wrap: balance;
+body {
+    background-color: var(--color-bg);
+    overflow-x: hidden;
 }
 
-h1 { font-size: var(--font-size-4xl); font-weight: var(--font-weight-bold); }
-h2 { font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold); }
-h3 { font-size: var(--font-size-xl);  font-weight: var(--font-weight-semibold); }
-h4 { font-size: var(--font-size-lg);  font-weight: var(--font-weight-semibold); }
-
-/* Body copy reads better slightly narrower than its container. */
-p {
-    text-wrap: pretty;
+/* Film grain over the whole page: fixed, non-interactive, no request. */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-grain);
+    pointer-events: none;
+    background-image: var(--texture-grain);
+    opacity: var(--grain-opacity);
+    filter: invert(var(--grain-invert));
 }
 
-/* --- Links -------------------------------------------------------------- */
-a {
-    text-decoration-color: var(--color-accent);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.2em;
-    transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+h1,
+h2 {
+    font-family: var(--font-display);
+    font-weight: var(--weight-regular);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
 }
 
-a:hover {
-    text-decoration-color: var(--color-accent-hover);
+h3,
+h4 {
+    font-family: var(--font-body);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
 }
 
-/* --- Media -------------------------------------------------------------- */
-img {
-    border-radius: var(--radius-md);
+/* --- Page scaffolding --------------------------------------------------- */
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* --- Form elements ------------------------------------------------------ */
-input,
-select,
-textarea {
-    display: block;
+/* The header is fixed, so ordinary pages start below it. Pages whose top is
+   a dark stage let the stage run underneath the transparent header. */
+.site-main {
+    flex: 1;
+    padding-top: var(--header-height);
+}
+
+.has-stage-hero .site-main {
+    padding-top: 0;
+}
+
+.shell {
     width: 100%;
-    padding: var(--space-3) var(--space-4);
-    font-size: var(--font-size-base);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface);
+    max-width: var(--shell-max);
+    margin-inline: auto;
+    padding-inline: var(--shell-pad);
+}
+
+.shell-narrow {
+    max-width: 52rem;
+}
+
+.section {
+    padding-block: var(--section-pad);
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+/* --- Section heading: eyebrow + display title + hairline rule ----------- */
+.section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3) var(--space-6);
+    margin-bottom: var(--space-7);
+}
+
+.section-head-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.eyebrow {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-accent);
+}
+
+.section-title {
+    margin: 0;
+    font-size: var(--text-display-md);
+}
+
+.section-rule {
+    flex: 1 1 8rem;
+    height: var(--border-width);
+    margin-bottom: 0.9em;
+    background: var(--color-border);
+}
+
+.section-lede {
+    flex-basis: 100%;
+    max-width: 60ch;
+    margin: 0;
+    font-size: var(--text-md);
+    color: var(--color-text-secondary);
+}
+
+/* --- Small shared pieces ------------------------------------------------- */
+.link {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.link:hover {
     color: var(--color-text-primary);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    box-shadow: var(--focus-ring);
+.icon {
+    width: 1.25em;
+    height: 1.25em;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
-/* --- Buttons ------------------------------------------------------------
-   Variants (.btn-primary / .btn-secondary / .btn-outline) are defined once,
-   in components.css, alongside the .btn base class. */
-button {
-    font: inherit;
-    border: none;
-    cursor: pointer;
-}
-
-button:focus-visible {
-    outline: none;
-    box-shadow: var(--focus-ring);
-}
-
-/* --- Accessibility helpers ---------------------------------------------- */
 .visually-hidden {
-    position: absolute;
+    position: absolute !important;
     width: 1px;
     height: 1px;
     padding: 0;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    clip: rect(0 0 0 0);
     white-space: nowrap;
     border: 0;
 }
 
 .skip-to-content {
     position: absolute;
-    left: -9999px;
-    top: auto;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
+    top: -100px;
+    left: var(--space-4);
+    z-index: calc(var(--z-overlay) + 2);
+    padding: var(--space-3) var(--space-5);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--color-on-accent);
+    background: var(--color-accent-fill);
 }
 
 .skip-to-content:focus {
-    left: var(--space-4);
     top: var(--space-4);
-    width: auto;
-    height: auto;
-    overflow: auto;
-    background: var(--color-surface);
-    padding: var(--space-3) var(--space-5);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    color: var(--color-text-primary);
-    font-size: var(--font-size-base);
-    z-index: 1100;
-    text-decoration: none;
-}
-
-/* --- Page scaffolding ---------------------------------------------------- */
-.page-wrapper {
-    min-height: 100vh;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-}
-
-.site-main {
-    flex: 1 0 auto;
-}
-
-/* The one horizontal container. Every section's content sits inside a
-   .shell, so the left edge is identical the whole way down the page. */
-.shell {
-    width: 100%;
-    max-width: var(--layout-max-width);
-    margin-inline: auto;
-    padding-inline: var(--layout-page-padding);
-}
-
-.shell-narrow {
-    max-width: var(--layout-narrow-width);
-}
-
-/* --- Header -------------------------------------------------------------- */
-.site-header {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background-color: var(--color-header-bg);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
-    backdrop-filter: saturate(180%) blur(14px);
-    border-bottom: 1px solid transparent;
-    transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
-}
-
-/* Set by navigation.js once the page has scrolled, so the header only
-   separates itself from the content when there is content behind it. */
-.site-header.is-stuck {
-    border-bottom-color: var(--color-border);
-    box-shadow: var(--shadow-sm);
+    color: var(--color-on-accent);
 }

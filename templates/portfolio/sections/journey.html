@@ -1,0 +1,27 @@
+{# Omitted entirely when empty rather than showing visitors an empty state. #}
+{% if journey_entries %}
+<section id="journey" class="journey section">
+    <div class="shell">
+        <div class="section-head" data-reveal>
+            <div class="section-head-text">
+                <span class="eyebrow">05 — Journey</span>
+                <h2 class="section-title">Journey</h2>
+            </div>
+            <span class="section-rule" aria-hidden="true"></span>
+        </div>
+
+        <ol class="timeline">
+            {% for entry in journey_entries %}
+            <li class="timeline-item" data-reveal>
+                <div class="timeline-meta">
+                    <time class="timeline-date" datetime="{{ entry.date|date:'Y-m-d' }}">{{ entry.date|date:'F Y' }}</time>
+                    <span class="timeline-type badge">{{ entry.get_entry_type_display }}</span>
+                </div>
+                <h3 class="timeline-title">{{ entry.title }}</h3>
+                <p class="timeline-description">{{ entry.description|truncatewords:25 }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+{% endif %}

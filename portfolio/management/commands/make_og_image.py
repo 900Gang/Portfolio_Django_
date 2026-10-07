@@ -3,48 +3,60 @@ Render the link-preview (Open Graph) image.
 
 Social platforms will not render an SVG og:image and do not execute CSS, so
 the card has to exist as a raster file. Generating it from the site's own
-identity settings — rather than hand-designing one in an image editor — means
-it cannot drift out of date when the name, role or tagline changes.
+identity settings — rather than hand-designing one in an image editor —
+means it cannot drift out of date when the name, role or tagline changes.
 
-    python manage.py make_og_image
+    python manage.py make_og_image --photo design/photos/1000256302.jpg
 
-Pillow is already a dependency (ImageField), so this adds no new packages.
+The headshot is optional; without it the card is text only. Pillow is
+already a dependency (ImageField), so this adds no new packages.
 """
 from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+
+from portfolio.templatetags.portfolio_extras import handle as detection_handle
 
 # Facebook, LinkedIn, Slack and X all crop toward 1.91:1.
 WIDTH, HEIGHT = 1200, 630
-MARGIN = 84
+MARGIN = 72
+PHOTO_SIZE = 470
+GAP = 48
 
 # Pulled from the dark theme in variables.css. Duplicated deliberately: the
-# generator cannot parse CSS custom properties, and a link preview that
-# silently stopped matching the site would be worse than one that is pinned.
-BG = (12, 18, 17)
-SURFACE = (20, 29, 28)
-ACCENT = (86, 200, 192)
-TEXT = (232, 239, 236)
-MUTED = (134, 150, 146)
-RULE = (38, 49, 47)
+# generator cannot parse CSS custom properties, and a preview that silently
+# stopped matching the site would be worse than one that is pinned.
+BG = (7, 7, 7)
+ACCENT = (239, 59, 66)
+ACCENT_FILL = (214, 31, 38)
+TEXT = (242, 239, 234)
+MUTED = (138, 132, 126)
+RULE = (38, 38, 38)
+WHITE = (255, 255, 255)
 
-# Preference order: the site's own typeface if it happens to be installed,
-# then a reasonable sans on each platform.
+# Where the face sits inside the square headshot crop, as fractions
+# (left, top, right, bottom). Tuned for design/photos/1000256302.jpg.
+FACE_BOX = (0.27, 0.18, 0.75, 0.70)
+
+# Preference order: the site's own typefaces if installed, then the closest
+# common system faces. Impact stands in for Anton on Windows.
 FONT_CANDIDATES = {
-    'bold': [
-        '/Library/Fonts/IBMPlexSans-Bold.ttf',
-        '~/Library/Fonts/IBMPlexSans-Bold.ttf',
-        '/usr/share/fonts/truetype/ibm-plex/IBMPlexSans-Bold.ttf',
-        '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
+    'display': [
+        '~/Library/Fonts/Anton-Regular.ttf',
+        '/Library/Fonts/Anton-Regular.ttf',
+        '/usr/share/fonts/truetype/anton/Anton-Regular.ttf',
+        'C:/Windows/Fonts/Anton-Regular.ttf',
+        '/System/Library/Fonts/Supplemental/Impact.ttf',
+        '/usr/share/fonts/truetype/msttcorefonts/Impact.ttf',
+        'C:/Windows/Fonts/impact.ttf',
+        'C:/Windows/Fonts/ariblk.ttf',
         '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-        'C:/Windows/Fonts/arialbd.ttf',
     ],
     'regular': [
-        '/Library/Fonts/IBMPlexSans-Regular.ttf',
-        '~/Library/Fonts/IBMPlexSans-Regular.ttf',
-        '/usr/share/fonts/truetype/ibm-plex/IBMPlexSans-Regular.ttf',
+        '~/Library/Fonts/Archivo-Regular.ttf',
+        '/usr/share/fonts/truetype/archivo/Archivo-Regular.ttf',
         '/System/Library/Fonts/Supplemental/Arial.ttf',
         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
         'C:/Windows/Fonts/arial.ttf',
@@ -69,6 +81,16 @@ def _font(kind, size):
     return ImageFont.load_default()
 
 
+def _fit(draw, text, kind, size, max_width, minimum=40):
+    """The largest font of `kind`, from `size` down, that fits `text`."""
+    while size > minimum:
+        font = _font(kind, size)
+        if draw.textlength(text, font=font) <= max_width:
+            return font
+        size -= 4
+    return _font(kind, minimum)
+
+
 def _wrap(draw, text, font, max_width):
     """Greedy word wrap against the rendered width of each candidate line."""
     lines, line = [], ''
@@ -84,6 +106,37 @@ def _wrap(draw, text, font, max_width):
     return lines
 
 
+def _draw_photo(image, draw, photo_path):
+    """The headshot on the right, square-cropped, with the hero's detection box."""
+    with Image.open(photo_path) as source:
+        photo = ImageOps.fit(
+            ImageOps.exif_transpose(source).convert('RGB'),
+            (PHOTO_SIZE, PHOTO_SIZE),
+            Image.Resampling.LANCZOS,
+            centering=(0.5, 0.35),
+        )
+    left = WIDTH - MARGIN - PHOTO_SIZE
+    top = (HEIGHT - PHOTO_SIZE) // 2
+    image.paste(photo, (left, top))
+
+    x0 = left + round(PHOTO_SIZE * FACE_BOX[0])
+    y0 = top + round(PHOTO_SIZE * FACE_BOX[1])
+    x1 = left + round(PHOTO_SIZE * FACE_BOX[2])
+    y1 = top + round(PHOTO_SIZE * FACE_BOX[3])
+    draw.rectangle([x0, y0, x1, y1], outline=ACCENT, width=2)
+
+    arm = 18
+    for corner_x, corner_y, step in ((x0, y0, 1), (x1, y1, -1)):
+        draw.line([(corner_x, corner_y), (corner_x + step * arm, corner_y)], fill=ACCENT, width=5)
+        draw.line([(corner_x, corner_y), (corner_x, corner_y + step * arm)], fill=ACCENT, width=5)
+
+    label = f'{detection_handle(settings.SITE_OWNER)} · 0.99'
+    font = _font('mono', 18)
+    label_width = draw.textlength(label, font=font)
+    draw.rectangle([x0, y0 - 30, x0 + label_width + 16, y0 - 2], fill=ACCENT_FILL)
+    draw.text((x0 + 8, y0 - 26), label, font=font, fill=WHITE)
+
+
 class Command(BaseCommand):
     help = 'Render the Open Graph link-preview image into the static tree.'
 
@@ -92,61 +145,66 @@ class Command(BaseCommand):
             '--output',
             help='Destination path. Defaults to static/<OG_IMAGE_STATIC_PATH>.',
         )
+        parser.add_argument(
+            '--photo',
+            help='Optional headshot placed on the right of the card.',
+        )
 
     def handle(self, *args, **options):
         relative = settings.OG_IMAGE_STATIC_PATH
         if not relative:
             raise CommandError('OG_IMAGE_STATIC_PATH is empty; nothing to render.')
 
+        photo = Path(options['photo']) if options['photo'] else None
+        if photo is not None and not photo.is_file():
+            raise CommandError(f'{photo} does not exist.')
+
         destination = Path(options['output']) if options['output'] else (
-            settings.BASE_DIR / 'static' / relative
+            Path(settings.BASE_DIR) / 'static' / relative
         )
         destination.parent.mkdir(parents=True, exist_ok=True)
 
         image = Image.new('RGB', (WIDTH, HEIGHT), BG)
         draw = ImageDraw.Draw(image)
 
-        # Faint engineering grid, echoing the hero background.
-        for x in range(0, WIDTH, 60):
-            draw.line([(x, 0), (x, HEIGHT)], fill=SURFACE, width=1)
-        for y in range(0, HEIGHT, 60):
-            draw.line([(0, y), (WIDTH, y)], fill=SURFACE, width=1)
+        text_width = WIDTH - 2 * MARGIN
+        if photo is not None:
+            _draw_photo(image, draw, photo)
+            text_width -= PHOTO_SIZE + GAP
 
-        # Accent bar down the left edge.
-        draw.rectangle([0, 0, 10, HEIGHT], fill=ACCENT)
+        y = MARGIN + 6
+        draw.text((MARGIN, y), settings.SITE_ROLE.upper(), font=_font('mono', 24), fill=ACCENT)
+        y += 54
 
-        eyebrow_font = _font('mono', 24)
-        name_font = _font('bold', 92)
-        role_font = _font('regular', 36)
-        tag_font = _font('regular', 26)
+        name = settings.SITE_OWNER.upper()
+        name_font = _fit(draw, name, 'display', 132, text_width)
+        draw.text((MARGIN, y), name, font=name_font, fill=TEXT)
+        y += getattr(name_font, 'size', 60) + 26
 
-        y = MARGIN
+        draw.rectangle([MARGIN, y, MARGIN + 96, y + 4], fill=ACCENT)
+        y += 34
 
-        draw.text((MARGIN, y), settings.SITE_ROLE.upper(), font=eyebrow_font, fill=ACCENT)
-        y += 62
+        focus_font = _font('regular', 30)
+        for line in _wrap(draw, settings.SITE_FOCUS, focus_font, text_width)[:2]:
+            draw.text((MARGIN, y), line, font=focus_font, fill=TEXT)
+            y += 42
 
-        draw.text((MARGIN, y), settings.SITE_OWNER, font=name_font, fill=TEXT)
-        y += 118
+        y += 10
+        description_font = _font('regular', 22)
+        for line in _wrap(draw, settings.SITE_DESCRIPTION, description_font, text_width)[:2]:
+            draw.text((MARGIN, y), line, font=description_font, fill=MUTED)
+            y += 32
 
-        draw.line([(MARGIN, y), (MARGIN + 120, y)], fill=ACCENT, width=4)
-        y += 44
-
-        for line in _wrap(draw, settings.SITE_FOCUS, role_font, WIDTH - 2 * MARGIN)[:2]:
-            draw.text((MARGIN, y), line, font=role_font, fill=TEXT)
-            y += 50
-
-        y += 14
-        for line in _wrap(draw, settings.SITE_DESCRIPTION, tag_font, WIDTH - 2 * MARGIN)[:2]:
-            draw.text((MARGIN, y), line, font=tag_font, fill=MUTED)
-            y += 38
-
-        # Footer rule with the contact line.
-        footer_y = HEIGHT - MARGIN - 20
-        draw.line([(MARGIN, footer_y - 34), (WIDTH - MARGIN, footer_y - 34)], fill=RULE, width=2)
+        footer_y = HEIGHT - MARGIN - 18
+        draw.line(
+            [(MARGIN, footer_y - 26), (MARGIN + text_width, footer_y - 26)],
+            fill=RULE, width=2,
+        )
         footer = ' · '.join(
             part for part in (settings.SITE_LOCATION, settings.SITE_EMAIL) if part
         )
-        draw.text((MARGIN, footer_y), footer, font=_font('mono', 22), fill=MUTED)
+        footer_font = _fit(draw, footer, 'mono', 20, text_width, minimum=12)
+        draw.text((MARGIN, footer_y), footer, font=footer_font, fill=MUTED)
 
         image.save(destination, 'PNG', optimize=True)
         self.stdout.write(self.style.SUCCESS(f'Wrote {destination} ({WIDTH}x{HEIGHT})'))

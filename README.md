@@ -17,37 +17,63 @@ skills, and a contact form that stores messages.
 
 ## Design
 
+"Editorial noir": near-black and red, huge condensed display type, and a
+spotlight portrait with a computer-vision detection box drawn over the face.
 The visual layer is a small, explicit design system rather than a CSS
 framework:
 
 | File | Responsibility |
 |------|----------------|
-| `static/css/variables.css` | **Every colour in the project.** Design tokens for colour, type, spacing, shape and motion |
+| `static/css/variables.css` | **Every colour in the project.** Design tokens for colour, type, spacing, shape, motion and the film-grain texture |
 | `static/css/reset.css` | Minimal normalisation |
-| `static/css/base.css` | Element-level typography, forms, page scaffolding |
-| `static/css/components.css` | Buttons, cards, navigation, every section, project page |
-| `static/css/responsive.css` | Mobile navigation, small-screen overrides, reduced-motion and print |
+| `static/css/base.css` | Element typography, page scaffolding, section headings, grain overlay |
+| `static/css/components.css` | Header and navigation, buttons, chips, project cards, form, alerts, footer |
+| `static/css/sections.css` | Every page section in order — hero, ticker, about, projects, process, skills, journey, credentials, contact — then the project page and the error page, each with its own breakpoints |
+| `static/css/motion.css` | Keyframes, the hero intro, scroll reveals and the reduced-motion switch |
+| `static/css/responsive.css` | Mobile navigation, page-wide small-screen overrides and print |
+
+The home page is one Django partial per section, in `templates/portfolio/sections/`.
 
 Rules the test suite enforces:
 
 - **Colour lives in one file.** No hex or `rgba()` value may appear outside
-  `variables.css`, and every `--color-*` token must have a dark-mode value.
+  `variables.css`, every `--color-*` token must exist in both themes, and the
+  `--color-stage*` tokens must be identical in both.
 - **Every stylesheet on disk must be linked.** Orphaned CSS fails the build.
 - **No CSS custom properties inside media queries** — `@media (min-width: var(--x))`
   is invalid and silently discards the whole at-rule.
+- **Motion is safe by default.** Every hidden-before-reveal state is scoped
+  under `.motion-ready`, keyframes animate only `transform` and `opacity`, and
+  `prefers-reduced-motion` switches animation off.
 
-Typography is IBM Plex Sans for prose and IBM Plex Mono for labels, metadata
-and numbers. Type scales fluidly with `clamp()`, so there are no per-breakpoint
-heading overrides.
+Typography is Anton for display type and numbers, Archivo for prose, and IBM
+Plex Mono for labels and metadata. Type scales fluidly with `clamp()`, so
+there are no per-breakpoint heading overrides.
+
+The red has two values on purpose: `#ef3b42` for red text and `#d61f26` for
+button fills. The reference red, `#e5292f`, measures about 4.5:1 against both
+black and white — right on the accessibility line — so it is used for neither.
 
 ### Theming
 
-Three states: explicit light, explicit dark, and follow-the-OS (the default).
+Dark is the default for every visitor. The operating-system preference is
+deliberately not followed: the design, and the portrait, are built for black.
+The toggle switches to a light "paper" theme and the choice is stored.
 `static/js/theme.js` is loaded **synchronously in `<head>`** so the stored
-choice is applied before first paint — deferring it would flash the light
-theme at a dark-mode visitor. Dark values are declared twice, under both
-`prefers-color-scheme` and `[data-theme="dark"]`, so the manual toggle can
-override the OS in both directions.
+choice applies before first paint.
+
+The navigation, the hero and the project page's title band are "stages": they
+stay dark in the light theme and use only the `--color-stage*` and
+`--color-on-stage*` tokens.
+
+### Motion
+
+`theme.js` adds `.motion-ready` to `<html>` before first paint unless the
+visitor asked for reduced motion; `motion.css` scopes every hidden state under
+it. `static/js/motion.js` adds the detection-box counter, scroll reveals, the
+stats count-up and the hero parallax. If `motion.js` has not run within three
+seconds, `theme.js` withdraws the class, so content can never stay invisible.
+With JavaScript off, the page is static and complete.
 
 ## Local Setup
 
@@ -105,17 +131,24 @@ records that are no longer in the seed data. Pruning matters whenever a natural
 key itself changes: records are matched on (name, category), (name, issuer) and
 (institution, degree), so a rename inserts a new row and strands the old one.
 
-## Link Previews
+## Images
 
 ```bash
-python manage.py make_og_image
+python manage.py make_portrait design/photos/1000256303.jpg
+python manage.py make_og_image --photo design/photos/1000256302.jpg
 ```
 
-Renders `static/img/og-image.png` (1200×630) from the site identity settings,
-so the card shared to LinkedIn or Slack cannot drift out of date when the name,
-role or tagline changes. The `og:image` tags are emitted only when the file
-actually exists, and always as absolute URLs — scrapers do not resolve
-relative ones.
+`make_portrait` exports the hero portrait as `static/img/portrait-480.webp`
+and `static/img/portrait-768.webp`, the two widths the hero's `srcset` serves.
+`make_og_image` renders `static/img/og-image.png` (1200×630) from the site
+identity settings, with the headshot and the same detection box on the right,
+so the card shared to LinkedIn or Slack cannot drift out of date when the
+name, role or tagline changes. The original photos live in `design/`, which is
+git-ignored (everything under `static/` is published); only the generated
+files are committed.
+
+The `og:image` tags are emitted only when the file actually exists, and always
+as absolute URLs — scrapers do not resolve relative ones.
 
 `robots.txt` and `sitemap.xml` are served from the app; the sitemap covers the
 home page and every project.
@@ -161,10 +194,10 @@ Outside debug the project also sets secure cookies, `nosniff`,
 `RESUME_DOWNLOAD_NAME`, `OG_IMAGE_STATIC_PATH`. See `.env.example`.
 
 Three of these gate UI: `SITE_AVAILABILITY` set to an empty value hides the
-"open to opportunities" pill, `SITE_PHONE` set to an empty value drops the
-phone row from the contact section, and the résumé button appears only once the
-file at `RESUME_STATIC_PATH` actually exists — so the site never ships a
-download link that 404s.
+availability marker in the navigation and the contact section, `SITE_PHONE`
+set to an empty value drops the phone row from the contact section, and the
+résumé button appears only once the file at `RESUME_STATIC_PATH` actually
+exists — so the site never ships a download link that 404s.
 
 ### Keeping the site, the résumé and LinkedIn in step
 
@@ -181,7 +214,7 @@ of them changes:
    longer in the seed, so a rename does not leave both versions on the page).
    To update the live site, run it with `DATABASE_URL` set to the production
    database — deploys no longer run it (see Deployment).
-3. Re-run `python manage.py make_og_image`.
+3. Re-run `python manage.py make_og_image --photo design/photos/1000256302.jpg`.
 
 Two résumé variants are kept in `static/files/`:
 `Resume_Anand_Final_ATS_Python_AI_ML.pdf` (served — "Python Developer | AI/ML
@@ -268,7 +301,7 @@ media to object storage.
 python manage.py test
 ```
 
-160 tests across two files:
+212 tests across three files:
 
 - `portfolio/tests.py` — the feature suite: models, views, form validation,
   and every section's rendering and empty state.
@@ -276,8 +309,12 @@ python manage.py test
   the properties the design system relies on: admin permissions, skill
   grouping, seed idempotency, **constant query counts**, static-asset lints,
   colour-token discipline, crawler endpoints, link-preview tags, theme
-  override behaviour, nav-anchor resolution, honeypot spam protection,
-  résumé wiring, project-image delivery and error pages.
+  behaviour, nav-anchor resolution, honeypot spam protection, résumé wiring,
+  project-image delivery and error pages.
+- `portfolio/test_redesign.py` — the editorial noir design: navigation off the
+  home page, the hero and its portrait files, the ticker, the process and
+  credentials sections, the empty-database page, motion safety, and the
+  portrait and link-preview commands.
 
 The query-count tests assert the home page and project page issue the same
 number of queries regardless of how much content exists, so an N+1 introduced
@@ -294,18 +331,20 @@ decorative movement, and a print stylesheet that strips the chrome.
 
 ```
 Portfolio_Django_/
-├── portfolio_project/      # Settings, URLs, WSGI/ASGI, env loader
+├── portfolio_project/      # Settings, URLs, WSGI/ASGI, env loader, middleware
 ├── portfolio/              # The app
 │   ├── models.py           # Skill, Project, JourneyEntry, Education,
 │   │                       # Certification, ProfessionalSkill, ContactMessage
 │   ├── views.py            # home, ProjectDetailView, robots.txt
 │   ├── sitemaps.py
-│   ├── context_processors.py   # Site identity for every template
-│   ├── management/commands/     # populate_portfolio, make_og_image
-│   ├── tests.py / test_regressions.py
-├── templates/              # base, components, pages, 404, 500
+│   ├── context_processors.py    # Site identity for every template
+│   ├── templatetags/            # handle, ticker_skills filters
+│   ├── management/commands/     # populate_portfolio, make_portrait, make_og_image
+│   ├── tests.py / test_regressions.py / test_redesign.py
+├── templates/              # base, components, portfolio/sections/, pages, 404, 500
 ├── static/                 # css/, js/, img/, files/
 ├── media/                  # Admin-uploaded project screenshots
+├── design/                 # Original photos and mockups (git-ignored)
 └── manage.py
 ```
 

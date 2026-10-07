@@ -1,247 +1,187 @@
 /* ==========================================================================
-   Design tokens.
+   Design tokens — "Editorial noir".
 
-   Every colour in the project is defined here and nowhere else, so the two
-   themes cannot drift apart and a palette change is a one-file edit.
-   Light values live on :root. Dark values are declared twice on purpose:
-   once under prefers-color-scheme for visitors who never touch the toggle,
-   and once under [data-theme="dark"] so the manual toggle can override the
-   OS in *both* directions.
+   Every colour in the project is defined here and nowhere else; the test
+   suite enforces it. Dark is the default theme and lives on :root. The light
+   "paper" theme is an explicit choice made with the toggle and lives under
+   [data-theme="light"]. Every --color-* token is defined in both blocks.
+
+   The stage tokens are identical in both themes on purpose: the navigation,
+   the hero and the project hero band stay dark, because the portrait only
+   works on black.
    ========================================================================== */
 
 :root {
+    color-scheme: dark;
+
     /* --- Ground and surfaces -------------------------------------------- */
-    --color-bg: #fbfcfb;
-    --color-bg-secondary: #f2f6f4;
-    --color-bg-alt: #e8efeb;
-    --color-surface: #ffffff;
-    --color-surface-elevated: #f7faf9;
-    --color-surface-sunken: #eff4f2;
+    --color-bg: #070707;
+    --color-surface: #0f0f0f;
+    --color-surface-raised: #151515;
 
     /* --- Text ------------------------------------------------------------ */
-    --color-text-primary: #101a18;
-    --color-text-secondary: #3a4a47;
-    --color-text-muted: #64756f;
-    --color-text-inverse: #f7faf9;
+    --color-text-primary: #f2efea;
+    --color-text-secondary: #b9b3ad;
+    --color-text-muted: #8a847e;
 
     /* --- Lines ----------------------------------------------------------- */
-    --color-border: #dbe4e0;
-    --color-border-strong: #c2d0cb;
-    --color-rule: #e4ebe8;
+    --color-border: #262626;
+    --color-border-strong: #3a3a3a;
 
-    /* --- Accent: petrol. The single hue the site is built around. -------- */
-    --color-accent: #0b6467;
-    --color-accent-hover: #084d50;
-    --color-accent-soft: #e0efee;
-    --color-accent-softer: #f0f7f7;
+    /* --- Accent: red ------------------------------------------------------
+       The reference red measures about 4.5:1 against both black and white,
+       which is on the line. Text uses a lighter red and fills a darker one;
+       side by side they read as the same colour. */
+    --color-accent: #ef3b42;
+    --color-accent-fill: #d61f26;
+    --color-accent-fill-hover: #b9181e;
     --color-on-accent: #ffffff;
+    --color-accent-deep: #c8161d;
+    --color-accent-wash: rgba(214, 31, 38, 0.45);
+    --color-accent-glow: rgba(239, 59, 66, 0.18);
 
-    /* --- Highlight: warm ochre, used sparingly for "featured" marks ------ */
-    --color-highlight: #9a6212;
-    --color-highlight-soft: #f7ecd8;
+    /* --- Stage: dark in both themes ------------------------------------- */
+    --color-stage: #070707;
+    --color-stage-translucent: rgba(7, 7, 7, 0.92);
+    --color-stage-overlay: rgba(7, 7, 7, 0.98);
+    --color-on-stage: #f2efea;
+    --color-on-stage-secondary: #b9b3ad;
+    --color-on-stage-muted: #8a847e;
+    --color-stage-accent: #ef3b42;
+    --color-stage-border: #262626;
 
-    /* --- Semantic -------------------------------------------------------- */
+    /* --- Skill status dots ----------------------------------------------- */
+    --color-status-used: #ef3b42;
+    --color-status-building: #f2b544;
+    --color-status-learning: #8a847e;
+
+    /* --- Feedback -------------------------------------------------------- */
+    --color-success: #5fd39b;
+    --color-success-bg: #0d2419;
+    --color-success-border: #1f5a3c;
+    --color-error: #ff7a7a;
+    --color-error-bg: #2a0f10;
+    --color-error-border: #6b1d20;
+
+    /* --- Texture (not colours: one tile of white noise, then dimmed) ----- */
+    --grain-opacity: 0.06;
+    --grain-invert: 0;
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+
+    --color-bg: #f4f1ec;
+    --color-surface: #ffffff;
+    --color-surface-raised: #ebe6df;
+
+    --color-text-primary: #111111;
+    --color-text-secondary: #4a4540;
+    --color-text-muted: #6b655f;
+
+    --color-border: #d9d2c8;
+    --color-border-strong: #bdb4a8;
+
+    --color-accent: #b3141b;
+    --color-accent-fill: #b3141b;
+    --color-accent-fill-hover: #8f1016;
+    --color-on-accent: #ffffff;
+    --color-accent-deep: #c8161d;
+    --color-accent-wash: rgba(179, 20, 27, 0.4);
+    --color-accent-glow: rgba(179, 20, 27, 0.12);
+
+    --color-stage: #070707;
+    --color-stage-translucent: rgba(7, 7, 7, 0.92);
+    --color-stage-overlay: rgba(7, 7, 7, 0.98);
+    --color-on-stage: #f2efea;
+    --color-on-stage-secondary: #b9b3ad;
+    --color-on-stage-muted: #8a847e;
+    --color-stage-accent: #ef3b42;
+    --color-stage-border: #262626;
+
+    --color-status-used: #b3141b;
+    --color-status-building: #9a6212;
+    --color-status-learning: #6b655f;
+
     --color-success: #1a7a4f;
-    --color-error: #a33524;
-    --color-warning: #8a5a10;
-    --color-info: #1f5f7a;
-
     --color-success-bg: #dcefe5;
-    --color-success-fg: #0e4b30;
     --color-success-border: #b6dcc8;
+    --color-error: #a33524;
     --color-error-bg: #f8e0dc;
-    --color-error-fg: #7d281a;
     --color-error-border: #eebeb5;
-    --color-warning-bg: #f6e7c8;
-    --color-info-bg: #d9e9f1;
 
-    /* --- Effects that need alpha ----------------------------------------
-       Alpha colours have to be authored here rather than composed in the
-       component files, because the colour lint forbids raw rgba() outside
-       this file. Each one still gets a dark-mode value below. */
-    --color-header-bg: rgba(251, 252, 251, 0.82);
-    --color-scrim: rgba(16, 26, 24, 0.45);
-    --color-grid-line: rgba(11, 100, 103, 0.06);
-    --color-glow: rgba(11, 100, 103, 0.1);
-    --color-focus-ring: rgba(11, 100, 103, 0.3);
-    --color-shadow-ambient: rgba(14, 32, 30, 0.07);
-    --color-shadow-key: rgba(14, 32, 30, 0.1);
+    --grain-opacity: 0.05;
+    --grain-invert: 1;
+}
 
-    /* --- Typography ------------------------------------------------------ */
-    --font-family-sans-serif: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+/* Theme-independent tokens. A separate block, so the two colour blocks above
+   stay directly comparable line by line. */
+:root {
+    /* --- Type ------------------------------------------------------------ */
+    --font-display: "Anton", "Impact", "Haettenschweiler", "Arial Narrow Bold", system-ui, sans-serif;
+    --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
 
-    --font-weight-light: 300;
-    --font-weight-normal: 400;
-    --font-weight-medium: 500;
-    --font-weight-semibold: 600;
-    --font-weight-bold: 700;
+    --text-2xs: 0.6875rem;
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-md: 1.0625rem;
+    --text-lg: 1.25rem;
+    --text-xl: clamp(1.375rem, 1.1rem + 1vw, 1.875rem);
+    --text-statement: clamp(1.5rem, 1.05rem + 1.8vw, 2.5rem);
+    --text-display-sm: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+    --text-display-md: clamp(2.75rem, 1.6rem + 4.6vw, 5.5rem);
+    --text-display-lg: clamp(3.5rem, 2rem + 6vw, 7rem);
+    --text-display-xl: clamp(3rem, 16.5vw, 15.5rem);
 
-    /* Fluid scale: each step interpolates between its phone and desktop size,
-       so headings never need a per-breakpoint override. */
-    --font-size-xs: 0.75rem;
-    --font-size-sm: 0.875rem;
-    --font-size-base: 1rem;
-    --font-size-lg: clamp(1.05rem, 0.99rem + 0.3vw, 1.175rem);
-    --font-size-xl: clamp(1.15rem, 1.05rem + 0.5vw, 1.375rem);
-    --font-size-2xl: clamp(1.35rem, 1.18rem + 0.85vw, 1.75rem);
-    --font-size-3xl: clamp(1.7rem, 1.38rem + 1.6vw, 2.5rem);
-    --font-size-4xl: clamp(2.1rem, 1.6rem + 2.5vw, 3.25rem);
-    --font-size-5xl: clamp(2.6rem, 1.75rem + 4.2vw, 4.75rem);
+    --leading-tight: 0.92;
+    --leading-snug: 1.2;
+    --leading-body: 1.65;
+    --tracking-display: 0.01em;
+    --tracking-label: 0.12em;
 
-    --line-height-tight: 1.08;
-    --line-height-snug: 1.3;
-    --line-height-normal: 1.6;
-    --line-height-relaxed: 1.75;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
 
-    --letter-spacing-tight: -0.022em;
-    --letter-spacing-normal: 0;
-    --letter-spacing-label: 0.12em;
-
-    /* --- Spacing: a 4px-based scale, referenced by name everywhere ------- */
+    /* --- Space ----------------------------------------------------------- */
     --space-1: 0.25rem;
     --space-2: 0.5rem;
     --space-3: 0.75rem;
     --space-4: 1rem;
     --space-5: 1.5rem;
     --space-6: 2rem;
-    --space-7: 2.5rem;
-    --space-8: 3rem;
-    --space-9: 4rem;
-    --space-10: 5rem;
-    --space-11: 7rem;
+    --space-7: 3rem;
+    --space-8: 4rem;
+    --space-9: 6rem;
+    --space-10: 8rem;
 
-    /* --- Layout ---------------------------------------------------------- */
-    --layout-max-width: 1120px;
-    --layout-narrow-width: 68ch;
-    --layout-page-padding: clamp(1.25rem, 5vw, 3rem);
-    --layout-section-spacing: clamp(4rem, 9vw, 7rem);
-
-    /* --- Header ---------------------------------------------------------- */
-    --header-height: 4.25rem;
+    --section-pad: clamp(4.5rem, 3rem + 6vw, 8rem);
+    --shell-max: 1320px;
+    --shell-pad: clamp(1.25rem, 0.5rem + 3vw, 3rem);
+    --header-height: 72px;
 
     /* --- Shape ----------------------------------------------------------- */
-    --radius-sm: 0.25rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1.125rem;
-    --radius-pill: 9999px;
+    --radius-sm: 2px;
+    --radius-pill: 999px;
+    --border-width: 1px;
 
-    --shadow-sm: 0 1px 2px var(--color-shadow-ambient);
-    --shadow-md: 0 2px 4px var(--color-shadow-ambient), 0 8px 16px -6px var(--color-shadow-key);
-    --shadow-lg: 0 4px 8px var(--color-shadow-ambient), 0 20px 36px -12px var(--color-shadow-key);
-
-    --transition-fast: 150ms;
-    --transition-normal: 250ms;
-    --transition-slow: 400ms;
+    /* --- Motion ---------------------------------------------------------- */
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --dur-fast: 160ms;
+    --dur-base: 320ms;
+    --dur-slow: 800ms;
 
-    --focus-ring: 0 0 0 3px var(--color-focus-ring);
+    /* --- Layers ---------------------------------------------------------- */
+    --z-base: 1;
+    --z-raised: 3;
+    --z-header: 50;
+    --z-overlay: 60;
+    --z-grain: 100;
 
-    color-scheme: light;
-}
-
-/* Dark values, factored out so the two selectors below stay identical. */
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-        --color-bg: #0c1211;
-        --color-bg-secondary: #121a19;
-        --color-bg-alt: #182120;
-        --color-surface: #141d1c;
-        --color-surface-elevated: #1a2423;
-        --color-surface-sunken: #0f1716;
-
-        --color-text-primary: #e8efec;
-        --color-text-secondary: #b6c3bf;
-        --color-text-muted: #869692;
-        --color-text-inverse: #0c1211;
-
-        --color-border: #26312f;
-        --color-border-strong: #384542;
-        --color-rule: #1e2827;
-
-        --color-accent: #56c8c0;
-        --color-accent-hover: #7ad8d1;
-        --color-accent-soft: #12302f;
-        --color-accent-softer: #0f2726;
-        --color-on-accent: #04201f;
-
-        --color-highlight: #d7a758;
-        --color-highlight-soft: #2d2413;
-
-        --color-success: #5bbd8a;
-        --color-error: #e0897a;
-        --color-warning: #d6a95f;
-        --color-info: #7fb4cc;
-
-        --color-success-bg: #14301f;
-        --color-success-fg: #8fd9b0;
-        --color-success-border: #23503a;
-        --color-error-bg: #341914;
-        --color-error-fg: #eda495;
-        --color-error-border: #5b2b22;
-        --color-warning-bg: #322611;
-        --color-info-bg: #16262f;
-
-        --color-header-bg: rgba(12, 18, 17, 0.82);
-        --color-scrim: rgba(0, 0, 0, 0.6);
-        --color-grid-line: rgba(86, 200, 192, 0.07);
-        --color-glow: rgba(86, 200, 192, 0.12);
-        --color-focus-ring: rgba(86, 200, 192, 0.4);
-        --color-shadow-ambient: rgba(0, 0, 0, 0.45);
-        --color-shadow-key: rgba(0, 0, 0, 0.55);
-
-        color-scheme: dark;
-    }
-}
-
-:root[data-theme="dark"] {
-    --color-bg: #0c1211;
-    --color-bg-secondary: #121a19;
-    --color-bg-alt: #182120;
-    --color-surface: #141d1c;
-    --color-surface-elevated: #1a2423;
-    --color-surface-sunken: #0f1716;
-
-    --color-text-primary: #e8efec;
-    --color-text-secondary: #b6c3bf;
-    --color-text-muted: #869692;
-    --color-text-inverse: #0c1211;
-
-    --color-border: #26312f;
-    --color-border-strong: #384542;
-    --color-rule: #1e2827;
-
-    --color-accent: #56c8c0;
-    --color-accent-hover: #7ad8d1;
-    --color-accent-soft: #12302f;
-    --color-accent-softer: #0f2726;
-    --color-on-accent: #04201f;
-
-    --color-highlight: #d7a758;
-    --color-highlight-soft: #2d2413;
-
-    --color-success: #5bbd8a;
-    --color-error: #e0897a;
-    --color-warning: #d6a95f;
-    --color-info: #7fb4cc;
-
-    --color-success-bg: #14301f;
-    --color-success-fg: #8fd9b0;
-    --color-success-border: #23503a;
-    --color-error-bg: #341914;
-    --color-error-fg: #eda495;
-    --color-error-border: #5b2b22;
-    --color-warning-bg: #322611;
-    --color-info-bg: #16262f;
-
-    --color-header-bg: rgba(12, 18, 17, 0.82);
-    --color-scrim: rgba(0, 0, 0, 0.6);
-    --color-grid-line: rgba(86, 200, 192, 0.07);
-    --color-glow: rgba(86, 200, 192, 0.12);
-    --color-focus-ring: rgba(86, 200, 192, 0.4);
-    --color-shadow-ambient: rgba(0, 0, 0, 0.45);
-    --color-shadow-key: rgba(0, 0, 0, 0.55);
-
-    color-scheme: dark;
+    /* --- Texture --------------------------------------------------------
+       Film grain: a 160px fractal-noise tile, white with partial alpha. The
+       light theme inverts it to dark grain via --grain-invert. */
+    --texture-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }

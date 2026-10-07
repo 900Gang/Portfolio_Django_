@@ -63,3 +63,7 @@ build/
 # DOM — personal data that must not reach a commit, least of all a public one.
 *.mht
 *.mhtml
+
+# Local tooling and design source files (original photos, mockups)
+.claude/
+/design/

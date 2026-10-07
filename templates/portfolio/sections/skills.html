@@ -1,0 +1,40 @@
+<section id="skills" class="skills section">
+    <div class="shell">
+        <div class="section-head" data-reveal>
+            <div class="section-head-text">
+                <span class="eyebrow">04 — Skills</span>
+                <h2 class="section-title">Technical Skills</h2>
+            </div>
+            <span class="section-rule" aria-hidden="true"></span>
+            <p class="section-lede">Grouped by area, with an honest marker of how far each one has been taken.</p>
+        </div>
+
+        {% regroup skills by get_category_display as skills_by_category %}
+        {% if skills_by_category %}
+        <ul class="skills-legend" aria-label="Status key">
+            <li class="skills-legend-item"><span class="skill-dot is-used_in_projects" aria-hidden="true"></span>Used in projects</li>
+            <li class="skills-legend-item"><span class="skill-dot is-building_with" aria-hidden="true"></span>Building with</li>
+            <li class="skills-legend-item"><span class="skill-dot is-learning" aria-hidden="true"></span>Learning</li>
+        </ul>
+
+        <div class="skills-grouped">
+            {% for category_group in skills_by_category %}
+            <div class="skills-group" data-reveal>
+                <h3 class="skills-group-title">{{ category_group.grouper }}</h3>
+                <ul class="skills-grid">
+                    {% for skill in category_group.list %}
+                    <li class="skill-card">
+                        <span class="skill-dot is-{{ skill.status }}" aria-hidden="true"></span>
+                        <span class="skill-name">{{ skill.name }}</span>
+                        <span class="visually-hidden">({{ skill.get_status_display }})</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="skills-empty">No skills listed.</p>
+        {% endif %}
+    </div>
+</section>

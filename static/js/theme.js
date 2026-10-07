@@ -2,47 +2,56 @@
  * Theme resolution.
  *
  * Loaded synchronously in <head>, before any painting, so the stored choice
- * is applied to <html> before the first frame. Deferring this to the main
- * bundle would show a flash of the light theme to a dark-mode visitor.
+ * is applied to <html> before the first frame.
  *
- * Three states are stored: "light", "dark", and absent (follow the OS). The
- * toggle cycles between light and dark; clearing the preference is left to
- * the browser, because a three-way control is more explanation than it is
- * worth for one button.
+ * Dark is the default for every visitor: it is the design, and the hero
+ * portrait only works on black. The OS colour-scheme preference is
+ * deliberately not consulted. Light is an explicit choice made with the
+ * toggle, and it persists.
+ *
+ * It also sets the motion flag described below, for the same reason: it has
+ * to be in place before the first frame.
  */
 (function () {
     var STORAGE_KEY = 'portfolio-theme';
+    var DEFAULT_THEME = 'dark';
 
     function stored() {
         try {
             return window.localStorage.getItem(STORAGE_KEY);
         } catch (error) {
             // Private mode and blocked site data both throw here. Falling
-            // back to the OS preference is the correct behaviour, not an
-            // error worth surfacing.
+            // back to the default is correct, not an error worth surfacing.
             return null;
         }
     }
 
     function apply(theme) {
-        if (theme === 'light' || theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', theme);
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-        }
+        document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
     }
 
-    apply(stored());
+    apply(stored() || DEFAULT_THEME);
+
+    // Motion flag, set before first paint so the hero intro starts from its
+    // hidden state instead of flashing its final state first. motion.css
+    // scopes every hidden state under this class. If motion.js has not run
+    // within three seconds (blocked or failed), the flag is withdrawn so
+    // revealed content can never stay invisible.
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduceMotion) {
+        document.documentElement.classList.add('motion-ready');
+        window.setTimeout(function () {
+            if (!window.portfolioMotion) {
+                document.documentElement.classList.remove('motion-ready');
+            }
+        }, 3000);
+    }
 
     // Exposed so navigation.js can drive the toggle without duplicating the
     // storage key or the resolution rules.
     window.portfolioTheme = {
         current: function () {
-            var explicit = document.documentElement.getAttribute('data-theme');
-            if (explicit) {
-                return explicit;
-            }
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
         },
         toggle: function () {
             var next = this.current() === 'dark' ? 'light' : 'dark';

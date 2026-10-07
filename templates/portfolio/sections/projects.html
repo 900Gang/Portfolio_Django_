@@ -1,0 +1,28 @@
+<section id="projects" class="projects section">
+    <div class="shell">
+        <div class="section-head" data-reveal>
+            <div class="section-head-text">
+                <span class="eyebrow">02 — Work</span>
+                <h2 class="section-title">Featured Projects</h2>
+            </div>
+            <span class="section-rule" aria-hidden="true"></span>
+            <p class="section-lede">
+                Systems built end to end — from ESP32 sensor integration and real-time
+                data pipelines to model training and the Python that ties them together.
+            </p>
+        </div>
+
+        {% if featured_projects %}
+        <div class="projects-grid">
+            {% for project in featured_projects %}
+            {% include 'components/project_card.html' with number=forloop.counter %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="projects-empty">
+            <p class="projects-empty-text">No featured projects yet. Check back soon!</p>
+            <a href="#about" class="btn btn-outline">Learn more about me</a>
+        </div>
+        {% endif %}
+    </div>
+</section>

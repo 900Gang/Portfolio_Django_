@@ -1,0 +1,60 @@
+{% load static portfolio_extras %}
+<section id="home" class="hero">
+    <div class="hero-word-wrap" aria-hidden="true">
+        <p class="hero-word">{{ site_role }}</p>
+    </div>
+
+    <div class="hero-figure">
+        <div class="hero-parallax">
+            <img class="hero-portrait"
+                 src="{% static 'img/portrait-768.webp' %}"
+                 srcset="{% static 'img/portrait-480.webp' %} 480w, {% static 'img/portrait-768.webp' %} 768w"
+                 sizes="(max-width: 900px) 78vw, 34vw"
+                 width="768" height="1344"
+                 alt="Portrait of {{ site_owner }}"
+                 fetchpriority="high"
+                 decoding="async">
+            <div class="hero-detect" aria-hidden="true">
+                <span class="hero-detect-label">{{ site_owner|handle }} · <span class="hero-detect-score" data-score="0.99">0.99</span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="shell hero-grid">
+        <div class="hero-intro">
+            <p class="hero-hello">Hello, I'm</p>
+            <h1 class="hero-title">{{ site_owner }}</h1>
+            <p class="hero-role">{{ site_role }}{% if site_tagline %}<span aria-hidden="true"> · </span>{{ site_tagline }}{% endif %}</p>
+            {% if site_current %}
+            <p class="hero-current"><span class="hero-current-label">Currently</span>{{ site_current }}</p>
+            {% endif %}
+            <p class="hero-description">{{ site_description }}</p>
+            <div class="hero-actions">
+                <a href="#projects" class="btn btn-primary">View projects</a>
+                {% if resume_url %}
+                <a href="{{ resume_url }}" class="btn btn-outline" download="{{ resume_download_name }}">
+                    Download résumé <span class="visually-hidden">(PDF)</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <aside class="hero-aside" aria-label="At a glance">
+            <p class="hero-statement"><span class="hero-statement-icon" aria-hidden="true">✦</span>Turning image data into models that see, classify and detect.</p>
+            <dl class="hero-stats">
+                <div class="hero-stat">
+                    <dt class="hero-stat-label">Featured projects</dt>
+                    <dd class="hero-stat-value" data-count="{{ featured_projects|length }}">{{ featured_projects|length|stringformat:"02d" }}</dd>
+                </div>
+                <div class="hero-stat">
+                    <dt class="hero-stat-label">Technologies</dt>
+                    <dd class="hero-stat-value" data-count="{{ skills|length }}">{{ skills|length|stringformat:"02d" }}</dd>
+                </div>
+                <div class="hero-stat">
+                    <dt class="hero-stat-label">Certifications</dt>
+                    <dd class="hero-stat-value" data-count="{{ certifications|length }}">{{ certifications|length|stringformat:"02d" }}</dd>
+                </div>
+            </dl>
+        </aside>
+    </div>
+</section>
