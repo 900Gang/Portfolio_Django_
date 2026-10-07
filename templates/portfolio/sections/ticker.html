@@ -1,7 +1,8 @@
 {% load portfolio_extras %}
 {% with ticker=skills|ticker_skills %}
 {% if ticker %}
-<div class="ticker" role="region" aria-label="Core technologies">
+{# Focusable so touch and keyboard users can pause it: focus pauses the band (WCAG 2.2.2). #}
+<div class="ticker" role="region" tabindex="0" aria-label="Core technologies (focus to pause)">
     <div class="ticker-track">
         <ul class="ticker-list">
             {% for skill in ticker %}<li class="ticker-item">{{ skill.name }}</li>{% endfor %}

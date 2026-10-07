@@ -31,6 +31,10 @@
             menu.classList.toggle('nav-menu-open', open);
             toggle.setAttribute('aria-expanded', String(open));
             document.documentElement.classList.toggle('menu-open', open);
+            // The overlay covers the page; keep keyboard focus inside it.
+            document.querySelectorAll('main, .site-footer').forEach(function (region) {
+                region.inert = open;
+            });
         }
 
         toggle.addEventListener('click', function (event) {

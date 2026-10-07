@@ -98,6 +98,12 @@
         padding-block: 1.5rem;
     }
 
+    /* Sections never scrolled to are still waiting to be revealed. */
+    .motion-ready [data-reveal] {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
     a {
         color: inherit;
         text-decoration: underline;

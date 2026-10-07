@@ -30,6 +30,12 @@
     transform: none;
 }
 
+/* The light theme's page red is too dark on the stage (about 1.8:1), so
+   focus rings on the stage use the stage red. */
+:is(.site-header, .hero, .project-detail-hero) :focus-visible {
+    outline-color: var(--color-stage-accent);
+}
+
 .nav-container {
     display: flex;
     align-items: center;

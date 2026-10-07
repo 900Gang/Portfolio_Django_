@@ -509,3 +509,38 @@ class MotionTest(TestCase):
         html = home_html(self.client)
         self.assertIn("css/motion.css", html)
         self.assertIn('js/motion.js" defer', html)
+
+
+class FinalReviewFixesTest(TestCase):
+    """Findings from the whole-branch review, pinned before they were fixed."""
+
+    def _css(self, name):
+        return (BASE_DIR / "static" / "css" / name).read_text()
+
+    def test_focus_ring_on_the_stage_uses_the_stage_red(self):
+        """In the light theme the page red is #b3141b, about 1.8:1 on the dark
+        stage; focus rings there must use the stage red instead."""
+        self.assertRegex(
+            self._css("components.css"),
+            r":is\(\.site-header, \.hero, \.project-detail-hero\) :focus-visible \{[^}]*"
+            r"outline-color: var\(--color-stage-accent\)",
+        )
+
+    def test_printing_shows_sections_that_were_never_scrolled_to(self):
+        css = self._css("responsive.css")
+        block = css[css.index("@media print"):]
+        self.assertRegex(block, r"\.motion-ready \[data-reveal\] \{[^}]*opacity: 1 !important")
+
+    def test_ticker_can_be_paused_without_a_mouse(self):
+        """WCAG 2.2.2: endless motion needs a way to stop. Tapping or tabbing
+        to the band focuses it, and focus pauses it."""
+        Skill.objects.create(
+            name="Keras", category=SkillCategory.BACKEND, status=SkillStatus.USED_IN_PROJECTS
+        )
+        self.assertRegex(home_html(self.client), r'<div class="ticker" role="region" tabindex="0"')
+        self.assertIn(".ticker:focus-within .ticker-track", self._css("motion.css"))
+
+    def test_open_menu_makes_the_page_behind_it_inert(self):
+        js = (BASE_DIR / "static" / "js" / "navigation.js").read_text()
+        self.assertIn("inert", js)
+        self.assertIn("'main, .site-footer'", js)

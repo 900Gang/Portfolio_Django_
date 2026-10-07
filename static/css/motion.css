@@ -39,12 +39,13 @@
     to { transform: translateX(-50%); }
 }
 
-/* --- Ticker: always moving, paused while hovered --------------------------- */
+/* --- Ticker: always moving, paused while hovered or focused ---------------- */
 .ticker-track {
     animation: ticker-scroll 48s linear infinite;
 }
 
-.ticker:hover .ticker-track {
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track {
     animation-play-state: paused;
 }
 
