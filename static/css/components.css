@@ -16,7 +16,9 @@
     transition: transform var(--dur-base) var(--ease-out), background-color var(--dur-base) ease, border-color var(--dur-base) ease;
 }
 
-.has-stage-hero .site-header:not(.is-stuck) {
+/* Only navigation.js adds .is-stuck, so without scripts the header stays a
+   solid bar rather than floating transparently over body copy. */
+.js .has-stage-hero .site-header:not(.is-stuck) {
     background: transparent;
     border-bottom-color: transparent;
 }

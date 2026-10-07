@@ -15,6 +15,10 @@ from PIL import Image, ImageOps
 # Must match the srcset in templates/portfolio/sections/hero.html.
 WIDTHS = (480, 768)
 
+# The hero's width/height attributes, .hero-figure's aspect-ratio and the
+# .hero-detect percentages all assume a 768x1344 (4:7) portrait.
+EXPECTED_RATIO = 768 / 1344
+
 
 class Command(BaseCommand):
     help = 'Export the hero portrait as WebP at the widths the hero serves.'
@@ -36,6 +40,13 @@ class Command(BaseCommand):
 
         with Image.open(source) as original:
             image = ImageOps.exif_transpose(original).convert('RGB')
+
+        if abs(image.width / image.height - EXPECTED_RATIO) > 0.01:
+            self.stderr.write(self.style.WARNING(
+                f'{source} is {image.width}x{image.height}; the hero layout and its detection '
+                f'box assume a 4:7 portrait (768x1344). Crop it to 4:7 first, or retune '
+                f'.hero-figure and .hero-detect in static/css/sections.css.'
+            ))
 
         for width in WIDTHS:
             if image.width < width:

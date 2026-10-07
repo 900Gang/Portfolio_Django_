@@ -31,6 +31,9 @@
             <nav class="project-breadcrumb" aria-label="Breadcrumb">
                 <a href="{% url 'portfolio:home' %}#projects" class="project-breadcrumb-link">{% include 'components/icon.html' with name='arrow-left' %} Back to projects</a>
             </nav>
+            {% if project.featured %}
+            <span class="project-detail-number" aria-hidden="true">{{ project.featured_ahead|add:1|stringformat:"02d" }}</span>
+            {% endif %}
             <span class="project-detail-type-badge">{{ project.project_type }}</span>
             <h1 class="project-detail-title">{{ project.title }}</h1>
             <p class="project-detail-summary">{{ project.short_description }}</p>

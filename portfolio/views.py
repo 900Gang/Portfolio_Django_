@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
+from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, Value
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -85,7 +87,28 @@ class ProjectDetailView(DetailView):
     def get_queryset(self):
         # Prefetch here rather than in get_context_data, so the M2M is
         # fetched with the object instead of on first template access.
-        return super().get_queryset().prefetch_related('technologies')
+        #
+        # featured_ahead counts the featured projects listed before this one
+        # under Project.Meta.ordering, so the page can show the same number
+        # as its home-page card (01, 02, ...). It is a subquery inside the
+        # same SELECT, so it costs no extra query.
+        ahead = (
+            Project.objects.filter(featured=True)
+            .filter(
+                Q(order__lt=OuterRef('order'))
+                | Q(order=OuterRef('order'), created_at__gt=OuterRef('created_at'))
+                | Q(order=OuterRef('order'), created_at=OuterRef('created_at'), pk__lt=OuterRef('pk'))
+            )
+            .order_by()
+            .values('featured')
+            .annotate(count=Count('pk'))
+            .values('count')
+        )
+        return (
+            super().get_queryset()
+            .prefetch_related('technologies')
+            .annotate(featured_ahead=Coalesce(Subquery(ahead, output_field=IntegerField()), Value(0)))
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

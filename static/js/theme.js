@@ -32,6 +32,10 @@
 
     apply(stored() || DEFAULT_THEME);
 
+    // Marks that scripts run, for styles that need navigation.js to undo
+    // them (the transparent header over a stage hero).
+    document.documentElement.classList.add('js');
+
     // Motion flag, set before first paint so the hero intro starts from its
     // hidden state instead of flashing its final state first. motion.css
     // scopes every hidden state under this class. If motion.js has not run
