@@ -1,0 +1,58 @@
+# Runs the checks and the full test suite on every pull request and every
+# push to main. Render deploys main automatically; with its auto-deploy set
+# to "After CI checks pass", a change that breaks these never goes live.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Throwaway values: no DATABASE_URL means a local SQLite database, and
+      # no GEMINI_API_KEY / RESEND_API_KEY means nothing calls Google or Resend.
+      SECRET_KEY: ci-only-throwaway-key-not-used-anywhere-else-0123456789
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Django system checks (production settings)
+        run: python manage.py check --deploy --fail-level ERROR
+        env:
+          DEBUG: "False"
+          ALLOWED_HOSTS: nanomachine.xyz
+
+      - name: Collect static files the way Render's build does
+        run: python manage.py collectstatic --noinput
+        env:
+          DEBUG: "False"
+          ALLOWED_HOSTS: nanomachine.xyz
+
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+        env:
+          DEBUG: "True"
+
+      - name: Run the test suite
+        run: python manage.py test
+        env:
+          DEBUG: "True"
