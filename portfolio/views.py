@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import DetailView
 
-from . import chatbot
+from . import chatbot, notifications
 from .forms import ContactForm
 from .models import (
     SKILL_CATEGORY_DISPLAY_ORDER,
@@ -40,7 +40,7 @@ def home(request):
     if request.method == 'POST':
         contact_form = ContactForm(request.POST)
         if contact_form.is_valid():
-            contact_form.save()
+            notifications.notify_new_message(contact_form.save())
             messages.success(request, 'Your message has been sent successfully.')
             # Redirect after a successful POST so a refresh cannot resubmit.
             return redirect('portfolio:home')

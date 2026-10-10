@@ -257,6 +257,15 @@ GEMINI_API_KEY = get_str('GEMINI_API_KEY', '')
 CHATBOT_MODEL = get_str('CHATBOT_MODEL', 'gemini-3.5-flash-lite')
 CHATBOT_ENABLED = bool(GEMINI_API_KEY)
 
+# Email alert for each new contact message, sent through Resend's HTTP API
+# because Render's free plan blocks outbound SMTP. Off while the key is empty.
+# Resend's test sender (onboarding@resend.dev) can only send to the address
+# the Resend account was created with, so keep CONTACT_ALERT_TO equal to it
+# until a domain is verified in Resend.
+RESEND_API_KEY = get_str('RESEND_API_KEY', '')
+CONTACT_ALERT_TO = get_str('CONTACT_ALERT_TO', SITE_EMAIL)
+CONTACT_ALERT_FROM = get_str('CONTACT_ALERT_FROM', 'Portfolio <onboarding@resend.dev>')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
