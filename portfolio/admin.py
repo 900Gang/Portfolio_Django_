@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Skill, Project, JourneyEntry, Education, ContactMessage, Certification, ProfessionalSkill
+from .models import Skill, Project, JourneyEntry, Education, ContactMessage, Certification, ProfessionalSkill, ChatLog
 
 
 @admin.register(Skill)
@@ -67,3 +67,24 @@ class ProfessionalSkillAdmin(admin.ModelAdmin):
     search_fields = ["name"]
     ordering = ["display_order", "name"]
     list_editable = ["display_order", "is_visible"]
+
+
+@admin.register(ChatLog)
+class ChatLogAdmin(admin.ModelAdmin):
+    """Read-only: logs are written by the assistant, never by hand."""
+
+    list_display = ["created_at", "question_excerpt", "model", "output_tokens"]
+    list_filter = ["created_at", "model"]
+    search_fields = ["question", "answer"]
+    date_hierarchy = "created_at"
+    ordering = ["-created_at"]
+
+    @admin.display(description="Question")
+    def question_excerpt(self, obj):
+        return obj.question[:80]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

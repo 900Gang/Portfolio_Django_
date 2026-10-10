@@ -1,0 +1,38 @@
+{# Portfolio assistant: launcher button and chat dialog. Rendered only when CHATBOT_ENABLED. #}
+{% url 'portfolio:chat' as chat_url %}
+<div class="chatbot" data-chat-url="{{ chat_url }}">
+    {# Read by chatbot.js, so the widget also works on pages without a form. #}
+    {% csrf_token %}
+
+    <button type="button" class="chatbot-launcher" aria-haspopup="dialog" aria-controls="chatbot-panel" aria-expanded="false">
+        <span class="chatbot-launcher-icon" aria-hidden="true">✦</span>
+        <span>Ask about {{ site_first_name }}</span>
+    </button>
+
+    <section id="chatbot-panel" class="chatbot-panel" role="dialog" aria-modal="true" aria-labelledby="chatbot-title" hidden>
+        <header class="chatbot-header">
+            <h2 id="chatbot-title" class="chatbot-title">Ask about {{ site_first_name }}</h2>
+            <button type="button" class="chatbot-close" aria-label="Close the assistant">&times;</button>
+        </header>
+
+        <div class="chatbot-messages" aria-live="polite">
+            <div class="chatbot-message is-assistant">
+                <p>Hi! I'm {{ site_first_name }}'s portfolio assistant. Ask me about his skills, projects, experience or how to reach him.</p>
+            </div>
+        </div>
+
+        <div class="chatbot-suggestions" aria-label="Suggested questions">
+            <button type="button" class="chatbot-chip">What are his main skills?</button>
+            <button type="button" class="chatbot-chip">Tell me about his projects</button>
+            <button type="button" class="chatbot-chip">What's his experience?</button>
+            <button type="button" class="chatbot-chip">How can I contact him?</button>
+        </div>
+
+        <form class="chatbot-form">
+            <label for="chatbot-input" class="visually-hidden">Your question</label>
+            <textarea id="chatbot-input" class="chatbot-input" rows="1" maxlength="500" placeholder="Ask a question…"></textarea>
+            <button type="submit" class="chatbot-send">Send</button>
+        </form>
+        <p class="chatbot-note">AI answers from {{ site_first_name }}'s portfolio, powered by Google Gemini. They can be wrong. Questions are processed by Google — don't share personal details.</p>
+    </section>
+</div>
