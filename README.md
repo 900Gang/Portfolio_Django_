@@ -186,6 +186,32 @@ The key runs on Gemini's free tier: no billing, Google's rate limits apply,
 and Google may use prompts to improve its products. In production start
 gunicorn with `--threads 4` so a chat request never blocks page loads.
 
+## Contact alerts
+
+Each new contact message is saved first and then emailed to the owner by
+`portfolio/notifications.py`, through Resend's HTTP API. Render's free plan
+blocks outbound SMTP (ports 25, 465 and 587), so Gmail SMTP and Django's
+SMTP backend cannot work there.
+
+- The email names the visitor and includes their email, subject, message and
+  a link to the message in the admin; pressing Reply answers the visitor.
+- With no `RESEND_API_KEY` set, nothing is sent, so local development and the
+  tests need no key.
+- A failed alert is logged and never shown to the visitor: the message is
+  already in the database.
+
+Setup: create a free account at [resend.com](https://resend.com) **with the
+address that should receive the alerts**, create an API key with "Sending
+access", and set it as `RESEND_API_KEY`. Until a domain is verified in Resend,
+the test sender `onboarding@resend.dev` can only send to the account's own
+address, so `CONTACT_ALERT_TO` must stay equal to it.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RESEND_API_KEY` | empty | Resend API key. Turns the alerts on. Secret: environment only |
+| `CONTACT_ALERT_TO` | `SITE_EMAIL` | Where alerts are sent |
+| `CONTACT_ALERT_FROM` | `Portfolio <onboarding@resend.dev>` | Sender; change after verifying a domain in Resend |
+
 ## Environment Variables
 
 Settings are read from the environment; a `.env` file at the project root is
@@ -275,13 +301,14 @@ build rather than silently hiding the download button.
 
 The live site runs on **Render** (web service, Singapore region) with a
 **Neon** PostgreSQL database in the same region. Render deploys every push to
-`main`.
+`main`; set its auto-deploy to **After CI checks pass** so the GitHub Actions
+tests (see [Tests](#tests)) gate each deploy.
 
 | Render setting | Value |
 |----------------|-------|
 | Build command | `./build.sh` (installs dependencies, `collectstatic`, `migrate`) |
-| Start command | `gunicorn portfolio_project.wsgi:application` |
-| Environment | `DATABASE_URL` (Neon **pooled** connection string), `SECRET_KEY`, `ALLOWED_HOSTS`, `SITE_URL`, `CSRF_TRUSTED_ORIGINS` |
+| Start command | `gunicorn portfolio_project.wsgi:application --threads 4` |
+| Environment | `DATABASE_URL` (Neon **pooled** connection string), `SECRET_KEY`, `ALLOWED_HOSTS`, `SITE_URL`, `CSRF_TRUSTED_ORIGINS`, `GEMINI_API_KEY`, `RESEND_API_KEY` |
 
 Environment changes only take effect on the next deploy — use **Save, rebuild
 and deploy**, not plain Save.
@@ -334,7 +361,7 @@ media to object storage.
 python manage.py test
 ```
 
-263 tests across four files:
+272 tests across five files:
 
 - `portfolio/tests.py` — the feature suite: models, views, form validation,
   and every section's rendering and empty state.
@@ -348,11 +375,17 @@ python manage.py test
   home page, the hero and its portrait files, the ticker, the process and
   credentials sections, the empty-database page, motion safety, and the
   portrait and link-preview commands.
-
 - `portfolio/test_chatbot.py` — the portfolio assistant: the profile and
   system prompt, the request sent to Gemini (with a fake client, so no key or
   network is needed), validation, rate limiting, logging, the admin and the
   widget's safety rules.
+- `portfolio/test_notifications.py` — the contact alert: the email's
+  contents, the request sent to Resend, and that a failed alert never breaks
+  the contact form.
+
+GitHub Actions (`.github/workflows/tests.yml`) runs the Django system checks
+with production settings, `collectstatic`, a missing-migrations check and the
+whole suite on every pull request and every push to `main`.
 
 The query-count tests assert the home page and project page issue the same
 number of queries regardless of how much content exists, so an N+1 introduced
