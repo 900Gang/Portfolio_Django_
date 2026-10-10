@@ -306,7 +306,7 @@ tests (see [Tests](#tests)) gate each deploy.
 
 | Render setting | Value |
 |----------------|-------|
-| Build command | `./build.sh` (installs dependencies, `collectstatic`, `migrate`) |
+| Build command | `./build.sh` (installs `requirements.lock`, `collectstatic`, `migrate`) |
 | Start command | `gunicorn portfolio_project.wsgi:application --threads 4` |
 | Environment | `DATABASE_URL` (Neon **pooled** connection string), `SECRET_KEY`, `ALLOWED_HOSTS`, `SITE_URL`, `CSRF_TRUSTED_ORIGINS`, `GEMINI_API_KEY`, `RESEND_API_KEY` |
 
@@ -330,6 +330,21 @@ WhiteNoise serves the collected static files from the app server, so no
 separate web server or CDN is required. Outside `DEBUG`, assets are hashed and
 pre-compressed at collect time and served with immutable cache headers, so a
 deploy busts the cache by itself.
+
+### Dependencies
+
+`requirements.txt` lists the direct dependencies with version ranges.
+`requirements.lock` pins every package, including indirect ones, with its
+file hashes; `build.sh` and CI install only from it
+(`--require-hashes --only-binary :all:`), so production runs exactly the
+versions the tests ran and no package setup script executes. After changing
+`requirements.txt`, or to pick up updates, regenerate the lock and commit
+both files:
+
+```bash
+pip install pip-tools
+pip-compile --generate-hashes --allow-unsafe --strip-extras --output-file requirements.lock requirements.txt
+```
 
 ### Media
 

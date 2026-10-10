@@ -74,9 +74,9 @@ def notify_new_message(message):
     try:
         _post(build_email(message))
     except urllib.error.HTTPError as error:
-        logger.error("Contact alert rejected by Resend: %s %s", error.code, error.read()[:300])
+        logger.exception("Contact alert rejected by Resend: %s %s", error.code, error.read()[:300])
     except OSError as error:  # URLError, timeouts and other network failures
-        logger.error("Contact alert could not be sent: %s", error)
+        logger.exception("Contact alert could not be sent: %s", error)
     else:
         return True
     return False
