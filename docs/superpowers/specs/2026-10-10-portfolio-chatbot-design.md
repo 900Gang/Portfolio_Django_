@@ -1,7 +1,7 @@
 # Portfolio chatbot — "Ask about Anand"
 
 Date: 2026-10-10
-Status: approved in conversation, awaiting written-spec review
+Status: revised — the AI provider changed from Anthropic Claude to Google Gemini; awaiting review of the revision
 
 ## 1. Goal
 
@@ -17,8 +17,9 @@ Success means:
   words, and get a short, accurate answer drawn only from the portfolio data.
 - Questions the data cannot answer get an honest "I don't know" plus a way to
   contact Anand; off-topic requests are declined.
-- Running cost stays small and bounded: per-visitor rate limits on the site,
-  a hard monthly spend limit at Anthropic.
+- Running cost stays at zero on Gemini's free tier, and bounded if billing is
+  ever enabled: per-visitor rate limits on the site, Google's own free-tier
+  limits, and a budget alert on a paid project.
 - Nothing a visitor types can run code on the page, reach secrets, or make
   the assistant act beyond answering.
 - All existing tests stay green; the chatbot adds no database queries to
@@ -34,8 +35,9 @@ conversations that survive a page reload, languages other than English, voice.
 
 | Decision | Choice |
 |----------|--------|
-| Bot type | AI chatbot (Claude), answers in natural language |
-| Model | Claude Haiku 5.5 — `claude-haiku-5-5` ($0.10 / $0.50 per million input / output tokens) |
+| Bot type | AI chatbot (Google Gemini), answers in natural language |
+| Model | Gemini 3.5 Flash-Lite — `gemini-3.5-flash-lite` (paid tier would be $0.30 / $2.50 per million input / output tokens) |
+| Billing tier | Gemini free tier to start: no cost, Google's rate limits apply, and Google may use prompts — including visitors' questions — to improve its products. The widget says so |
 | Scope | Answer from the profile; point to the contact form, email, LinkedIn or résumé when there is interest; decline off-topic |
 | Logging | Keep each question and answer in the database, read-only in the admin, deleted after 90 days; no IP addresses stored |
 | Delivery | Whole answer in one JSON response with a typing indicator (no streaming) |
@@ -59,6 +61,9 @@ conversations that survive a page reload, languages other than English, voice.
     experience?", "How can I contact him?".
   - A text box (maximum 500 characters, Enter sends, Shift+Enter makes a new
     line) and a Send button.
+  - A footnote under the text box: "AI answers from Anand's portfolio, powered
+    by Google Gemini. They can be wrong. Questions are processed by Google —
+    don't share personal details."
 - While waiting: a typing indicator; the Send button and text box are
   disabled until the answer or an error arrives.
 - Answers render paragraphs, bullet lists, bold text and links. Links open
@@ -108,8 +113,9 @@ prompt can be cached. Phone numbers are not included: the site shows one, but
 the assistant points to email, LinkedIn and the contact form instead.
 
 The About text currently lives in `templates/portfolio/sections/about.html`.
-It moves to a template include, `portfolio/about_text.txt`, read by both the
-About section and the profile builder, so the two cannot drift.
+It moves to one Python constant, `ABOUT_PARAGRAPHS` in `portfolio/content.py`,
+exposed to templates as `about_paragraphs` and read by the profile builder,
+so the two cannot drift.
 
 ### Behaviour (system instructions)
 
@@ -135,18 +141,18 @@ About section and the profile builder, so the two cannot drift.
 
 | File | Change |
 |------|--------|
-| `requirements.txt` | Add the official `anthropic` SDK |
-| `portfolio_project/settings.py` | `ANTHROPIC_API_KEY` (env, default empty), `CHATBOT_MODEL` (env, default `claude-haiku-5-5`), `CHATBOT_ENABLED` = key is non-empty |
-| `.env.example`, `README.md` | Document the two variables, the Render steps and the spend limit |
+| `requirements.txt` | Add Google's official `google-genai` SDK |
+| `portfolio_project/settings.py` | `GEMINI_API_KEY` (env, default empty), `CHATBOT_MODEL` (env, default `gemini-3.5-flash-lite`), `CHATBOT_ENABLED` = key is non-empty |
+| `.env.example`, `README.md` | Document the two variables, the free-tier terms and the Render steps |
 | `portfolio/chatbot.py` | New: `build_profile()`, `build_system_prompt()`, `get_client()`, `ask(question, history)`, `client_ip(request)`, rate-limit helpers |
 | `portfolio/models.py` + migration | New `ChatLog` model |
 | `portfolio/admin.py` | Read-only `ChatLogAdmin` |
 | `portfolio/views.py`, `portfolio/urls.py` | New `chat` view at `POST /api/chat/` (name `portfolio:chat`) |
 | `portfolio/views.py` (`robots_txt`) | Add `Disallow: /api/` |
-| `portfolio/context_processors.py` | Add `chatbot_enabled` (from settings; no query) |
+| `portfolio/content.py` | New: `ABOUT_PARAGRAPHS`, shared by the About section and the profile |
+| `portfolio/context_processors.py` | Add `chatbot_enabled`, `site_first_name` and `about_paragraphs` (from settings and constants; no query) |
 | `templates/base.html` | Link `css/chatbot.css`; include the widget and `js/chatbot.js` (deferred) when `chatbot_enabled` |
 | `templates/components/chatbot.html` | New: launcher, panel, `{% csrf_token %}` |
-| `templates/portfolio/about_text.txt` | New: the About paragraphs, shared by the section and the profile |
 | `static/css/chatbot.css` | New: widget styles, colours from existing tokens only |
 | `static/js/chatbot.js` | New: open/close, focus handling, send/receive, safe Markdown rendering |
 | `portfolio/test_chatbot.py` | New tests (section 8) |
@@ -187,30 +193,49 @@ Responses:
 | 400 | `{"error": "..."}` | Invalid JSON or failed validation |
 | 405 | — | Any method but POST |
 | 429 | `{"error": "You've asked a lot of questions — try again in a few minutes, or use the contact form."}` | Rate limit hit |
-| 502 | `{"error": "I can't answer right now. You can email Anand at <email>."}` | Anthropic API error, timeout or connection failure |
+| 502 | `{"error": "I can't answer right now. You can email Anand at <email>."}` | Gemini API error, timeout or connection failure |
+| 503 | `{"error": "The assistant is busy right now. Try again in a minute, or email Anand at <email>."}` | Google's free-tier rate limit hit (Gemini returned HTTP 429) |
 | 503 | `{"error": "The assistant is not available."}` | `CHATBOT_ENABLED` is false |
 
-### The Claude call
+### The Gemini call
 
-- Client: `anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY,
-  timeout=20.0, max_retries=1)`, created by `get_client()` (one place, so
-  tests replace it).
-- `client.messages.create(...)` with:
+- Client: `genai.Client(api_key=settings.GEMINI_API_KEY,
+  http_options=types.HttpOptions(timeout=20_000,
+  retry_options=types.HttpRetryOptions(attempts=2)))` — the SDK's timeout is
+  in milliseconds and it retries up to 5 attempts unless told otherwise;
+  one retry keeps a visitor's wait short. Created by `get_client()` (one
+  place, so tests replace it) and used in a `with` block: a client that is
+  garbage-collected mid-request closes its connection, and `with` also
+  closes it cleanly afterwards.
+- `client.models.generate_content(...)` with:
   - `model=settings.CHATBOT_MODEL`
-  - `max_tokens=600`
-  - `system=[{"type": "text", "text": <system prompt>, "cache_control":
-    {"type": "ephemeral"}}]`
-  - `messages=history + [{"role": "user", "content": message}]`
-  - `output_config={"effort": "low"}` (Haiku 5.5 thinks adaptively by
-    default; low effort keeps answers fast and cheap)
-- The reply is the concatenated `text` blocks of the response.
-  - `stop_reason == "refusal"` → reply "I can't help with that one, but I'm
-    happy to answer questions about Anand's work."
-  - `stop_reason == "max_tokens"` → keep the text and append "…".
+  - `contents=` the history plus the new message, each as
+    `types.Content(role=..., parts=[types.Part(text=...)])`, with the site's
+    `assistant` role mapped to Gemini's `model` role
+  - `config=types.GenerateContentConfig(system_instruction=<system prompt>,
+    max_output_tokens=800, thinking_config=types.ThinkingConfig(
+    thinking_level="minimal"))` — `max_output_tokens` includes thinking
+    tokens, so it leaves room for a short answer; `minimal` is Flash-Lite's
+    default level, set explicitly so a future default change can't slow
+    answers down
+- The reply is `response.text`.
+  - Blocked: `response.prompt_feedback.block_reason` is set, or the first
+    candidate's `finish_reason` is `SAFETY`, `BLOCKLIST`,
+    `PROHIBITED_CONTENT`, `SPII` or `RECITATION` → reply "I can't help with
+    that one, but I'm happy to answer questions about Anand's work."
+  - `finish_reason == MAX_TOKENS` → keep the text and append "…".
   - Empty text → treated as an API error (502).
-- Caching applies only once the system prompt exceeds the model's minimum
-  cacheable length; below it the request still works at full input price.
-  Either way the per-answer cost is a fraction of a cent.
+- Errors: `google.genai.errors.APIError` (its subclasses `ClientError` and
+  `ServerError`) and `httpx.HTTPError` (network failures and timeouts; the
+  SDK is built on `httpx`). An `APIError` with code 429 means Google's
+  free-tier limit was hit and gets the "busy" message; everything else gets
+  the 502 message.
+- Token counts for the log come from `response.usage_metadata`:
+  `prompt_token_count`, `candidates_token_count` and
+  `cached_content_token_count` (missing values count as 0).
+- Caching: Gemini caches repeated prompt prefixes automatically (implicit
+  caching). The system prompt is byte-stable, so repeat questions benefit
+  without any extra code.
 
 ### Rate limiting
 
@@ -219,7 +244,8 @@ Responses:
 - Visitor IP: `CF-Connecting-IP` (Cloudflare fronts the site), else the
   right-most `X-Forwarded-For` entry (added by Render's proxy), else
   `REMOTE_ADDR`. Used only as a cache key, never stored. These limits damp
-  abuse; the Anthropic spend limit is the hard backstop.
+  abuse; on the free tier Google's own limits are the hard backstop, and on
+  a paid project a budget alert.
 - A request is counted before the API call, so failed calls still count.
 
 ### Logging
@@ -254,16 +280,22 @@ Responses:
   created only for `https://`, `http://`, `mailto:` and site-relative (`/…`)
   targets.
 - Input is size-limited (message, history, item length) before anything is
-  sent to Anthropic.
+  sent to Google.
+- On the free tier Google may use prompts, including visitors' questions, to
+  improve its products. The prompt contains only information already public
+  on the site, and the widget's footnote tells visitors their questions are
+  processed by Google Gemini and asks them not to share personal details.
 
 ## 7. Configuration and operations
 
-- Environment: `ANTHROPIC_API_KEY` (secret) and optional `CHATBOT_MODEL`.
-- Render: add `ANTHROPIC_API_KEY`; change the start command to
+- Environment: `GEMINI_API_KEY` (secret, created in Google AI Studio) and
+  optional `CHATBOT_MODEL`.
+- Render: add `GEMINI_API_KEY`; change the start command to
   `gunicorn portfolio_project.wsgi:application --threads 4` so a slow chat
   request never blocks page loads on the single free instance.
-- Anthropic Console: set a monthly spend limit on the workspace that owns the
-  key.
+- Free tier: no billing account needed. If billing is enabled later, set a
+  budget alert on the Google Cloud project; prompts then stop being used to
+  improve Google's products.
 - With no key set (local development, tests, a misconfigured deploy) the
   widget is not rendered and the endpoint returns 503.
 
@@ -279,11 +311,15 @@ makes no network calls and needs no API key.
 - Endpoint: GET → 405; missing CSRF token → 403; invalid JSON, empty message,
   501-character message, over-long or malformed history → 400; no key → 503;
   fake client raising an API error → 502 with the email in the message;
-  refusal → friendly reply; success → 200 with the reply and a
+  success → 200 with the reply and a
   `conversation_id`.
-- The request sent to the fake client: model `claude-haiku-5-5` by default,
-  `max_tokens` 600, low effort, system prompt with `cache_control`, history
-  followed by the new message.
+- The request sent to the fake client: model `gemini-3.5-flash-lite` by
+  default, the system prompt as `system_instruction`, `max_output_tokens`
+  800, `thinking_level` `minimal`, history followed by the new message with
+  `assistant` mapped to `model`.
+- Gemini rate limit (an `APIError` with code 429) → 503 "busy" message;
+  other `APIError`s and `httpx` errors → 502; blocked prompts and blocked
+  answers → the friendly refusal reply.
 - Rate limit: the ninth request inside ten minutes → 429; counted per IP;
   `CF-Connecting-IP` preferred over `X-Forwarded-For`.
 - Logging: a success writes one `ChatLog`; rows older than 90 days are
@@ -304,6 +340,5 @@ instructions" stays in role.
 1. The owner pastes each plan step on branch `portfolio-chatbot`, running
    that step's check.
 2. Full suite and review; push; pull request.
-3. Before merging: `ANTHROPIC_API_KEY` and `--threads 4` on Render, spend
-   limit in the Anthropic Console.
+3. Before merging: `GEMINI_API_KEY` and `--threads 4` on Render.
 4. After merging: one question on the live site.
