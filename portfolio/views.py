@@ -1,23 +1,30 @@
+import json
+import logging
+
 from django.conf import settings
 from django.contrib import messages
 from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import DetailView
 
+from . import chatbot
 from .forms import ContactForm
 from .models import (
     SKILL_CATEGORY_DISPLAY_ORDER,
     Certification,
+    ChatLog,
     Education,
     JourneyEntry,
     ProfessionalSkill,
     Project,
     Skill,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET", "HEAD", "POST"])
@@ -129,8 +136,62 @@ def robots_txt(request):
         'User-agent: *',
         'Allow: /',
         'Disallow: /admin/',
+        'Disallow: /api/',
         '',
         f'Sitemap: {sitemap_url}',
         '',
     ]
     return HttpResponse('\n'.join(lines), content_type='text/plain')
+
+
+@require_POST
+def chat(request):
+    """
+    Answer one visitor question with the portfolio assistant.
+
+    JSON in ({"message", "history", "conversation_id"}), JSON out
+    ({"reply", "conversation_id"} or {"error"}). CSRF-protected like any
+    other POST; the widget sends the token in the X-CSRFToken header.
+    """
+    if not settings.CHATBOT_ENABLED:
+        return JsonResponse({"error": "The assistant is not available."}, status=503)
+
+    try:
+        payload = json.loads(request.body or b"")
+        message, history, conversation_id = chatbot.parse_request(payload)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Send a JSON object."}, status=400)
+    except ValueError as error:
+        return JsonResponse({"error": str(error)}, status=400)
+
+    if chatbot.rate_limited(chatbot.client_ip(request)):
+        return JsonResponse(
+            {"error": "You've asked a lot of questions — try again in a few minutes, or use the contact form."},
+            status=429,
+        )
+
+    try:
+        answer = chatbot.ask(message, history)
+    except chatbot.ChatbotBusy:
+        logger.warning("Portfolio assistant hit Google's rate limit")
+        return JsonResponse(
+            {"error": f"The assistant is busy right now. Try again in a minute, or email {chatbot.first_name()} at {settings.SITE_EMAIL}."},
+            status=503,
+        )
+    except chatbot.ChatbotUnavailable:
+        logger.exception("Portfolio assistant request failed")
+        return JsonResponse(
+            {"error": f"I can't answer right now. You can email {chatbot.first_name()} at {settings.SITE_EMAIL}."},
+            status=502,
+        )
+
+    ChatLog.objects.create(
+        conversation_id=conversation_id,
+        question=message,
+        answer=answer.text,
+        model=settings.CHATBOT_MODEL,
+        input_tokens=answer.input_tokens,
+        output_tokens=answer.output_tokens,
+        cache_read_tokens=answer.cache_read_tokens,
+    )
+    return JsonResponse({"reply": answer.text, "conversation_id": conversation_id})

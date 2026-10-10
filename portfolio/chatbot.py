@@ -180,3 +180,202 @@ def build_profile():
 def build_system_prompt():
     instructions = INSTRUCTIONS.format(first_name=first_name(), owner=settings.SITE_OWNER)
     return f"{instructions}\n\n{build_profile()}"
+
+
+# ---------------------------------------------------------------------------
+# Limits
+# ---------------------------------------------------------------------------
+
+MAX_MESSAGE_CHARS = 500
+MAX_HISTORY_ITEMS = 6  # the last three exchanges
+MAX_HISTORY_ITEM_CHARS = 2000
+# Gemini counts its thinking tokens against this limit too.
+MAX_OUTPUT_TOKENS = 800
+
+# (requests, window in seconds) per visitor IP.
+RATE_LIMITS = ((8, 10 * 60), (40, 24 * 60 * 60))
+
+
+class ChatbotUnavailable(Exception):
+    """Gemini could not produce an answer (API error, timeout or empty reply)."""
+
+
+class ChatbotBusy(ChatbotUnavailable):
+    """Google's rate limit was hit (HTTP 429); worth trying again shortly."""
+
+
+@dataclass
+class Answer:
+    text: str
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_read_tokens: int = 0
+
+
+
+# ---------------------------------------------------------------------------
+# Asking Gemini
+# ---------------------------------------------------------------------------
+
+# Finish reasons meaning Gemini withheld the answer.
+BLOCKED_FINISH_REASONS = {
+    types.FinishReason.SAFETY,
+    types.FinishReason.BLOCKLIST,
+    types.FinishReason.PROHIBITED_CONTENT,
+    types.FinishReason.SPII,
+    types.FinishReason.RECITATION,
+}
+
+
+def get_client():
+    """The one place a Gemini client is created; tests replace this."""
+    return genai.Client(
+        api_key=settings.GEMINI_API_KEY,
+        http_options=types.HttpOptions(
+            timeout=20_000,  # milliseconds
+            retry_options=types.HttpRetryOptions(attempts=2),
+        ),
+    )
+
+
+def _content(role, text):
+    # The site calls the model's turns "assistant"; Gemini calls them "model".
+    return types.Content(
+        role="model" if role == "assistant" else "user",
+        parts=[types.Part(text=text)],
+    )
+
+
+def ask(message, history):
+    """
+    Ask Gemini one question. `history` is the earlier turns, already
+    validated by parse_request(). Returns an Answer; raises ChatbotBusy when
+    Google's rate limit is hit and ChatbotUnavailable when no answer could be
+    produced.
+    """
+    try:
+        # Keep the client open for the whole call: a client that is garbage
+        # collected mid-request closes its connection. `with` closes it after.
+        with get_client() as client:
+            response = client.models.generate_content(
+                model=settings.CHATBOT_MODEL,
+                contents=[
+                    *(_content(item["role"], item["content"]) for item in history),
+                    _content("user", message),
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction=build_system_prompt(),
+                    max_output_tokens=MAX_OUTPUT_TOKENS,
+                    thinking_config=types.ThinkingConfig(thinking_level="minimal"),
+                ),
+            )
+    except errors.APIError as error:
+        if error.code == 429:
+            raise ChatbotBusy(str(error)) from error
+        raise ChatbotUnavailable(str(error)) from error
+    except httpx.HTTPError as error:  # network failure or timeout
+        raise ChatbotUnavailable(str(error)) from error
+
+    usage = response.usage_metadata
+    tokens = {
+        "input_tokens": (usage and usage.prompt_token_count) or 0,
+        "output_tokens": (usage and usage.candidates_token_count) or 0,
+        "cache_read_tokens": (usage and usage.cached_content_token_count) or 0,
+    }
+
+    finish_reason = response.candidates[0].finish_reason if response.candidates else None
+    blocked_prompt = response.prompt_feedback is not None and response.prompt_feedback.block_reason
+    if blocked_prompt or finish_reason in BLOCKED_FINISH_REASONS:
+        return Answer(
+            f"I can't help with that one, but I'm happy to answer questions about {first_name()}'s work.",
+            **tokens,
+        )
+
+    text = (response.text or "").strip()
+    if not text:
+        raise ChatbotUnavailable("Gemini returned an empty reply.")
+    if finish_reason == types.FinishReason.MAX_TOKENS:
+        text += "…"
+    return Answer(text, **tokens)
+
+
+# ---------------------------------------------------------------------------
+# Visitor requests
+# ---------------------------------------------------------------------------
+
+
+def parse_request(payload):
+    """
+    Validate the JSON body of a chat request.
+
+    Returns (message, history, conversation_id). Raises ValueError with a
+    message that is safe to show the visitor.
+    """
+    if not isinstance(payload, dict):
+        raise ValueError("Send a JSON object.")
+
+    message = payload.get("message")
+    if not isinstance(message, str) or not message.strip():
+        raise ValueError("Type a question first.")
+    message = message.strip()
+    if len(message) > MAX_MESSAGE_CHARS:
+        raise ValueError(f"Keep questions under {MAX_MESSAGE_CHARS} characters.")
+
+    history = payload.get("history") or []
+    if not isinstance(history, list) or len(history) > MAX_HISTORY_ITEMS:
+        raise ValueError("The conversation history is too long.")
+    clean_history = []
+    for index, item in enumerate(history):
+        expected_role = "user" if index % 2 == 0 else "assistant"
+        content = item.get("content") if isinstance(item, dict) else None
+        if (
+            not isinstance(item, dict)
+            or item.get("role") != expected_role
+            or not isinstance(content, str)
+            or not content.strip()
+            or len(content) > MAX_HISTORY_ITEM_CHARS
+        ):
+            raise ValueError("The conversation history is malformed.")
+        clean_history.append({"role": expected_role, "content": content})
+    if clean_history and clean_history[-1]["role"] != "assistant":
+        raise ValueError("The conversation history is malformed.")
+
+    try:
+        conversation_id = str(uuid.UUID(str(payload.get("conversation_id"))))
+    except ValueError:
+        conversation_id = str(uuid.uuid4())
+
+    return message, clean_history, conversation_id
+
+
+def client_ip(request):
+    """
+    The visitor's address, used only as a rate-limit key and never stored.
+
+    Cloudflare fronts the site and sends CF-Connecting-IP. Otherwise the
+    right-most X-Forwarded-For entry is the one Render's proxy added; entries
+    to its left can be written by the visitor.
+    """
+    cloudflare = request.META.get("HTTP_CF_CONNECTING_IP", "").strip()
+    if cloudflare:
+        return cloudflare
+    hops = [hop.strip() for hop in request.META.get("HTTP_X_FORWARDED_FOR", "").split(",") if hop.strip()]
+    if hops:
+        return hops[-1]
+    return request.META.get("REMOTE_ADDR") or "unknown"
+
+
+def rate_limited(ip):
+    """Count this request against the visitor's limits; True once any is exceeded."""
+    limited = False
+    for limit, window in RATE_LIMITS:
+        key = f"chatbot:rate:{window}:{ip}"
+        cache.add(key, 0, timeout=window)
+        try:
+            count = cache.incr(key)
+        except ValueError:  # the key expired between add() and incr()
+            cache.set(key, 1, timeout=window)
+            count = 1
+        if count > limit:
+            limited = True
+    return limited
