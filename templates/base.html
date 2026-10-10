@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <link rel="stylesheet" href="{% static 'css/sections.css' %}">
     <link rel="stylesheet" href="{% static 'css/motion.css' %}">
+    <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
 
     {% block structured_data %}
@@ -81,6 +82,10 @@
 
     <script src="{% static 'js/navigation.js' %}" defer></script>
     <script src="{% static 'js/motion.js' %}" defer></script>
+    {% if chatbot_enabled %}
+    {% include 'components/chatbot.html' %}
+    <script src="{% static 'js/chatbot.js' %}" defer></script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

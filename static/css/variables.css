@@ -49,6 +49,8 @@
     --color-on-stage-muted: #8a847e;
     --color-stage-accent: #ef3b42;
     --color-stage-border: #262626;
+    --color-stage-raised: #151515;
+    --color-stage-shadow: rgba(0, 0, 0, 0.5);
 
     /* --- Skill status dots ----------------------------------------------- */
     --color-status-used: #ef3b42;
@@ -98,6 +100,8 @@
     --color-on-stage-muted: #8a847e;
     --color-stage-accent: #ef3b42;
     --color-stage-border: #262626;
+    --color-stage-raised: #151515;
+    --color-stage-shadow: rgba(0, 0, 0, 0.5);
 
     --color-status-used: #b3141b;
     --color-status-building: #9a6212;

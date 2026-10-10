@@ -461,3 +461,62 @@ class RateLimitTest(TestCase):
         self.assertEqual(chatbot.client_ip(request), "2.2.2.2")
         del request.META["HTTP_X_FORWARDED_FOR"]
         self.assertEqual(chatbot.client_ip(request), "10.0.0.1")
+
+
+# --- Task 5: the widget ------------------------------------------------------------
+
+import re  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+BASE_DIR = Path(settings.BASE_DIR)
+
+
+class WidgetTest(TestCase):
+    def _pages(self):
+        project = Project.objects.create(title="P", short_description="d")
+        return [reverse("portfolio:home"), project.get_absolute_url()]
+
+    @ENABLED
+    def test_widget_is_on_every_page_when_enabled(self):
+        for url in self._pages():
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                self.assertIn('class="chatbot"', html)
+                self.assertIn(f'data-chat-url="{reverse("portfolio:chat")}"', html)
+                self.assertIn('js/chatbot.js" defer', html)
+                widget = html[html.index('class="chatbot"'):]
+                self.assertIn('name="csrfmiddlewaretoken"', widget)
+                self.assertIn('role="dialog"', widget)
+                # Visitors are told who processes their questions.
+                self.assertIn("Google Gemini", widget)
+
+    @DISABLED
+    def test_widget_is_absent_when_disabled(self):
+        for url in self._pages():
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                self.assertNotIn('class="chatbot"', html)
+                self.assertNotIn("js/chatbot.js", html)
+
+    def test_stylesheet_is_linked_from_base(self):
+        base = (BASE_DIR / "templates" / "base.html").read_text()
+        self.assertIn("static 'css/chatbot.css'", base)
+
+    def test_script_never_parses_replies_as_html(self):
+        js = (BASE_DIR / "static" / "js" / "chatbot.js").read_text()
+        for forbidden in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write"):
+            with self.subTest(api=forbidden):
+                self.assertNotIn(forbidden, js)
+        self.assertIn("textContent", js)
+
+    def test_only_safe_link_targets_become_links(self):
+        """The script's link allow-list, checked with Python's regex engine
+        (the pattern uses no syntax the two engines treat differently)."""
+        js = (BASE_DIR / "static" / "js" / "chatbot.js").read_text()
+        pattern = re.compile(re.search(r"var SAFE_LINK = /(.+)/i;", js).group(1), re.I)
+        for href in ("https://github.com/900Gang", "http://example.com", "mailto:a@b.co", "/projects/x/", "/#contact"):
+            with self.subTest(allowed=href):
+                self.assertTrue(pattern.match(href))
+        for href in ("javascript:alert(1)", "JavaScript:alert(1)", "data:text/html,x", "//evil.example", "vbscript:x"):
+            with self.subTest(blocked=href):
+                self.assertFalse(pattern.match(href))
