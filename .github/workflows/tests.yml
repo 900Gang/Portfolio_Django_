@@ -36,7 +36,8 @@ jobs:
       # Exactly the versions and files Render installs: every package pinned
       # and hash-checked, and wheels only, so no setup script runs.
       - name: Install dependencies
-        run: pip install --require-hashes --only-binary :all: -r requirements.lock
+        run: |
+          pip install --require-hashes --only-binary :all: -r requirements.lock
 
       - name: Django system checks (production settings)
         run: python manage.py check --deploy --fail-level ERROR
