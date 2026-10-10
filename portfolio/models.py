@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.db import models
+from django.utils import timezone
 from django.urls import reverse
 from django.utils.text import slugify
 from django.core.validators import URLValidator
@@ -255,3 +258,32 @@ class ProfessionalSkill(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ChatLog(models.Model):
+    """One question to the portfolio assistant and the answer it gave."""
+
+    # Old logs are deleted whenever a new one is saved: Render's free plan
+    # has no scheduled jobs to do it separately.
+    RETENTION = timedelta(days=90)
+
+    conversation_id = models.CharField(max_length=36, db_index=True)
+    question = models.TextField()
+    answer = models.TextField()
+    model = models.CharField(max_length=60)
+    input_tokens = models.PositiveIntegerField(default=0)
+    output_tokens = models.PositiveIntegerField(default=0)
+    cache_read_tokens = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Chat Log"
+        verbose_name_plural = "Chat Logs"
+
+    def __str__(self):
+        return f"{self.created_at:%Y-%m-%d} — {self.question[:60]}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        ChatLog.objects.filter(created_at__lt=timezone.now() - self.RETENTION).delete()

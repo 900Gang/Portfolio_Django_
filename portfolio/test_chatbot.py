@@ -35,3 +35,60 @@ class ChatbotSettingsTest(TestCase):
     def test_first_name_is_available_to_templates(self):
         context = self.client.get(reverse("portfolio:home")).context
         self.assertEqual(context["site_first_name"], settings.SITE_OWNER.split()[0])
+
+
+# --- Task 2: the chat log -------------------------------------------------------
+
+from datetime import timedelta  # noqa: E402
+
+from django.contrib.auth.models import User  # noqa: E402
+from django.utils import timezone  # noqa: E402
+
+from .models import ChatLog  # noqa: E402
+
+
+class ChatLogTest(TestCase):
+    def test_str_shows_the_date_and_the_start_of_the_question(self):
+        log = ChatLog.objects.create(
+            conversation_id="c", question="What are his main skills? " * 5, answer="a", model="m"
+        )
+        self.assertTrue(str(log).startswith(log.created_at.strftime("%Y-%m-%d")))
+        self.assertIn("What are his main skills?", str(log))
+        self.assertLess(len(str(log)), 80)
+
+    def test_saving_deletes_logs_older_than_ninety_days(self):
+        old = ChatLog.objects.create(conversation_id="c", question="old", answer="a", model="m")
+        ChatLog.objects.filter(pk=old.pk).update(created_at=timezone.now() - timedelta(days=91))
+        recent = ChatLog.objects.create(conversation_id="c", question="recent", answer="a", model="m")
+        ChatLog.objects.filter(pk=recent.pk).update(created_at=timezone.now() - timedelta(days=89))
+
+        ChatLog.objects.create(conversation_id="c", question="new", answer="a", model="m")
+
+        self.assertEqual(
+            sorted(ChatLog.objects.values_list("question", flat=True)), ["new", "recent"]
+        )
+
+
+class ChatLogAdminTest(TestCase):
+    def setUp(self):
+        admin_user = User.objects.create_superuser("admin", "admin@example.com", "pw")
+        self.client.force_login(admin_user)
+        self.log = ChatLog.objects.create(
+            conversation_id="c", question="Where is he based?", answer="Trivandrum.", model="m"
+        )
+
+    def test_list_and_detail_pages_load(self):
+        self.assertEqual(self.client.get(reverse("admin:portfolio_chatlog_changelist")).status_code, 200)
+        detail = self.client.get(reverse("admin:portfolio_chatlog_change", args=[self.log.pk]))
+        self.assertEqual(detail.status_code, 200)
+        self.assertContains(detail, "Trivandrum.")
+
+    def test_logs_cannot_be_added_or_edited(self):
+        self.assertEqual(self.client.get(reverse("admin:portfolio_chatlog_add")).status_code, 403)
+        response = self.client.post(
+            reverse("admin:portfolio_chatlog_change", args=[self.log.pk]),
+            {"question": "changed", "answer": "changed"},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.log.refresh_from_db()
+        self.assertEqual(self.log.question, "Where is he based?")
