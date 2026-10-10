@@ -92,3 +92,108 @@ class ChatLogAdminTest(TestCase):
         self.assertEqual(response.status_code, 403)
         self.log.refresh_from_db()
         self.assertEqual(self.log.question, "Where is he based?")
+
+
+# --- Task 3: the profile and the system prompt -------------------------------
+
+from . import chatbot  # noqa: E402
+from .content import ABOUT_PARAGRAPHS  # noqa: E402
+from .models import (  # noqa: E402
+    Certification,
+    Education,
+    JourneyEntry,
+    ProfessionalSkill,
+    Project,
+    Skill,
+    SkillCategory,
+    SkillStatus,
+)
+
+
+class AboutTextTest(TestCase):
+    def test_about_section_renders_the_shared_paragraphs(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        for paragraph in ABOUT_PARAGRAPHS:
+            with self.subTest(paragraph=paragraph[:30]):
+                self.assertIn(paragraph, html)
+
+
+class ProfileTest(TestCase):
+    def setUp(self):
+        python = Skill.objects.create(
+            name="Python", category=SkillCategory.BACKEND, status=SkillStatus.USED_IN_PROJECTS
+        )
+        Skill.objects.create(name="Kubernetes", category=SkillCategory.DEVOPS, status=SkillStatus.LEARNING)
+        project = Project.objects.create(
+            title="Hematology Screening",
+            short_description="Classifies blood smear images.",
+            description="Built with Keras.\n\nRuns an OpenCV pipeline.",
+            github_url="https://github.com/example/heme",
+            featured=True,
+        )
+        project.technologies.add(python)
+        Project.objects.create(title="Side Project", short_description="A smaller thing.")
+        Education.objects.create(
+            institution="College of Engineering", degree="B.Tech",
+            field_of_study="Computer Science", start_date="2022-08-01", end_date="2026-05-31",
+        )
+        JourneyEntry.objects.create(date="2026-09-01", title="Joined Yangtso Four Labs", description="AI intern.")
+        Certification.objects.create(name="TensorFlow Developer", issuer="Google", issue_year=2025)
+        Certification.objects.create(name="Hidden Cert", issuer="Nobody", is_visible=False)
+        ProfessionalSkill.objects.create(name="Teamwork")
+        ProfessionalSkill.objects.create(name="Hidden Skill", is_visible=False)
+
+    def test_profile_contains_the_portfolio(self):
+        profile = chatbot.build_profile()
+        for needle in (
+            settings.SITE_OWNER,
+            settings.SITE_ROLE,
+            settings.SITE_EMAIL,
+            settings.SITE_LINKEDIN_URL,
+            settings.SITE_GITHUB_URL,
+            "/#contact",
+            "### Backend & Data",
+            "- Python — Used in Projects",
+            "- Kubernetes — Learning",
+            "### Hematology Screening (featured)",
+            "Technologies: Python",
+            "https://github.com/example/heme",
+            "Built with Keras. Runs an OpenCV pipeline.",
+            "### Side Project",
+            "B.Tech in Computer Science, College of Engineering (2022–2026)",
+            "September 2026",
+            "Joined Yangtso Four Labs",
+            "TensorFlow Developer — Google (2025)",
+            "- Teamwork",
+            ABOUT_PARAGRAPHS[0],
+        ):
+            with self.subTest(needle=needle):
+                self.assertIn(needle, profile)
+
+    def test_featured_projects_come_first(self):
+        profile = chatbot.build_profile()
+        self.assertLess(profile.index("Hematology Screening"), profile.index("Side Project"))
+
+    def test_hidden_records_and_the_phone_number_are_left_out(self):
+        profile = chatbot.build_profile()
+        self.assertNotIn("Hidden Cert", profile)
+        self.assertNotIn("Hidden Skill", profile)
+        if settings.SITE_PHONE:
+            self.assertNotIn(settings.SITE_PHONE, profile)
+
+    def test_profile_is_identical_between_builds_so_it_can_be_cached(self):
+        self.assertEqual(chatbot.build_profile(), chatbot.build_profile())
+
+    def test_system_prompt_is_instructions_then_profile(self):
+        prompt = chatbot.build_system_prompt()
+        self.assertTrue(prompt.startswith(f"You are {settings.SITE_OWNER.split()[0]}'s portfolio assistant"))
+        self.assertIn("Use only facts from the profile", prompt)
+        self.assertTrue(prompt.endswith(chatbot.build_profile()))
+
+
+class EmptyProfileTest(TestCase):
+    def test_profile_builds_on_an_empty_database(self):
+        profile = chatbot.build_profile()
+        self.assertIn(settings.SITE_OWNER, profile)
+        self.assertIn("No skills listed.", profile)
+        self.assertIn("No projects listed.", profile)

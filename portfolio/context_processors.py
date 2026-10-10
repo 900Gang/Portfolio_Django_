@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.templatetags.static import static
 
+from .content import ABOUT_PARAGRAPHS
 from .models import JourneyEntry
 
 
@@ -33,6 +34,7 @@ def site(request):
         'resume_url': _static_if_present(settings.RESUME_STATIC_PATH),
         'resume_download_name': settings.RESUME_DOWNLOAD_NAME,
         'og_image_url': _absolute(request, _static_if_present(settings.OG_IMAGE_STATIC_PATH)),
+        'about_paragraphs': ABOUT_PARAGRAPHS,
         # The assistant widget is rendered only when an API key is configured.
         'chatbot_enabled': settings.CHATBOT_ENABLED,
     }
