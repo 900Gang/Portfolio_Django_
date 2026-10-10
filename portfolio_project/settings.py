@@ -250,6 +250,13 @@ RESUME_DOWNLOAD_NAME = get_str('RESUME_DOWNLOAD_NAME', 'Anand_N_Resume.pdf')
 # tag. Regenerate with `python manage.py make_og_image`.
 OG_IMAGE_STATIC_PATH = get_str('OG_IMAGE_STATIC_PATH', 'img/og-image.png')
 
+# Portfolio assistant (chatbot). It switches on only when a Gemini API key
+# is set, so local development, tests and a misconfigured deploy simply hide
+# it. The key is a secret: set it in the environment, never in code.
+GEMINI_API_KEY = get_str('GEMINI_API_KEY', '')
+CHATBOT_MODEL = get_str('CHATBOT_MODEL', 'gemini-3.5-flash-lite')
+CHATBOT_ENABLED = bool(GEMINI_API_KEY)
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
