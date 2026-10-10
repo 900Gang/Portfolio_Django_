@@ -153,6 +153,39 @@ as absolute URLs — scrapers do not resolve relative ones.
 `robots.txt` and `sitemap.xml` are served from the app; the sitemap covers the
 home page and every project.
 
+## Portfolio assistant
+
+A chat widget ("Ask about Anand") answers visitors' questions from the site's
+own data, using Gemini 3.5 Flash-Lite through Google's official
+`google-genai` SDK.
+
+- `portfolio/chatbot.py` builds the profile on every request (identity, the
+  About text, skills, projects, journey, education, visible certifications
+  and professional skills) in a fixed order, so Gemini can cache the system
+  prompt, then asks Gemini. The phone number is deliberately left out.
+- `POST /api/chat/` (CSRF-protected JSON) validates the question (500
+  characters at most, with up to the last three exchanges as history),
+  limits each visitor to 8 questions per 10 minutes and 40 per day, and
+  returns the reply. When Google's own rate limit is hit it answers 503 with
+  a "busy" message.
+- Every answer is saved as a `ChatLog`, read-only in the admin. Logs older
+  than 90 days are deleted automatically when a new one is saved.
+- The widget (`templates/components/chatbot.html`, `static/js/chatbot.js`,
+  `static/css/chatbot.css`) shows replies as text with a small safe Markdown
+  subset; only `https://`, `mailto:` and site links become links. Its
+  footnote tells visitors that questions are processed by Google Gemini.
+- With no `GEMINI_API_KEY` set, the widget is hidden and the endpoint
+  returns 503, so local development and the tests need no key.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GEMINI_API_KEY` | empty | Gemini API key from Google AI Studio. Turns the assistant on. Secret: environment only |
+| `CHATBOT_MODEL` | `gemini-3.5-flash-lite` | Model used for answers |
+
+The key runs on Gemini's free tier: no billing, Google's rate limits apply,
+and Google may use prompts to improve its products. In production start
+gunicorn with `--threads 4` so a chat request never blocks page loads.
+
 ## Environment Variables
 
 Settings are read from the environment; a `.env` file at the project root is
@@ -301,7 +334,7 @@ media to object storage.
 python manage.py test
 ```
 
-212 tests across three files:
+263 tests across four files:
 
 - `portfolio/tests.py` — the feature suite: models, views, form validation,
   and every section's rendering and empty state.
@@ -315,6 +348,11 @@ python manage.py test
   home page, the hero and its portrait files, the ticker, the process and
   credentials sections, the empty-database page, motion safety, and the
   portrait and link-preview commands.
+
+- `portfolio/test_chatbot.py` — the portfolio assistant: the profile and
+  system prompt, the request sent to Gemini (with a fake client, so no key or
+  network is needed), validation, rate limiting, logging, the admin and the
+  widget's safety rules.
 
 The query-count tests assert the home page and project page issue the same
 number of queries regardless of how much content exists, so an N+1 introduced
