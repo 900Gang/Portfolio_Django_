@@ -229,7 +229,7 @@ loaded automatically, and real environment variables take precedence over it.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DATABASE_URL` | empty | e.g. `postgres://user:pass@host:5432/dbname`. Parsed by `dj-database-url` with persistent connections (`conn_max_age=600`); SSL is required when `DEBUG=False`. When unset, the project uses `db.sqlite3` at the project root |
+| `DATABASE_URL` | empty | e.g. `postgres://user:pass@host:5432/dbname`. Parsed by `dj-database-url` with persistent connections (`conn_max_age=600`) that are health-checked before reuse, because Neon closes idle connections when it suspends; SSL is required when `DEBUG=False`. When unset, the project uses `db.sqlite3` at the project root |
 
 ### Security
 
@@ -326,6 +326,9 @@ DATABASE_URL='<neon pooled string>' python manage.py createsuperuser
 On Render's free plan the service sleeps after about 15 minutes without
 traffic, so the first request after that takes 30–60 seconds.
 
+Warnings and errors from Django and the app, including the traceback of any
+500, are written to stderr and appear in Render's service logs.
+
 WhiteNoise serves the collected static files from the app server, so no
 separate web server or CDN is required. Outside `DEBUG`, assets are hashed and
 pre-compressed at collect time and served with immutable cache headers, so a
@@ -376,7 +379,7 @@ media to object storage.
 python manage.py test
 ```
 
-272 tests across five files:
+275 tests across five files:
 
 - `portfolio/tests.py` — the feature suite: models, views, form validation,
   and every section's rendering and empty state.

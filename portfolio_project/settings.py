@@ -112,6 +112,10 @@ if DATABASE_URL:
         'default': dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
+            # Neon suspends after five idle minutes and closes every
+            # connection; without a health check the first request after a
+            # quiet spell reused the dead connection and failed with a 500.
+            conn_health_checks=True,
             ssl_require=not DEBUG,
         )
     }
@@ -123,6 +127,26 @@ else:
         }
     }
 
+
+# Logging. Warnings and errors, including the traceback of any 500, go to
+# stderr, which Render keeps in the service logs. Django's default prints them
+# only with DEBUG on and otherwise emails ADMINS, which is not configured, so a
+# production 500 used to leave no trace. Request lines come from gunicorn's own
+# access log, so 4xx warnings from django.request are left out.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'plain': {'format': '{levelname} {name}: {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'plain'},
+    },
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
+        'portfolio': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

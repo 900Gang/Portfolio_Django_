@@ -7,7 +7,11 @@ bug that was found and fixed, or locks in a property the refactor relies on so
 a future change cannot silently undo it.
 """
 import io
+import json
+import os
 import re
+import subprocess
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -1026,3 +1030,50 @@ class ProjectImageDeliveryTest(TestCase):
                 self.assertLess(
                     size, 400_000, f"{project.image.name} is {size / 1024:.0f}KB"
                 )
+
+
+class ProductionDatabaseSettingsTest(TestCase):
+    """
+    Neon suspends its compute after five idle minutes and closes every
+    connection. Django kept its connection for ten minutes without checking it,
+    so the first request after a quiet spell reused a dead connection and
+    failed with a 500. Health checks make Django test a reused connection and
+    reconnect instead.
+    """
+
+    def _production_database(self):
+        # The DATABASE_URL branch only runs when the variable is set, so read
+        # the settings in a fresh interpreter rather than this test process.
+        env = dict(os.environ, DATABASE_URL="postgres://user:pass@db.example.com:5432/portfolio", DEBUG="True")
+        script = (
+            "import json; from portfolio_project import settings; "
+            "db = settings.DATABASES['default']; "
+            "print(json.dumps({k: db[k] for k in ('ENGINE', 'CONN_MAX_AGE', 'CONN_HEALTH_CHECKS')}))"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", script], cwd=settings.BASE_DIR, env=env,
+            capture_output=True, text=True, check=True,
+        )
+        return json.loads(result.stdout.strip().splitlines()[-1])
+
+    def test_persistent_connections_are_health_checked(self):
+        db = self._production_database()
+        self.assertEqual(db["ENGINE"], "django.db.backends.postgresql")
+        self.assertGreater(db["CONN_MAX_AGE"], 0)
+        self.assertTrue(db["CONN_HEALTH_CHECKS"])
+
+
+class ErrorLoggingTest(TestCase):
+    """Unhandled errors must reach stderr, which Render keeps, whatever DEBUG
+    is. Django's default only prints them with DEBUG on and otherwise emails
+    ADMINS, which is not configured, so a production 500 left no trace."""
+
+    def test_django_errors_go_to_the_console_without_a_debug_filter(self):
+        django_logger = settings.LOGGING["loggers"]["django"]
+        self.assertIn("console", django_logger["handlers"])
+        console = settings.LOGGING["handlers"]["console"]
+        self.assertEqual(console["class"], "logging.StreamHandler")
+        self.assertNotIn("require_debug_true", console.get("filters", []))
+
+    def test_app_warnings_and_errors_are_kept(self):
+        self.assertIn(settings.LOGGING["loggers"]["portfolio"]["level"], ("INFO", "WARNING"))
