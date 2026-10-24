@@ -238,12 +238,33 @@ loaded automatically, and real environment variables take precedence over it.
 | `DEBUG` | `False` | Debug mode |
 | `CSRF_TRUSTED_ORIGINS` | empty | Comma-separated origins, production only |
 | `SECURE_SSL_REDIRECT` | `True` in production | Redirect HTTP to HTTPS |
-| `SECURE_HSTS_SECONDS` | `0` | Enables HSTS when greater than zero |
+| `SECURE_HSTS_SECONDS` | `31536000` in production | HSTS max-age; `0` turns HSTS off |
+| `SECURE_HSTS_INCLUDE_SUBDOMAINS` | `False` | Adds `includeSubDomains` to HSTS |
+| `SECURE_HSTS_PRELOAD` | `False` | Adds `preload` to HSTS. Hard to undo once browsers list the domain |
+| `CSP_ENABLED` | `True` in production | Sends the Content-Security-Policy header (off with `DEBUG`, whose error pages use inline scripts) |
 
 `DEBUG` defaults to `False` and `SECRET_KEY` is mandatory outside debug, so a
 misconfigured deployment fails at startup rather than serving insecurely.
 Outside debug the project also sets secure cookies, `nosniff`,
 `X-Frame-Options: DENY` and a `strict-origin-when-cross-origin` referrer policy.
+
+Further hardening:
+
+- **Content-Security-Policy** (`portfolio_project/csp.py`): scripts only from
+  this site, styles and fonts from this site and Google Fonts, nothing may
+  frame the site. Templates must not contain inline scripts, event-handler
+  attributes or `style="..."`; the one inline `<style>` block in `500.html` is
+  allowed by its hash, computed at start-up.
+- **HSTS** for a year by default; `includeSubDomains` and `preload` are opt-in.
+- **Admin sign-in lockout** (`portfolio/admin_auth.py`): five failed attempts
+  from one address lock that address out for 15 minutes. It is per address,
+  not per username, so nobody can lock the owner out from elsewhere.
+- **Rate limits** (`portfolio/throttle.py`): the contact form allows 5
+  submissions per hour and 20 per day per visitor (valid or not), the chat 8
+  questions per 10 minutes and 40 per day. Counters live in the local-memory
+  cache, so they reset when the process restarts.
+- **Dependencies** are hash-locked and checked with `pip-audit`
+  (`pip-audit -r requirements.lock --no-deps --disable-pip`).
 
 ### Identity
 
@@ -379,7 +400,7 @@ media to object storage.
 python manage.py test
 ```
 
-275 tests across five files:
+292 tests across six files:
 
 - `portfolio/tests.py` — the feature suite: models, views, form validation,
   and every section's rendering and empty state.
@@ -400,6 +421,12 @@ python manage.py test
 - `portfolio/test_notifications.py` — the contact alert: the email's
   contents, the request sent to Resend, and that a failed alert never breaks
   the contact form.
+- `portfolio/test_security.py` — the hardening: contact rate limit, admin
+  sign-in lockout, the Content-Security-Policy and template rules, HSTS
+  defaults, the patched dependency versions and the pinned CI actions.
+
+The test runner (`portfolio_project/test_runner.py`) clears the cache before
+every test, so rate-limit counters never carry from one test to the next.
 
 GitHub Actions (`.github/workflows/tests.yml`) runs the Django system checks
 with production settings, `collectstatic`, a missing-migrations check and the

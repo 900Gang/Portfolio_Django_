@@ -1,5 +1,9 @@
 from django.contrib import admin
+from .admin_auth import ThrottledAdminAuthenticationForm
 from .models import Skill, Project, JourneyEntry, Education, ContactMessage, Certification, ProfessionalSkill, ChatLog
+
+# Failed admin sign-ins lock the visitor out for 15 minutes after five tries.
+admin.site.login_form = ThrottledAdminAuthenticationForm
 
 
 @admin.register(Skill)

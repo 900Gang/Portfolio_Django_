@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import DetailView
 
-from . import chatbot, notifications
+from . import chatbot, notifications, throttle
 from .forms import ContactForm
 from .models import (
     SKILL_CATEGORY_DISPLAY_ORDER,
@@ -26,6 +26,10 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+# (messages, window in seconds) per visitor IP. Counts every submission,
+# valid or not, so a bot cannot flood the inbox or the email quota.
+CONTACT_RATE_LIMITS = ((5, 60 * 60), (20, 24 * 60 * 60))
+
 
 @require_http_methods(["GET", "HEAD", "POST"])
 def home(request):
@@ -37,17 +41,27 @@ def home(request):
     fell through to the GET branch and rendered the page rather than being
     rejected with 405.
     """
+    status = 200
     if request.method == 'POST':
         contact_form = ContactForm(request.POST)
-        if contact_form.is_valid():
+        if throttle.exceeded('contact', throttle.client_ip(request), CONTACT_RATE_LIMITS):
+            # Re-render with the visitor's text kept, rather than saving it.
+            status = 429
+            messages.error(
+                request,
+                "You've sent several messages already. Please try again later, "
+                f"or email {settings.SITE_EMAIL}.",
+            )
+        elif contact_form.is_valid():
             notifications.notify_new_message(contact_form.save())
             messages.success(request, 'Your message has been sent successfully.')
             # Redirect after a successful POST so a refresh cannot resubmit.
             return redirect('portfolio:home')
-        messages.error(
-            request,
-            'Your message could not be sent. Please check the highlighted fields.',
-        )
+        else:
+            messages.error(
+                request,
+                'Your message could not be sent. Please check the highlighted fields.',
+            )
     else:
         contact_form = ContactForm()
 
@@ -79,7 +93,7 @@ def home(request):
     # objects (`|length`), not re-queried here: every one of them is rendered
     # further down the page anyway, so the counts cost no extra queries and
     # cannot disagree with what the visitor can actually see.
-    return render(request, 'portfolio/home.html', context)
+    return render(request, 'portfolio/home.html', context, status=status)
 
 
 class ProjectDetailView(DetailView):
