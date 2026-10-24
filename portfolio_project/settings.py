@@ -14,6 +14,7 @@ from pathlib import Path
 
 import dj_database_url
 
+from .csp import build_policy
 from .env import get_bool, get_list, get_str, load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -44,11 +45,14 @@ if not DEBUG:
     SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
     X_FRAME_OPTIONS = 'DENY'
     CSRF_TRUSTED_ORIGINS = get_list('CSRF_TRUSTED_ORIGINS')
-    # Opt-in: a deployment that is not yet fully HTTPS should leave these off.
     SECURE_SSL_REDIRECT = get_bool('SECURE_SSL_REDIRECT', default=True)
-    SECURE_HSTS_SECONDS = int(get_str('SECURE_HSTS_SECONDS', '0'))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
-    SECURE_HSTS_PRELOAD = SECURE_HSTS_SECONDS > 0
+    # HSTS: browsers remember to use HTTPS for a year. The site is HTTPS-only
+    # (Cloudflare and Render both terminate TLS), so this is on by default.
+    # includeSubDomains and preload are separate opt-ins: preload in
+    # particular is hard to undo once a browser list has picked it up.
+    SECURE_HSTS_SECONDS = int(get_str('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = get_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False)
+    SECURE_HSTS_PRELOAD = get_bool('SECURE_HSTS_PRELOAD', default=False)
 
 
 # Application definition
@@ -76,7 +80,18 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'portfolio_project.middleware.ContentSecurityPolicyMiddleware',
 ]
+
+# Content-Security-Policy, built in portfolio_project/csp.py: scripts only
+# from this site, Google Fonts for styles and fonts, nothing may frame the
+# site. On by default outside DEBUG; Django's debug error pages use inline
+# scripts, so it is off with DEBUG unless CSP_ENABLED=True is set.
+CSP_ENABLED = get_bool('CSP_ENABLED', default=not DEBUG)
+
+# The rate limits and the admin lockout count in the cache; this runner clears
+# it before every test so tests cannot affect each other.
+TEST_RUNNER = 'portfolio_project.test_runner.CacheClearingRunner'
 
 ROOT_URLCONF = 'portfolio_project.urls'
 
@@ -97,6 +112,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'portfolio_project.wsgi.application'
+
+CONTENT_SECURITY_POLICY = build_policy(BASE_DIR / 'templates' / '500.html')
 
 
 # Database

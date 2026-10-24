@@ -10,10 +10,11 @@ from dataclasses import dataclass
 
 import httpx
 from django.conf import settings
-from django.core.cache import cache
 from google import genai
 from google.genai import errors, types
 
+from . import throttle
+from .throttle import client_ip  # noqa: F401  (used by views.chat)
 from .content import ABOUT_PARAGRAPHS
 from .context_processors import _static_if_present
 from .models import (
@@ -348,34 +349,6 @@ def parse_request(payload):
     return message, clean_history, conversation_id
 
 
-def client_ip(request):
-    """
-    The visitor's address, used only as a rate-limit key and never stored.
-
-    Cloudflare fronts the site and sends CF-Connecting-IP. Otherwise the
-    right-most X-Forwarded-For entry is the one Render's proxy added; entries
-    to its left can be written by the visitor.
-    """
-    cloudflare = request.META.get("HTTP_CF_CONNECTING_IP", "").strip()
-    if cloudflare:
-        return cloudflare
-    hops = [hop.strip() for hop in request.META.get("HTTP_X_FORWARDED_FOR", "").split(",") if hop.strip()]
-    if hops:
-        return hops[-1]
-    return request.META.get("REMOTE_ADDR") or "unknown"
-
-
 def rate_limited(ip):
     """Count this request against the visitor's limits; True once any is exceeded."""
-    limited = False
-    for limit, window in RATE_LIMITS:
-        key = f"chatbot:rate:{window}:{ip}"
-        cache.add(key, 0, timeout=window)
-        try:
-            count = cache.incr(key)
-        except ValueError:  # the key expired between add() and incr()
-            cache.set(key, 1, timeout=window)
-            count = 1
-        if count > limit:
-            limited = True
-    return limited
+    return throttle.exceeded("chatbot", ip, RATE_LIMITS)

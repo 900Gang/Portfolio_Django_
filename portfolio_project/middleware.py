@@ -32,3 +32,16 @@ class WhiteNoiseWithMediaMiddleware(WhiteNoiseMiddleware):
             if not prefix.startswith('/'):
                 prefix = '/' + prefix
             self.add_files(media_root, prefix=prefix)
+
+
+class ContentSecurityPolicyMiddleware:
+    """Send settings.CONTENT_SECURITY_POLICY on every response while CSP_ENABLED."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if django_settings.CSP_ENABLED and django_settings.CONTENT_SECURITY_POLICY:
+            response.headers.setdefault('Content-Security-Policy', django_settings.CONTENT_SECURITY_POLICY)
+        return response
