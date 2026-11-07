@@ -8,6 +8,19 @@ from .models import Certification, Education, JourneyEntry
 
 
 class ContentMigrationTest(TestCase):
+    def test_simplifies_cgpa_without_losing_coursework(self):
+        education = Education.objects.create(
+            institution="College of Engineering, Muttathara",
+            degree="B.Tech",
+            start_date="2022-09-01",
+            end_date="2026-05-31",
+            description="CGPA: 6.84/10.0 — no current backlogs.\n\nRelevant Coursework: DBMS",
+        )
+        migration = importlib.import_module("portfolio.migrations.0006_simplify_cgpa")
+        migration.simplify_cgpa(apps, SimpleNamespace(connection=SimpleNamespace(alias="default")))
+        education.refresh_from_db()
+        self.assertEqual(education.description, "CGPA: 6.84\n\nRelevant Coursework: DBMS")
+
     def test_corrects_existing_seeded_content_without_touching_unrelated_records(self):
         education = Education.objects.create(
             institution="College of Engineering, Muttathara",
