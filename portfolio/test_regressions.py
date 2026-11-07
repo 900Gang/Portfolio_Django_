@@ -260,6 +260,22 @@ class SeedCommandTest(TestCase):
             },
         )
 
+    def test_seed_uses_corrected_education_and_certification_details(self):
+        call_command("populate_portfolio", stdout=io.StringIO())
+        self.assertIn(
+            "CGPA: 6.84/10.0",
+            Education.objects.get(institution="College of Engineering, Muttathara").description,
+        )
+        self.assertEqual(
+            Education.objects.get(institution="Sree Narayana Public School").description,
+            "Percentage: 82%",
+        )
+        self.assertEqual(Certification.objects.filter(issuer="SkillNation").count(), 5)
+        self.assertIn(
+            "CGPA of 6.84/10.0",
+            JourneyEntry.objects.get(title="Graduated B.Tech in Computer Science Engineering").description,
+        )
+
     def test_reseeding_does_not_accumulate_technology_links(self):
         out = io.StringIO()
         call_command("populate_portfolio", stdout=out)
@@ -318,7 +334,7 @@ class SeedCommandTest(TestCase):
         )
         self.assertTrue(
             Certification.objects.filter(
-                name="Basic to Advanced SQL", issuer="LinkedIn"
+                name="Basic to Advanced SQL", issuer="SkillNation"
             ).exists()
         )
 

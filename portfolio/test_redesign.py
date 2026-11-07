@@ -83,6 +83,17 @@ class ChromeTest(TestCase):
         with override_settings(SITE_AVAILABILITY=""):
             self.assertNotIn('class="nav-status"', home_html(self.client))
 
+    def test_mobile_menu_has_visible_label_and_matching_breakpoint(self):
+        html = home_html(self.client)
+        js = (BASE_DIR / "static" / "js" / "navigation.js").read_text()
+        css = (BASE_DIR / "static" / "css" / "responsive.css").read_text()
+        self.assertIn('class="nav-toggle-label" aria-hidden="true">Menu</span>', html)
+        self.assertIn('aria-label="Open navigation menu"', html)
+        self.assertIn("'Close navigation menu' : 'Open navigation menu'", js)
+        breakpoint = re.search(r"MOBILE_BREAKPOINT = (\d+)", js).group(1)
+        self.assertIn(f"@media (max-width: {breakpoint}px)", css)
+        self.assertIn("overflow-y: auto", css)
+
 
 class HandleFilterTest(SimpleTestCase):
     """The label on the hero's detection box, derived from SITE_OWNER."""
@@ -344,7 +355,8 @@ class SkillsAndJourneyTest(TestCase):
 class CredentialsTest(TestCase):
     def test_quote_card_renders_the_agreed_line(self):
         html = home_html(self.client)
-        self.assertIn("A model is only as good as the data it learns from.", html)
+        self.assertIn("The Analytical Engine weaves algebraical patterns", html)
+        self.assertIn("Ada Lovelace", html)
         self.assertIn('href="#contact" class="quote-cta"', html)
 
     def test_certifications_live_inside_the_education_section(self):

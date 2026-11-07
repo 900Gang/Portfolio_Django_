@@ -9,7 +9,7 @@
 (function () {
     'use strict';
 
-    var MOBILE_BREAKPOINT = 900;
+    var MOBILE_BREAKPOINT = 1100;
 
     function ready(fn) {
         if (document.readyState !== 'loading') {
@@ -30,6 +30,8 @@
         function setOpen(open) {
             menu.classList.toggle('nav-menu-open', open);
             toggle.setAttribute('aria-expanded', String(open));
+            toggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+            toggle.querySelector('.nav-toggle-label').textContent = open ? 'Close' : 'Menu';
             document.documentElement.classList.toggle('menu-open', open);
             // The overlay covers the page; keep keyboard focus inside it.
             document.querySelectorAll('main, .site-footer').forEach(function (region) {
