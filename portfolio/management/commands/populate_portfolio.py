@@ -353,7 +353,7 @@ Tested and evaluated the application through iterative experimentation.""",
                 'start_date': '2022-09-01',
                 'end_date': '2026-05-31',
                 'is_current': False,
-                'description': 'CGPA: 6.84/10.0 — no current backlogs.\n\nRelevant Coursework: Data Structures, DBMS, Operating Systems, Computer Networks, Software Testing, Data Mining',
+                'description': 'CGPA: 6.84\n\nRelevant Coursework: Data Structures, DBMS, Operating Systems, Computer Networks, Software Testing, Data Mining',
                 'order': 1,
             },
             {

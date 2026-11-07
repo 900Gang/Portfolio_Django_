@@ -262,9 +262,10 @@ class SeedCommandTest(TestCase):
 
     def test_seed_uses_corrected_education_and_certification_details(self):
         call_command("populate_portfolio", stdout=io.StringIO())
-        self.assertIn(
-            "CGPA: 6.84/10.0",
-            Education.objects.get(institution="College of Engineering, Muttathara").description,
+        self.assertEqual(
+            Education.objects.get(institution="College of Engineering, Muttathara")
+            .description.splitlines()[0],
+            "CGPA: 6.84",
         )
         self.assertEqual(
             Education.objects.get(institution="Sree Narayana Public School").description,
