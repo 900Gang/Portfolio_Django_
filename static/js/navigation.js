@@ -202,11 +202,20 @@
         });
     }
 
+    /* --- Contact form error summary -------------------------------------- */
+    function initFormErrorSummary() {
+        var summary = document.querySelector('.form-error-summary[data-focus-on-load]');
+        if (summary) {
+            summary.focus();
+        }
+    }
+
     ready(function () {
         initMenu();
         initTheme();
         initHeader();
         initScrollSpy();
         initAlerts();
+        initFormErrorSummary();
     });
 })();

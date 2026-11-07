@@ -50,6 +50,21 @@ class ContactForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if name == 'website':
+                continue
+            attrs = field.widget.attrs
+            describedby = attrs.get('aria-describedby', '').split()
+            if self.is_bound and self.errors.get(name):
+                attrs['aria-invalid'] = 'true'
+                error_id = f'id_{name}-error'
+                if error_id not in describedby:
+                    describedby.append(error_id)
+            if describedby:
+                attrs['aria-describedby'] = ' '.join(describedby)
+
     def clean_website(self):
         """Reject submissions that filled the honeypot."""
         if self.cleaned_data.get('website'):
