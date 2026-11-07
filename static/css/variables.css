@@ -126,7 +126,7 @@
     --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
 
-    --text-2xs: 0.6875rem;
+    --text-2xs: 0.75rem;
     --text-xs: 0.75rem;
     --text-sm: 0.875rem;
     --text-base: 1rem;
