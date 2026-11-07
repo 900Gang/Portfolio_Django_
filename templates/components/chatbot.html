@@ -5,7 +5,7 @@
     {% csrf_token %}
 
     <button type="button" class="chatbot-launcher" aria-haspopup="dialog" aria-controls="chatbot-panel" aria-expanded="false">
-        <span class="chatbot-launcher-icon" aria-hidden="true">✦</span>
+        <span class="chatbot-launcher-icon" aria-hidden="true">{% include 'components/icon.html' with name='spark' %}</span>
         <span>Ask about {{ site_first_name }}</span>
     </button>
 

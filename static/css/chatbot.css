@@ -50,8 +50,13 @@
 }
 
 .chatbot-launcher-icon {
-    font-family: var(--font-body);
-    font-size: 1rem;
+    display: grid;
+    place-items: center;
+}
+
+.chatbot-launcher-icon .icon {
+    width: 1rem;
+    height: 1rem;
 }
 
 .chatbot.is-open .chatbot-launcher {
@@ -98,8 +103,8 @@
 .chatbot-close {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     padding: 0;
     font-size: 1.5rem;
     line-height: 1;
@@ -216,6 +221,7 @@
 }
 
 .chatbot-chip {
+    min-height: 44px;
     padding: 0.45rem 0.75rem;
     font-size: var(--text-xs);
     text-align: left;
