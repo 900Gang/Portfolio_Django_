@@ -43,8 +43,8 @@
     text-transform: uppercase;
     white-space: nowrap;
     color: var(--color-accent-deep);
-    -webkit-mask-image: linear-gradient(180deg, black 35%, transparent 96%);
-    mask-image: linear-gradient(180deg, black 35%, transparent 96%);
+    -webkit-mask-image: linear-gradient(180deg, black 70%, transparent 100%);
+    mask-image: linear-gradient(180deg, black 70%, transparent 100%);
 }
 
 .hero-figure {
@@ -55,8 +55,8 @@
     height: 94%;
     aspect-ratio: 768 / 1344;
     transform: translateX(-46%);
-    -webkit-mask-image: radial-gradient(ellipse 62% 72% at 50% 38%, black 55%, transparent 80%);
-    mask-image: radial-gradient(ellipse 62% 72% at 50% 38%, black 55%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 68% 68% at 50% 45%, black 48%, transparent 78%);
+    mask-image: radial-gradient(ellipse 68% 68% at 50% 45%, black 48%, transparent 78%);
 }
 
 .hero-parallax {
@@ -260,13 +260,23 @@
         min-height: 0;
     }
 
+    .hero-word-wrap {
+        position: relative;
+        top: auto;
+        padding: calc(var(--header-height) + var(--space-4)) var(--space-3) 0;
+    }
+
+    .hero-word {
+        font-size: clamp(2.4rem, 11vw, 6.5rem);
+    }
+
     .hero-figure {
         position: relative;
         bottom: auto;
         left: auto;
         width: min(78vw, 26rem);
         height: auto;
-        margin: calc(var(--header-height) + 6vw) auto 0;
+        margin: 0 auto;
         transform: none;
     }
 

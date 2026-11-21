@@ -46,6 +46,145 @@
         window.requestAnimationFrame(frame);
     }
 
+    /* A short, original code and title reveal; the canvas never intercepts input. */
+    function initCinematic() {
+        var scene = document.querySelector('.hero-cinematic');
+        var canvas = document.querySelector('.hero-code-canvas');
+        var title = document.querySelector('.hero-cinematic-title');
+        var zoomLetter = document.querySelector('.hero-cinematic-v');
+        var motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        if (!scene || !canvas || !title || !zoomLetter || motion.matches || document.hidden) {
+            return;
+        }
+        var context = canvas.getContext('2d');
+        if (!context) {
+            return;
+        }
+
+        var letters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-/';
+        var colors = getComputedStyle(document.documentElement);
+        var red = colors.getPropertyValue('--color-stage-accent').trim();
+        var light = colors.getPropertyValue('--color-on-stage').trim();
+        var width, height, frameId, started, fallbackTimer;
+        var duration = 7000;
+        var streams = [];
+
+        function makeStreams(count) {
+            streams = [];
+            for (var i = 0; i < count; i += 1) {
+                var length = 6 + Math.floor(Math.random() * 13);
+                var glyphs = [];
+                for (var j = 0; j < length; j += 1) {
+                    glyphs.push(Math.floor(Math.random() * letters.length));
+                }
+                streams.push({
+                    x: (i + Math.random() * 0.6) / count,
+                    offset: Math.random(),
+                    speed: 0.25 + Math.random() * 0.35,
+                    length: length,
+                    glyphs: glyphs
+                });
+            }
+        }
+
+        function resize() {
+            var ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+            width = scene.clientWidth;
+            height = scene.clientHeight;
+            canvas.width = Math.max(1, Math.round(width * ratio));
+            canvas.height = Math.max(1, Math.round(height * ratio));
+            context.setTransform(ratio, 0, 0, ratio, 0, 0);
+            var count = Math.max(20, Math.min(96, Math.floor(width / 15)));
+            if (streams.length !== count) { makeStreams(count); }
+            var origin = zoomLetter.offsetLeft + zoomLetter.offsetWidth / 2;
+            title.style.setProperty('--zoom-origin-x', origin + 'px');
+            title.style.setProperty('--zoom-shift-x', (title.offsetWidth / 2 - origin) + 'px');
+        }
+
+        function stop() {
+            window.cancelAnimationFrame(frameId);
+            scene.classList.remove('is-playing');
+            document.documentElement.classList.remove('cinematic-active');
+            window.clearTimeout(fallbackTimer);
+            window.removeEventListener('resize', resize);
+            window.removeEventListener('pointerdown', stop);
+            window.removeEventListener('keydown', stop);
+            window.removeEventListener('scroll', stop);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            motion.removeEventListener('change', onMotionChange);
+        }
+
+        function onVisibilityChange() {
+            if (document.hidden) { stop(); }
+        }
+
+        function onMotionChange() {
+            if (motion.matches) { stop(); }
+        }
+
+        function draw(timestamp) {
+            if (started === undefined) { started = timestamp; }
+            var elapsed = timestamp - started;
+            if (elapsed >= duration) {
+                stop();
+                return;
+            }
+            if (elapsed >= duration * 0.7) {
+                window.clearTimeout(fallbackTimer);
+                fallbackTimer = window.setTimeout(stop, duration - elapsed);
+                return;
+            }
+            context.clearRect(0, 0, width, height);
+            var time = elapsed / 1000;
+            var glyphStep = Math.floor(elapsed / 700);
+            var size = Math.max(11, Math.min(16, width / 60));
+            var spacing = size * 1.35;
+
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.font = '500 ' + size + 'px monospace';
+            streams.forEach(function (stream) {
+                var head = ((stream.offset + time * stream.speed) % 1.5) * (height + stream.length * spacing) - stream.length * spacing;
+                for (var n = 0; n < stream.length; n += 1) {
+                    var y = head - n * spacing;
+                    if (y < 0 || y > height) { continue; }
+                    context.fillStyle = n === 0 ? light : red;
+                    context.globalAlpha = 0.12 + 0.78 * (1 - n / stream.length);
+                    if (n === 0) {
+                        context.shadowColor = red;
+                        context.shadowBlur = 10;
+                    }
+                    var glyph = stream.glyphs[n];
+                    if (n === (glyphStep + stream.glyphs[0]) % stream.length) {
+                        glyph = (glyph + glyphStep) % letters.length;
+                    }
+                    context.fillText(letters[glyph], stream.x * width, y);
+                    context.shadowBlur = 0;
+                }
+            });
+
+            context.globalAlpha = 1;
+            frameId = window.requestAnimationFrame(draw);
+        }
+
+        scene.classList.add('is-playing');
+        document.documentElement.classList.add('cinematic-active');
+        resize();
+        window.addEventListener('resize', resize);
+        window.addEventListener('pointerdown', stop, { once: true });
+        window.addEventListener('keydown', stop, { once: true });
+        window.addEventListener('scroll', stop, { once: true, passive: true });
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        motion.addEventListener('change', onMotionChange);
+        fallbackTimer = window.setTimeout(stop, duration + 200);
+        if (document.fonts) {
+            document.fonts.ready.then(function () {
+                if (scene.classList.contains('is-playing')) { resize(); }
+            });
+        }
+        frameId = window.requestAnimationFrame(draw);
+    }
+
     /* --- Detection label: the confidence counts up as the box lands ------ */
     function initDetection() {
         var score = document.querySelector('.hero-detect-score');
@@ -90,6 +229,7 @@
         if (!items.length) {
             return;
         }
+
         if (!('IntersectionObserver' in window)) {
             items.forEach(function (item) {
                 item.classList.add('is-revealed');
@@ -118,6 +258,22 @@
             item.style.setProperty('--reveal-delay', Math.min(index, 6) * 90 + 'ms');
             observer.observe(item);
         });
+    }
+
+    function initMotionLines() {
+        var lines = document.querySelectorAll('.timeline');
+        if (!('IntersectionObserver' in window)) {
+            return;
+        }
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-drawing');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0 });
+        lines.forEach(function (line) { observer.observe(line); });
     }
 
     /* --- Hero parallax ----------------------------------------------------
@@ -156,9 +312,11 @@
     }
 
     ready(function () {
+        initCinematic();
         initDetection();
         initCountUp();
         initReveals();
+        initMotionLines();
         initParallax();
     });
 })();

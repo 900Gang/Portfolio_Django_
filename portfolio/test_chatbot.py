@@ -487,6 +487,14 @@ class WidgetTest(TestCase):
                 widget = html[html.index('class="chatbot"'):]
                 self.assertIn('name="csrfmiddlewaretoken"', widget)
                 self.assertIn('role="dialog"', widget)
+                self.assertIn('class="chatbot-avatar-character"', widget)
+                self.assertNotIn('class="chatbot-outfit"', widget)
+                self.assertNotIn('class="chatbot-smash"', widget)
+                self.assertIn('id="chatbot-avatar-hint"', widget)
+                self.assertIn("green transformation with sound", widget)
+                self.assertIn('class="chatbot-mic"', widget)
+                self.assertIn('class="chatbot-speech"', widget)
+                self.assertIn("browser's speech provider", widget)
                 # Visitors are told who processes their questions.
                 self.assertIn("Google Gemini", widget)
 
@@ -501,6 +509,15 @@ class WidgetTest(TestCase):
     def test_stylesheet_is_linked_from_base(self):
         base = (BASE_DIR / "templates" / "base.html").read_text()
         self.assertIn("static 'css/chatbot.css'", base)
+
+    @ENABLED
+    def test_suggestions_share_the_scrollable_conversation(self):
+        html = self.client.get(reverse("portfolio:home")).content.decode()
+        conversation = html[html.index('class="chatbot-conversation"'):html.index('class="chatbot-form"')]
+        self.assertIn('class="chatbot-messages"', conversation)
+        self.assertIn('class="chatbot-suggestions"', conversation)
+        js = (BASE_DIR / "static" / "js" / "chatbot.js").read_text()
+        self.assertIn("conversation.scrollTop = conversation.scrollHeight", js)
 
     def test_script_never_parses_replies_as_html(self):
         js = (BASE_DIR / "static" / "js" / "chatbot.js").read_text()

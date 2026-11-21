@@ -52,6 +52,31 @@
     --color-stage-raised: #151515;
     --color-stage-shadow: rgba(0, 0, 0, 0.5);
 
+    /* --- Assistant avatar: identical in both themes ---------------------- */
+    --color-avatar-black: #22242b;
+    --color-avatar-black-light: #646874;
+    --color-avatar-black-shadow: #111219;
+    --color-avatar-red: #b6202a;
+    --color-avatar-red-light: #f66a70;
+    --color-avatar-red-shadow: #65131b;
+    --color-avatar-white: #e8e4de;
+    --color-avatar-white-light: #fff;
+    --color-avatar-white-shadow: #a7a4a0;
+    --color-avatar-blue: #245db0;
+    --color-avatar-blue-light: #7eb1f0;
+    --color-avatar-blue-shadow: #112e66;
+    --color-avatar-violet: #783cab;
+    --color-avatar-violet-light: #c390ea;
+    --color-avatar-violet-shadow: #3e185c;
+    --color-avatar-power: #325035;
+    --color-avatar-power-light: #8bbe83;
+    --color-avatar-power-shadow: #1d2c20;
+    --color-avatar-skin-light: #e4aa80;
+    --color-avatar-skin-shadow: #8d5037;
+    --color-avatar-power-skin-light: #9bdd92;
+    --color-avatar-power-skin-shadow: #397c49;
+    --color-avatar-outline: #777;
+
     /* --- Skill status dots ----------------------------------------------- */
     --color-status-used: #ef3b42;
     --color-status-building: #f2b544;
@@ -102,6 +127,30 @@
     --color-stage-border: #262626;
     --color-stage-raised: #151515;
     --color-stage-shadow: rgba(0, 0, 0, 0.5);
+
+    --color-avatar-black: #22242b;
+    --color-avatar-black-light: #646874;
+    --color-avatar-black-shadow: #111219;
+    --color-avatar-red: #b6202a;
+    --color-avatar-red-light: #f66a70;
+    --color-avatar-red-shadow: #65131b;
+    --color-avatar-white: #e8e4de;
+    --color-avatar-white-light: #fff;
+    --color-avatar-white-shadow: #a7a4a0;
+    --color-avatar-blue: #245db0;
+    --color-avatar-blue-light: #7eb1f0;
+    --color-avatar-blue-shadow: #112e66;
+    --color-avatar-violet: #783cab;
+    --color-avatar-violet-light: #c390ea;
+    --color-avatar-violet-shadow: #3e185c;
+    --color-avatar-power: #325035;
+    --color-avatar-power-light: #8bbe83;
+    --color-avatar-power-shadow: #1d2c20;
+    --color-avatar-skin-light: #e4aa80;
+    --color-avatar-skin-shadow: #8d5037;
+    --color-avatar-power-skin-light: #9bdd92;
+    --color-avatar-power-skin-shadow: #397c49;
+    --color-avatar-outline: #777;
 
     --color-status-used: #b3141b;
     --color-status-building: #9a6212;

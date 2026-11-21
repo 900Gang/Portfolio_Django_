@@ -4,28 +4,88 @@
     {# Read by chatbot.js, so the widget also works on pages without a form. #}
     {% csrf_token %}
 
-    <button type="button" class="chatbot-launcher" aria-haspopup="dialog" aria-controls="chatbot-panel" aria-expanded="false">
-        <span class="chatbot-launcher-icon" aria-hidden="true">{% include 'components/icon.html' with name='spark' %}</span>
-        <span>Ask about {{ site_first_name }}</span>
-    </button>
+    <div class="chatbot-controls">
+        <button type="button" class="chatbot-launcher" aria-label="Ask about {{ site_first_name }}" title="Ask about {{ site_first_name }}. Double-click to change outfit; the green transformation plays a sound." aria-haspopup="dialog" aria-controls="chatbot-panel" aria-expanded="false" aria-describedby="chatbot-avatar-hint">
+            <span class="chatbot-avatar" aria-hidden="true">
+                <svg class="chatbot-avatar-character" viewBox="0 0 96 120" focusable="false">
+                    <defs>
+                        <radialGradient id="avatar-skin" cx="38%" cy="28%" r="70%">
+                            <stop offset="0" stop-color="var(--skin-light)"/>
+                            <stop offset="1" stop-color="var(--skin-shadow)"/>
+                        </radialGradient>
+                        <linearGradient id="avatar-suit" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="var(--outfit-light)"/>
+                            <stop offset=".5" stop-color="var(--outfit)"/>
+                            <stop offset="1" stop-color="var(--outfit-shadow)"/>
+                        </linearGradient>
+                        <radialGradient id="avatar-hair" cx="35%" cy="20%" r="75%">
+                            <stop offset="0" stop-color="#4b4142"/>
+                            <stop offset="1" stop-color="#101116"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="48" cy="113" rx="32" ry="5" fill="#000" opacity=".22"/>
+                    <g class="avatar-leg avatar-leg-left">
+                        <path d="M37 77h11l-2 27H34z" fill="#292a32"/>
+                        <path d="M34 102h12v6H29q-2-4 5-6z" fill="#111217"/>
+                    </g>
+                    <g class="avatar-leg avatar-leg-right">
+                        <path d="M48 77h11l3 27H50z" fill="#292a32"/>
+                        <path d="M50 102h12q7 2 5 6H50z" fill="#111217"/>
+                    </g>
+                    <g class="avatar-torso">
+                        <g class="avatar-arm avatar-arm-left">
+                            <path class="avatar-outfit" d="M35 43q-10 1-13 11l-5 19q-1 5 5 6l5-1 7-19z"/>
+                            <path d="M20 75q-2 7 3 8t5-7z" fill="url(#avatar-skin)"/>
+                        </g>
+                        <g class="avatar-arm avatar-arm-right">
+                            <path class="avatar-outfit" d="M61 43q10 1 13 11l5 19q1 5-5 6l-5-1-7-19z"/>
+                            <path d="M68 76q0 8 5 7t3-8z" fill="url(#avatar-skin)"/>
+                        </g>
+                        <path class="avatar-outfit" d="M35 42q13-5 26 0l4 44q-17 5-34 0z"/>
+                        <path d="M41 43h14l-2 21-5 7-5-7z" fill="#f3f0e9"/>
+                        <path d="M39 42l9 15-6 6-7-17zm18 0L48 57l6 6 7-17z" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="1.5"/>
+                    </g>
+                    <path d="M40 36h16v12q-8 7-16 0z" fill="url(#avatar-skin)"/>
+                    <ellipse cx="48" cy="25" rx="18" ry="21" fill="url(#avatar-skin)"/>
+                    <path d="M30 26q-5-7-1-13 1-6 7-7 3-6 10-4 6-3 10 2 7-1 10 5 5 5 2 14l-3 5-1-9q-5 1-8-3-9 5-19 1l-4 11z" fill="url(#avatar-hair)"/>
+                    <path d="M33 29q2 15 15 17 13-2 15-17-4 4-6 3-9-3-18 0-3 0-6-3z" fill="#35231e"/>
+                    <path d="M41 35q7 4 14 0-2 6-7 6t-7-6z" fill="url(#avatar-skin)"/>
+                    <path class="avatar-brows" d="M39 24h5m8 0h5" stroke="#30201c" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="42" cy="27" r="1.5" fill="#191919"/><circle cx="54" cy="27" r="1.5" fill="#191919"/>
+                    <path class="avatar-angry-brows" d="M38 22l7 3m6 0 7-3" stroke="#17251a" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+            </span>
+        </button>
+        <span id="chatbot-avatar-hint" class="visually-hidden">Activate once to open chat. Double-click or double-tap to cycle outfits and a green transformation with sound. Press Shift+C while focused to do the same.</span>
+        <span class="visually-hidden chatbot-avatar-status" aria-live="polite"></span>
+    </div>
 
     <section id="chatbot-panel" class="chatbot-panel" role="dialog" aria-modal="true" aria-labelledby="chatbot-title" hidden>
         <header class="chatbot-header">
-            <h2 id="chatbot-title" class="chatbot-title">Ask about {{ site_first_name }}</h2>
+            <div class="chatbot-heading">
+                <span class="chatbot-heading-mark" aria-hidden="true">AI</span>
+                <div>
+                    <p class="chatbot-eyebrow">PORTFOLIO ASSISTANT</p>
+                    <h2 id="chatbot-title" class="chatbot-title">Ask about {{ site_first_name }}</h2>
+                </div>
+            </div>
             <button type="button" class="chatbot-close" aria-label="Close the assistant">&times;</button>
         </header>
 
-        <div class="chatbot-messages" aria-live="polite">
-            <div class="chatbot-message is-assistant">
-                <p>Hi! I'm {{ site_first_name }}'s portfolio assistant. Ask me about his skills, projects, experience or how to reach him.</p>
+        <div class="chatbot-conversation">
+            <div class="chatbot-messages" aria-live="polite">
+                <div class="chatbot-message is-assistant">
+                    <p>Hi! I'm {{ site_first_name }}'s portfolio assistant. Ask me about his skills, projects, experience or how to reach him.</p>
+                </div>
             </div>
-        </div>
 
-        <div class="chatbot-suggestions" aria-label="Suggested questions">
-            <button type="button" class="chatbot-chip">What are his main skills?</button>
-            <button type="button" class="chatbot-chip">Tell me about his projects</button>
-            <button type="button" class="chatbot-chip">What's his experience?</button>
-            <button type="button" class="chatbot-chip">How can I contact him?</button>
+            <div class="chatbot-suggestions" aria-label="Suggested questions">
+                <p class="chatbot-suggestions-label">TRY ASKING</p>
+                <button type="button" class="chatbot-chip">What are his main skills?</button>
+                <button type="button" class="chatbot-chip">Tell me about his projects</button>
+                <button type="button" class="chatbot-chip">What's his experience?</button>
+                <button type="button" class="chatbot-chip">How can I contact him?</button>
+            </div>
         </div>
 
         <form class="chatbot-form">
@@ -33,6 +93,12 @@
             <textarea id="chatbot-input" class="chatbot-input" rows="1" maxlength="500" placeholder="Ask a question…"></textarea>
             <button type="submit" class="chatbot-send">Send</button>
         </form>
+        <div class="chatbot-voice">
+            <button type="button" class="chatbot-mic" aria-pressed="false" disabled>Speak</button>
+            <button type="button" class="chatbot-speech" aria-pressed="false" disabled>Read replies aloud: Off</button>
+        </div>
+        <p class="chatbot-voice-status" role="status">Voice features are being checked.</p>
+        <p class="chatbot-voice-note">Voice input may be processed by your browser's speech provider. Review the transcript before sending.</p>
         <p class="chatbot-note">AI answers from {{ site_first_name }}'s portfolio, powered by Google Gemini. They can be wrong. Questions are processed by Google — don't share personal details.</p>
     </section>
 </div>
