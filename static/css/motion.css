@@ -39,6 +39,88 @@
     to { transform: translateX(-50%); }
 }
 
+/* The canvas is shown only while its non-blocking intro is running. */
+.hero-cinematic {
+    display: none;
+}
+
+.motion-ready .hero-cinematic.is-playing {
+    position: absolute;
+    inset: 0 0 auto;
+    height: min(100vh, 100%);
+    z-index: 4;
+    display: block;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--color-stage);
+    animation: cinematic-fade 7000ms ease-in both;
+}
+
+.hero-cinematic::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, var(--color-accent-glow), transparent 70%);
+}
+
+.hero-code-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    animation: cinematic-code-fade 7000ms linear both;
+}
+
+.hero-cinematic-title-frame {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.hero-cinematic-title {
+    position: relative;
+    display: flex;
+    white-space: pre;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 8.5vw, 7.5rem);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--color-stage-accent);
+    text-shadow: 0 0 30px var(--color-accent-wash);
+    transform-origin: var(--zoom-origin-x, 50%) 50%;
+    animation: cinematic-title 7000ms ease-in both;
+}
+
+.hero-cinematic-title > span {
+    animation: cinematic-title-part 7000ms var(--ease-out) both;
+}
+
+.hero-cinematic-title > span:nth-child(2) { animation-delay: 80ms; }
+.hero-cinematic-title > span:nth-child(3) { animation-delay: 160ms; }
+
+@keyframes cinematic-code-fade {
+    0%, 25% { opacity: 1; }
+    46% { opacity: .14; }
+    70%, 100% { opacity: 0; }
+}
+
+@keyframes cinematic-title {
+    0%, 25% { opacity: 0; transform: scale(.96); }
+    32%, 65% { opacity: 1; transform: scale(1); }
+    100% { opacity: 1; transform: translateX(var(--zoom-shift-x, 0px)) scale(24); }
+}
+
+@keyframes cinematic-title-part {
+    0%, 27% { opacity: 0; transform: translateY(0.18em); }
+    42%, 100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cinematic-fade {
+    0%, 82% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
 /* --- Ticker: always moving, paused while hovered or focused ---------------- */
 .ticker-track {
     animation: ticker-scroll 48s linear infinite;
@@ -93,8 +175,48 @@
     transform: none;
 }
 
+/* Reveals are decorative: without motion or JavaScript the content stays visible. */
+@keyframes project-sweep {
+    0% { transform: translateX(-101%); }
+    45% { transform: translateX(0); }
+    100% { transform: translateX(101%); }
+}
+
+.motion-ready .project-card.is-revealed .project-media::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: var(--color-accent);
+    transform: translateX(-101%);
+    animation: project-sweep 900ms var(--ease-out) var(--reveal-delay, 0ms) both;
+}
+
+@keyframes line-draw {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+}
+
+.motion-ready .timeline.is-drawing::before {
+    transform-origin: top;
+    animation: line-draw 1200ms var(--ease-out) both;
+}
+
+@keyframes process-pulse {
+    50% { transform: scale(1.12); }
+}
+
+.motion-ready .process-step.is-revealed .process-icon {
+    animation: process-pulse 700ms var(--ease-out) var(--reveal-delay, 0ms) both;
+}
+
 /* --- Reduced motion ----------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
+    .motion-ready .hero-cinematic.is-playing {
+        display: none;
+    }
+
     *,
     *::before,
     *::after {

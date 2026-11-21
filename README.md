@@ -70,8 +70,10 @@ stay dark in the light theme and use only the `--color-stage*` and
 
 `theme.js` adds `.motion-ready` to `<html>` before first paint unless the
 visitor asked for reduced motion; `motion.css` scopes every hidden state under
-it. `static/js/motion.js` adds the detection-box counter, scroll reveals, the
-stats count-up and the hero parallax. If `motion.js` has not run within three
+it. A brief decorative red code-stream, title reveal and V zoom introduce the hero without
+blocking interaction; interacting with the page dismisses it. The assistant appears after the intro
+or immediately when motion is reduced. `static/js/motion.js` adds the detection-box counter,
+scroll reveals, the stats count-up and the hero parallax. If `motion.js` has not run within three
 seconds, `theme.js` withdraws the class, so content can never stay invisible.
 With JavaScript off, the page is static and complete.
 
@@ -174,6 +176,14 @@ own data, using Gemini 3.5 Flash-Lite through Google's official
   `static/css/chatbot.css`) shows replies as text with a small safe Markdown
   subset; only `https://`, `mailto:` and site links become links. Its
   footnote tells visitors that questions are processed by Google Gemini.
+  The shaded avatar briefly roams, waves and runs, and opens chat on a single
+  click. Double-click or double-tap it to cycle outfits and an original green
+  transformation with a synthesized sound, or press Shift+C when it has keyboard
+  focus. Motion pauses on hover or focus and respects reduced-motion preferences.
+  In supported secure
+  browser contexts, visitors can opt in to speech recognition and spoken
+  replies. Voice input may be processed by the browser's speech provider;
+  recognized text must be reviewed and sent manually.
 - With no `GEMINI_API_KEY` set, the widget is hidden and the endpoint
   returns 503, so local development and the tests need no key.
 

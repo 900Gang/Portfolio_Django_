@@ -517,6 +517,32 @@ class MotionTest(TestCase):
         self.assertIn("window.portfolioMotion", theme)
         self.assertIn("window.portfolioMotion = true", motion)
 
+    def test_cinematic_is_decorative_and_only_shown_while_running(self):
+        html = home_html(self.client)
+        css = self._css()
+        self.assertIn('<div class="hero-cinematic" aria-hidden="true">', html)
+        self.assertIn('<canvas class="hero-code-canvas"></canvas>', html)
+        self.assertIn(
+            '<span>AI DE</span><span class="hero-cinematic-v">V</span><span>ELOPER</span>',
+            html,
+        )
+        self.assertRegex(css, r"\.hero-cinematic \{\s*display: none;")
+        self.assertRegex(
+            css, r"\.motion-ready \.hero-cinematic\.is-playing \{[^}]*pointer-events: none;"
+        )
+        self.assertIn(".motion-ready .hero-cinematic.is-playing {\n        display: none;", css)
+        self.assertIn("transform-origin: var(--zoom-origin-x, 50%) 50%", css)
+        self.assertIn("translateX(var(--zoom-shift-x, 0px)) scale(24)", css)
+
+    def test_assistant_waits_for_the_intro_without_a_permanent_hidden_state(self):
+        js = (BASE_DIR / "static" / "js" / "motion.js").read_text()
+        css = (BASE_DIR / "static" / "css" / "chatbot.css").read_text()
+        self.assertIn("document.documentElement.classList.add('cinematic-active')", js)
+        self.assertIn("document.documentElement.classList.remove('cinematic-active')", js)
+        self.assertIn("window.setTimeout(stop, duration + 200)", js)
+        self.assertRegex(css, r"\.cinematic-active \.chatbot \{[^}]*chatbot-after-intro")
+        self.assertRegex(css, r"@keyframes chatbot-after-intro \{\s*from \{ visibility: hidden; \}\s*to \{ visibility: visible; \}")
+
     def test_motion_assets_are_wired_into_every_page(self):
         html = home_html(self.client)
         self.assertIn("css/motion.css", html)

@@ -111,12 +111,29 @@
         var panel = root.querySelector('.chatbot-panel');
         var closeButton = root.querySelector('.chatbot-close');
         var messages = root.querySelector('.chatbot-messages');
+        var conversation = root.querySelector('.chatbot-conversation');
         var suggestions = root.querySelector('.chatbot-suggestions');
         var form = root.querySelector('.chatbot-form');
         var input = root.querySelector('.chatbot-input');
         var send = root.querySelector('.chatbot-send');
         var csrf = root.querySelector('input[name="csrfmiddlewaretoken"]');
         var url = root.getAttribute('data-chat-url');
+        var avatar = root.querySelector('.chatbot-avatar');
+        var avatarStatus = root.querySelector('.chatbot-avatar-status');
+        var micButton = root.querySelector('.chatbot-mic');
+        var speechButton = root.querySelector('.chatbot-speech');
+        var voiceStatus = root.querySelector('.chatbot-voice-status');
+        var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        var recognition = null;
+        var recognitionActive = false;
+        var speechEnabled = false;
+        var speechSupported = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+        var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var outfits = ['black', 'red', 'white', 'blue', 'violet', 'power'];
+        var outfitIndex = 0;
+        var clickTimer = null;
+        var smashTimer = null;
+        var pointerFrame = null;
 
         var history = [];
         var conversationId = newConversationId();
@@ -130,14 +147,220 @@
         }
 
         function close() {
+            if (recognitionActive) {
+                recognition.abort();
+            }
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
             panel.hidden = true;
             root.classList.remove('is-open');
             launcher.setAttribute('aria-expanded', 'false');
             launcher.focus();
         }
 
-        launcher.addEventListener('click', open);
+        function roar() {
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) {
+                avatarStatus.textContent = 'Green transformation. Sound is unavailable in this browser.';
+                return;
+            }
+            try {
+                var context = new AudioContext();
+                var oscillator = context.createOscillator();
+                var volume = context.createGain();
+                var noise = context.createBufferSource();
+                var noiseGain = context.createGain();
+                var filter = context.createBiquadFilter();
+                var now = context.currentTime;
+                var buffer = context.createBuffer(1, Math.ceil(context.sampleRate * 0.56), context.sampleRate);
+                var samples = buffer.getChannelData(0);
+                for (var i = 0; i < samples.length; i += 1) {
+                    samples[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                noiseGain.gain.setValueAtTime(0.35, now);
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(700, now);
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(190, now);
+                oscillator.frequency.exponentialRampToValueAtTime(65, now + 0.55);
+                volume.gain.setValueAtTime(0.001, now);
+                volume.gain.exponentialRampToValueAtTime(0.045, now + 0.06);
+                volume.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+                oscillator.connect(volume);
+                noise.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(volume);
+                volume.connect(context.destination);
+                oscillator.onended = function () { context.close(); };
+                oscillator.start(now);
+                noise.start(now);
+                oscillator.stop(now + 0.56);
+                if (context.state === 'suspended') {
+                    context.resume().catch(function () {
+                        avatarStatus.textContent = 'Green transformation. Sound could not be played.';
+                        context.close();
+                    });
+                }
+            } catch (error) {
+                avatarStatus.textContent = 'Green transformation. Sound could not be played.';
+            }
+        }
+
+        function changeOutfit() {
+            window.clearTimeout(clickTimer);
+            clickTimer = null;
+            window.clearTimeout(smashTimer);
+            avatar.classList.remove('is-smashing');
+            outfitIndex = (outfitIndex + 1) % outfits.length;
+            avatar.setAttribute('data-outfit', outfits[outfitIndex]);
+            if (outfits[outfitIndex] === 'power') {
+                avatarStatus.textContent = 'Green transformation and smash.';
+                avatar.classList.add('is-smashing');
+                smashTimer = window.setTimeout(function () {
+                    avatar.classList.remove('is-smashing');
+                }, 1800);
+                roar();
+            } else {
+                avatarStatus.textContent = 'Avatar outfit: ' + outfits[outfitIndex] + '.';
+            }
+        }
+
+        launcher.addEventListener('click', function (event) {
+            // Keyboard activation opens chat immediately.
+            if (event.detail === 0) {
+                window.clearTimeout(clickTimer);
+                clickTimer = null;
+                open();
+                return;
+            }
+            if (clickTimer !== null) {
+                window.clearTimeout(clickTimer);
+                clickTimer = null;
+                changeOutfit();
+                return;
+            }
+            clickTimer = window.setTimeout(function () {
+                clickTimer = null;
+                open();
+            }, 400);
+        });
+        launcher.addEventListener('keydown', function (event) {
+            if (event.shiftKey && event.key.toLowerCase() === 'c') {
+                event.preventDefault();
+                changeOutfit();
+            }
+        });
+        window.addEventListener('pointermove', function (event) {
+            if (event.pointerType !== 'mouse' || reducedMotion.matches || root.classList.contains('is-open')) {
+                return;
+            }
+            if (pointerFrame !== null) {
+                window.cancelAnimationFrame(pointerFrame);
+            }
+            pointerFrame = window.requestAnimationFrame(function () {
+                var rect = avatar.getBoundingClientRect();
+                var x = Math.max(-4, Math.min(4, (event.clientX - (rect.left + rect.width / 2)) / 100));
+                var y = Math.max(-3, Math.min(3, (event.clientY - (rect.top + rect.height / 2)) / 100));
+                avatar.style.setProperty('--avatar-x', x + 'px');
+                avatar.style.setProperty('--avatar-y', y + 'px');
+                pointerFrame = null;
+            });
+        }, { passive: true });
+        reducedMotion.addEventListener('change', function () {
+            if (reducedMotion.matches) {
+                if (pointerFrame !== null) {
+                    window.cancelAnimationFrame(pointerFrame);
+                    pointerFrame = null;
+                }
+                avatar.style.removeProperty('--avatar-x');
+                avatar.style.removeProperty('--avatar-y');
+            }
+        });
         closeButton.addEventListener('click', close);
+
+        if (Recognition && window.isSecureContext) {
+            recognition = new Recognition();
+            recognition.lang = document.documentElement.lang || 'en';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            micButton.disabled = false;
+            recognition.onstart = function () {
+                if (panel.hidden || busy) {
+                    recognition.abort();
+                    return;
+                }
+                micButton.setAttribute('aria-pressed', 'true');
+                micButton.textContent = 'Stop listening';
+                voiceStatus.textContent = 'Listening. Speak your question.';
+            };
+            recognition.onresult = function (event) {
+                if (panel.hidden || busy) {
+                    return;
+                }
+                var spoken = event.results[0][0].transcript.trim();
+                var combined = input.value.trim() ? input.value.trim() + ' ' + spoken : spoken;
+                input.value = combined.slice(0, input.maxLength);
+                voiceStatus.textContent = combined.length > input.maxLength
+                    ? 'Transcript shortened to 500 characters. Review it before sending.'
+                    : 'Transcript ready. Review it before sending.';
+                input.focus();
+            };
+            recognition.onerror = function (event) {
+                if (event.error === 'aborted') {
+                    return;
+                }
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    voiceStatus.textContent = 'Microphone access was denied. Check browser permissions or type your question.';
+                } else {
+                    voiceStatus.textContent = 'Voice input failed (' + event.error + '). Try again or type your question.';
+                }
+            };
+            recognition.onend = function () {
+                recognitionActive = false;
+                micButton.setAttribute('aria-pressed', 'false');
+                micButton.textContent = 'Speak';
+                if (voiceStatus.textContent === 'Listening. Speak your question.' ||
+                    voiceStatus.textContent === 'Starting voice input...') {
+                    voiceStatus.textContent = 'Listening stopped. You can speak again or type your question.';
+                }
+            };
+            micButton.addEventListener('click', function () {
+                if (recognitionActive) {
+                    recognition.abort();
+                    return;
+                }
+                try {
+                    recognitionActive = true;
+                    micButton.setAttribute('aria-pressed', 'true');
+                    micButton.textContent = 'Stop listening';
+                    voiceStatus.textContent = 'Starting voice input...';
+                    recognition.start();
+                } catch (error) {
+                    recognitionActive = false;
+                    micButton.setAttribute('aria-pressed', 'false');
+                    micButton.textContent = 'Speak';
+                    voiceStatus.textContent = 'Could not start voice input. Try again or type your question.';
+                }
+            });
+        }
+        if (speechSupported) {
+            speechButton.disabled = false;
+            speechButton.addEventListener('click', function () {
+                speechEnabled = !speechEnabled;
+                speechButton.setAttribute('aria-pressed', String(speechEnabled));
+                speechButton.textContent = 'Read replies aloud: ' + (speechEnabled ? 'On' : 'Off');
+                if (!speechEnabled) {
+                    window.speechSynthesis.cancel();
+                }
+                voiceStatus.textContent = speechEnabled ? 'New replies will be read aloud.' : 'Spoken replies are off.';
+            });
+        }
+        voiceStatus.textContent = (recognition
+            ? 'Use Speak for voice input, or type your question.'
+            : 'Voice input is unavailable in this browser or connection. You can still type.')
+            + (speechSupported ? '' : ' Spoken replies are unavailable in this browser.');
 
         // Escape closes; Tab stays inside the open dialog.
         panel.addEventListener('keydown', function (event) {
@@ -168,7 +391,7 @@
         });
 
         function scrollToEnd() {
-            messages.scrollTop = messages.scrollHeight;
+            conversation.scrollTop = conversation.scrollHeight;
         }
 
         function addMessage(kind, text) {
@@ -183,6 +406,7 @@
             }
             messages.appendChild(bubble);
             scrollToEnd();
+            return bubble;
         }
 
         function showTyping() {
@@ -202,12 +426,16 @@
             busy = state;
             input.disabled = state;
             send.disabled = state;
+            micButton.disabled = state || !recognition;
         }
 
         function ask(rawQuestion) {
             var question = rawQuestion.trim();
             if (!question || busy) {
                 return;
+            }
+            if (recognitionActive) {
+                recognition.abort();
             }
             if (suggestions) {
                 suggestions.hidden = true;
@@ -245,7 +473,17 @@
                             { role: 'user', content: question },
                             { role: 'assistant', content: result.data.reply }
                         );
-                        addMessage('assistant', result.data.reply);
+                        var reply = addMessage('assistant', result.data.reply);
+                        if (speechEnabled && !panel.hidden) {
+                            window.speechSynthesis.cancel();
+                            var utterance = new SpeechSynthesisUtterance(reply.textContent);
+                            utterance.onerror = function (event) {
+                                if (event.error !== 'canceled' && event.error !== 'interrupted') {
+                                    voiceStatus.textContent = 'Could not play the spoken reply. The text is still available.';
+                                }
+                            };
+                            window.speechSynthesis.speak(utterance);
+                        }
                     } else {
                         addMessage('error', result.data.error || 'Something went wrong. Please try again.');
                     }
@@ -256,7 +494,9 @@
                 })
                 .then(function () {
                     setBusy(false);
-                    input.focus();
+                    if (!panel.hidden) {
+                        input.focus();
+                    }
                 });
         }
 
