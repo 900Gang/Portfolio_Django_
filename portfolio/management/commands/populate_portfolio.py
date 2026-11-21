@@ -95,14 +95,17 @@ class Command(BaseCommand):
             ('REST APIs', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 10),
             ('SQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 11),
             ('MySQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 12),
-            ('PostgreSQL', SkillCategory.BACKEND, SkillStatus.LEARNING, 13),
+            ('PostgreSQL', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 13),
             ('Firebase Realtime Database', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 14),
             ('Java', SkillCategory.BACKEND, SkillStatus.BUILDING_WITH, 15),
             ('C', SkillCategory.BACKEND, SkillStatus.BUILDING_WITH, 16),
             ('Flask', SkillCategory.BACKEND, SkillStatus.LEARNING, 17),
             ('FastAPI', SkillCategory.BACKEND, SkillStatus.LEARNING, 18),
-            ('Node.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 19),
-            ('Express.js', SkillCategory.BACKEND, SkillStatus.LEARNING, 20),
+            ('Node.js', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 19),
+            ('Express.js', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 20),
+            ('Gemini API', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 21),
+            ('ChromaDB', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 22),
+            ('Prisma', SkillCategory.BACKEND, SkillStatus.USED_IN_PROJECTS, 23),
 
             # DevOps & Cloud
             ('Linux', SkillCategory.DEVOPS, SkillStatus.BUILDING_WITH, 1),
@@ -111,6 +114,7 @@ class Command(BaseCommand):
             ('Docker', SkillCategory.DEVOPS, SkillStatus.LEARNING, 4),
             ('Jenkins', SkillCategory.DEVOPS, SkillStatus.LEARNING, 5),
             ('AWS', SkillCategory.DEVOPS, SkillStatus.LEARNING, 6),
+            ('GitHub Actions', SkillCategory.DEVOPS, SkillStatus.USED_IN_PROJECTS, 7),
 
             # Web & Frontend
             ('HTML', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 1),
@@ -118,8 +122,11 @@ class Command(BaseCommand):
             ('JavaScript', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 3),
             ('Bootstrap', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 4),
             ('jQuery', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 5),
-            ('React', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 6),
+            ('React', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 6),
             ('Flutter', SkillCategory.FRONTEND, SkillStatus.BUILDING_WITH, 7),
+            ('TypeScript', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 8),
+            ('Tailwind CSS', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 9),
+            ('Streamlit', SkillCategory.FRONTEND, SkillStatus.USED_IN_PROJECTS, 10),
 
             # Testing & Process
             ('SDLC', SkillCategory.TESTING, SkillStatus.BUILDING_WITH, 1),
@@ -148,6 +155,8 @@ class Command(BaseCommand):
             ('IoT', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 7),
             ('Embedded Systems', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 8),
             ('Prompt Engineering', SkillCategory.CONCEPTS, SkillStatus.BUILDING_WITH, 9),
+            ('Retrieval-Augmented Generation (RAG)', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 10),
+            ('OCR', SkillCategory.CONCEPTS, SkillStatus.USED_IN_PROJECTS, 11),
         ]
 
 
@@ -171,8 +180,8 @@ class Command(BaseCommand):
         return created, updated
 
     def _populate_projects(self):
-        # Bullets are the résumé's own, so the site and the CV a recruiter is
-        # reading alongside it cannot tell different stories.
+        # Academic project details come from the résumé; newer project details
+        # and links come from their repositories.
         #
         # Slugs are pinned rather than left to `Project.save()`. That derives a
         # slug only when the field is blank, appending "-1", "-2"... on
@@ -200,6 +209,7 @@ Collaborated with a four-member team on system integration, debugging, testing, 
                 'featured': True,
                 'order': 1,
                 'image': 'projects/learning-disabilities-ai-iot.webp',
+                'github_url': 'https://github.com/900Gang/Real-Time-Identification-Of-Learning-Disabilities-In-Students-Using-AI-And-IoT-',
                 'technologies': [
                     'Python', 'ESP32', 'Firebase Realtime Database', 'Git', 'IoT', 'REST APIs',
                 ],
@@ -224,8 +234,53 @@ Tested and evaluated the application through iterative experimentation.""",
                 'featured': True,
                 'order': 2,
                 'image': 'projects/hematology-screening.webp',
+                'github_url': 'https://github.com/900Gang/-HEMATOLOGY-SCREENING-WITH-AI-',
                 'technologies': [
                     'Python', 'TensorFlow', 'Keras', 'OpenCV', 'Git',
+                ],
+            },
+            {
+                'title': 'Gilto — Document Chat',
+                'slug': 'gilto-document-chat',
+                'short_description': (
+                    'Personal project: a document chatbot that uses retrieval-augmented '
+                    'generation to answer questions with citations from uploaded files.'
+                ),
+                'description': """Upload PDFs or images and ask questions grounded in your own documents. Answers include checked citations, and the app says when it cannot find an answer in the files.
+
+Combines vector and keyword search with ChromaDB and Gemini, and uses OCR for scanned pages and images. Supports English and Hindi, document summaries, and separate libraries and chat histories for each user.
+
+The hosted demo requires an approved Google account; uploaded data and chats are erased when the free host restarts or sleeps.""",
+                'featured': True,
+                'order': 3,
+                'image': 'projects/gilto.webp',
+                'github_url': 'https://github.com/900Gang/Gilto',
+                'live_demo_url': 'https://gilto-nanomachine.streamlit.app/',
+                'technologies': [
+                    'Python', 'Streamlit', 'Gemini API', 'ChromaDB',
+                    'Retrieval-Augmented Generation (RAG)', 'OCR',
+                ],
+            },
+            {
+                'title': 'Bilbo — Task Manager',
+                'slug': 'bilbo-task-manager',
+                'short_description': (
+                    'Personal project: a full-stack task manager with per-user accounts, '
+                    'tags, drag-and-drop ordering and due-date reminders.'
+                ),
+                'description': """A responsive task manager with account-based, per-user data. Tasks can be searched, filtered and sorted, tagged, and reordered using a mouse, touch or keyboard.
+
+Built with React, TypeScript and Tailwind CSS, backed by an Express API and PostgreSQL through Prisma. Authentication uses JWTs in HTTP-only cookies, and GitHub Actions runs the CI checks.
+
+The live app runs on Render's free tier and may take around 30 seconds to wake after inactivity.""",
+                'featured': True,
+                'order': 4,
+                'image': 'projects/bilbo.webp',
+                'github_url': 'https://github.com/900Gang/Bilbo',
+                'live_demo_url': 'https://task-manager-zjur.onrender.com',
+                'technologies': [
+                    'React', 'TypeScript', 'Tailwind CSS', 'Node.js', 'Express.js',
+                    'PostgreSQL', 'Prisma', 'GitHub Actions',
                 ],
             },
         ]
