@@ -390,7 +390,7 @@ so they need two things stock Django does not give them in production:
   `STATIC_ROOT` only, and `urls.py` wires media up under `DEBUG` alone, so
   without this every project card fell back to the placeholder on a deployed
   site while looking correct locally.
-- The two seeded screenshots are committed (see the exception at the bottom of
+- The seeded screenshots are committed (see the exceptions in
   `.gitignore`) and attached by `populate_portfolio`. The images have to be in
   the repo *and* referenced by the seed, or the cards come up blank.
 

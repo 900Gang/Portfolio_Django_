@@ -30,6 +30,8 @@ db.sqlite3.*
 /media/projects/*
 !/media/projects/learning-disabilities-ai-iot.webp
 !/media/projects/hematology-screening.webp
+!/media/projects/gilto.webp
+!/media/projects/bilbo.webp
 
 # IDE / Editor
 .vscode/

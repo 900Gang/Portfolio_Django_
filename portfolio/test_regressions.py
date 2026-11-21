@@ -251,8 +251,8 @@ class SeedCommandTest(TestCase):
         self.assertEqual(
             self._counts(),
             {
-                "Skill": 55,
-                "Project": 2,
+                "Skill": 64,
+                "Project": 4,
                 "Education": 3,
                 "Certification": 8,
                 "ProfessionalSkill": 8,
@@ -301,9 +301,39 @@ class SeedCommandTest(TestCase):
             sorted(Project.objects.values_list("slug", flat=True)),
             [
                 "ai-driven-clinical-support-for-hematology-screening",
+                "bilbo-task-manager",
                 "early-identification-of-learning-disabilities-using-ai-and-iot",
+                "gilto-document-chat",
             ],
         )
+
+    def test_completed_projects_and_their_skills_are_visible(self):
+        call_command("populate_portfolio", stdout=io.StringIO())
+        cases = (
+            ("gilto-document-chat", "Gilto", "https://github.com/900Gang/Gilto",
+             "https://gilto-nanomachine.streamlit.app/", {"Streamlit", "Gemini API", "ChromaDB"}),
+            ("bilbo-task-manager", "Bilbo", "https://github.com/900Gang/Bilbo",
+             "https://task-manager-zjur.onrender.com", {"React", "TypeScript", "PostgreSQL"}),
+        )
+        home = self.client.get(reverse("portfolio:home"))
+        for slug, name, github, demo, skills in cases:
+            with self.subTest(project=name):
+                project = Project.objects.get(slug=slug)
+                self.assertTrue(project.featured)
+                self.assertTrue(project.has_image)
+                self.assertEqual(project.github_url, github)
+                self.assertEqual(project.live_demo_url, demo)
+                self.assertTrue(skills.issubset(set(project.technologies.values_list("name", flat=True))))
+                self.assertTrue(all(
+                    skill.status == SkillStatus.USED_IN_PROJECTS
+                    for skill in project.technologies.all()
+                ))
+                self.assertContains(home, name)
+                detail = self.client.get(project.get_absolute_url())
+                self.assertContains(detail, github)
+                self.assertContains(detail, demo)
+                for skill in skills:
+                    self.assertContains(detail, skill)
 
     def test_seeding_repairs_a_drifted_slug(self):
         call_command("populate_portfolio", stdout=io.StringIO())
