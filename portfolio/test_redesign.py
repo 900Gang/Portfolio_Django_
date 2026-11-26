@@ -30,6 +30,12 @@ def home_html(client):
 class ChromeTest(TestCase):
     """Navigation, header and footer shared by every page."""
 
+    @override_settings(SITE_ROLE="AI Developer", SITE_LOCATION="Example location")
+    def test_footer_tagline_shows_only_the_role(self):
+        html = home_html(self.client)
+        self.assertIn('<p class="footer-tagline">AI Developer</p>', html)
+        self.assertIn('<span class="contact-channel-value">Example location</span>', html)
+
     def test_nav_links_on_home_stay_on_the_page(self):
         hrefs = re.findall(r'href="([^"]*)" class="nav-link"', home_html(self.client))
         self.assertTrue(hrefs, "no nav links found")
@@ -59,12 +65,20 @@ class ChromeTest(TestCase):
         missing = self.client.get("/projects/no-such-project/").content.decode()
         self.assertNotIn("has-stage-hero", missing)
 
-    def test_header_hides_on_scroll_down_and_returns_on_focus(self):
-        js = (BASE_DIR / "static" / "js" / "navigation.js").read_text()
-        css = (BASE_DIR / "static" / "css" / "components.css").read_text()
-        self.assertIn("'is-hidden'", js)
-        self.assertIn(".site-header.is-hidden", css)
-        self.assertIn(".site-header:focus-within", css)
+    def test_header_has_a_decorative_progress_indicator(self):
+        self.assertIn('<div class="scroll-progress" aria-hidden="true"></div>', home_html(self.client))
+
+    def test_featured_project_has_a_case_study_link_without_external_links(self):
+        project = Project.objects.create(
+            title="Example project", short_description="A useful tool", featured=True
+        )
+        html = home_html(self.client)
+        self.assertIn('class="project-context-label">Overview</p>', html)
+        self.assertIn("A useful tool", html)
+        self.assertIn(
+            f'href="{project.get_absolute_url()}" class="project-action-link">View case study',
+            html,
+        )
 
     def test_availability_text_gives_way_before_the_nav_runs_out_of_room(self):
         """At laptop widths the eight links plus the availability text overflow
@@ -345,11 +359,58 @@ class SkillsAndJourneyTest(TestCase):
         self.assertIn('<span class="skill-dot is-used_in_projects" aria-hidden="true"></span>', html)
         self.assertIn('<span class="visually-hidden">(Used in Projects)</span>', html)
 
+    def test_skill_disclosure_links_only_to_displayed_featured_projects(self):
+        skill = Skill.objects.create(
+            name="Python", category=SkillCategory.BACKEND, status=SkillStatus.USED_IN_PROJECTS
+        )
+        featured = Project.objects.create(
+            title="Featured", short_description="d", featured=True, order=1
+        )
+        other = Project.objects.create(title="Not featured", short_description="d")
+        featured.technologies.add(skill)
+        other.technologies.add(skill)
+        html = home_html(self.client)
+        section = html[html.index('<section id="skills"'):html.index('</section>', html.index('<section id="skills"'))]
+        self.assertIn("1 featured project", section)
+        self.assertIn('aria-label="Featured projects using Python"', section)
+        self.assertIn(f'href="{featured.get_absolute_url()}"', section)
+        self.assertNotIn(f'href="{other.get_absolute_url()}"', section)
+
+    def test_skills_without_featured_projects_remain_static(self):
+        Skill.objects.create(name="Solo skill", category=SkillCategory.TOOLS)
+        html = home_html(self.client)
+        section = html[html.index('<section id="skills"'):html.index('</section>', html.index('<section id="skills"'))]
+        self.assertIn("Solo skill", section)
+        self.assertNotIn('class="skill-projects"', section)
+
+    def test_featured_projects_beyond_home_page_limit_are_not_linked(self):
+        skill = Skill.objects.create(name="Python", category=SkillCategory.BACKEND)
+        for index in range(7):
+            project = Project.objects.create(
+                title=f"Project {index}", short_description="d", featured=True, order=index
+            )
+            project.technologies.add(skill)
+        html = home_html(self.client)
+        section = html[html.index('<section id="skills"'):html.index('</section>', html.index('<section id="skills"'))]
+        self.assertIn("6 featured projects", section)
+        self.assertNotIn("Project 6", section)
+
     def test_journey_entries_sit_on_a_timeline(self):
-        JourneyEntry.objects.create(date="2025-03-01", title="Joined lab", description="d")
+        entry = JourneyEntry.objects.create(date="2025-03-01", title="Joined lab", description="More detail about the work.")
         html = home_html(self.client)
         self.assertIn('<ol class="timeline">', html)
         self.assertIn("March 2025", html)
+        self.assertIn('<details class="timeline-entry">', html)
+        self.assertIn('<summary class="timeline-summary">', html)
+        self.assertIn(entry.title, html)
+        self.assertIn(entry.description, html)
+
+    def test_journey_disclosure_keeps_the_full_description(self):
+        description = " ".join(f"word{i}" for i in range(35))
+        JourneyEntry.objects.create(date="2026-03-01", title="A milestone", description=description)
+        html = home_html(self.client)
+        self.assertIn(description, html)
+        self.assertIn('datetime="2026-03-01"', html)
 
 
 class CredentialsTest(TestCase):

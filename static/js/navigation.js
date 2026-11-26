@@ -86,52 +86,48 @@
         });
     }
 
-    /* --- Header state -----------------------------------------------------
-       is-stuck: a solid bar once the page has scrolled. is-hidden: tucked
-       away while scrolling down past the first screen, back on any scroll
-       up. Never hidden while the mobile menu is open. */
+    /* --- Header and scroll progress -------------------------------------- */
     function initHeader() {
         var header = document.querySelector('.site-header');
         if (!header) {
             return;
         }
 
-        var HIDE_AFTER = 480;
-        var lastY = window.scrollY;
+        var progress = header.querySelector('.scroll-progress');
         var ticking = false;
 
         function update() {
             var y = window.scrollY;
-            var menuOpen = document.querySelector('.nav-menu.nav-menu-open');
             header.classList.toggle('is-stuck', y > 8);
-            if (menuOpen || y < HIDE_AFTER || y < lastY) {
-                header.classList.remove('is-hidden');
-            } else if (y > lastY + 4) {
-                header.classList.add('is-hidden');
+            if (progress) {
+                var scrollable = document.documentElement.scrollHeight - window.innerHeight;
+                var fraction = scrollable > 0 ? Math.max(0, Math.min(1, y / scrollable)) : 0;
+                progress.style.transform = 'scaleX(' + fraction + ')';
             }
-            lastY = y;
             ticking = false;
         }
 
-        update();
-        window.addEventListener('scroll', function () {
+        function scheduleUpdate() {
             if (!ticking) {
                 ticking = true;
                 window.requestAnimationFrame(update);
             }
-        }, { passive: true });
+        }
+
+        update();
+        window.addEventListener('scroll', scheduleUpdate, { passive: true });
+        window.addEventListener('resize', scheduleUpdate);
     }
 
     /* --- Scroll spy -------------------------------------------------------
        Marks the nav link for whichever section currently owns the top of the
-       viewport. IntersectionObserver rather than a scroll handler, so the
-       work happens off the main scroll path. Off the home page the links are
-       "/#section" and there is nothing to spy on. */
+       viewport, including the spaces between sections. Off the home page
+       the links are "/#section" and there is nothing to spy on. */
     function initScrollSpy() {
         var links = Array.prototype.slice.call(
             document.querySelectorAll('.nav-link[href^="#"]')
         );
-        if (!links.length || !('IntersectionObserver' in window)) {
+        if (!links.length) {
             return;
         }
 
@@ -149,47 +145,39 @@
             return;
         }
 
-        var visible = new Set();
+        var ticking = false;
 
         function select() {
-            // Of the sections currently in the band, the topmost one wins,
-            // so scrolling never highlights a section that has passed.
-            var best = null;
+            var best = sections[0];
+            var marker = window.innerHeight * 0.3;
             sections.forEach(function (section) {
-                if (!visible.has(section.id)) {
-                    return;
-                }
-                if (!best || section.getBoundingClientRect().top < best.getBoundingClientRect().top) {
+                if (section.getBoundingClientRect().top <= marker) {
                     best = section;
                 }
             });
+            if (window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1) {
+                best = sections[sections.length - 1];
+            }
             links.forEach(function (link) {
                 link.classList.remove('active');
                 link.removeAttribute('aria-current');
             });
             if (best && byId[best.id]) {
                 byId[best.id].classList.add('active');
-                byId[best.id].setAttribute('aria-current', 'true');
+                byId[best.id].setAttribute('aria-current', 'location');
             }
+            ticking = false;
         }
 
-        var observer = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    visible.add(entry.target.id);
-                } else {
-                    visible.delete(entry.target.id);
-                }
-            });
-            select();
-        }, {
-            rootMargin: '-20% 0px -70% 0px',
-            threshold: 0
-        });
-
-        sections.forEach(function (section) {
-            observer.observe(section);
-        });
+        function scheduleSelect() {
+            if (!ticking) {
+                ticking = true;
+                window.requestAnimationFrame(select);
+            }
+        }
+        select();
+        window.addEventListener('scroll', scheduleSelect, { passive: true });
+        window.addEventListener('resize', scheduleSelect);
     }
 
     /* --- Dismissible flash messages -------------------------------------- */

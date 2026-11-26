@@ -10,6 +10,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import date
@@ -906,8 +907,21 @@ class NavigationWiringTest(TestCase):
         js = (BASE_DIR / "static" / "js" / "navigation.js").read_text()
         css = (BASE_DIR / "static" / "css" / "components.css").read_text()
         self.assertIn(".nav-link.active", css)
-        self.assertIn("IntersectionObserver", js)
+        self.assertIn("requestAnimationFrame", js)
         self.assertIn("'active'", js)
+        self.assertIn("'aria-current', 'location'", js)
+
+    def test_navigation_scroll_behavior(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node.js is required for the navigation behavior test")
+        subprocess.run(
+            [node, str(BASE_DIR / "portfolio" / "test_navigation_behavior.js")],
+            cwd=BASE_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
 
     def test_anchor_targets_clear_the_sticky_header(self):
         """Without scroll padding, jumping to a section parks its heading

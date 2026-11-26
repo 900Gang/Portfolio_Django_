@@ -6,7 +6,7 @@
                 <h2 class="section-title">Technical Skills</h2>
             </div>
             <span class="section-rule" aria-hidden="true"></span>
-            <p class="section-lede">Grouped by area, with an honest marker of how far each one has been taken.</p>
+            <p class="section-lede">Grouped by area and experience. Explore the featured projects connected to each skill.</p>
         </div>
 
         {% regroup skills by get_category_display as skills_by_category %}
@@ -24,9 +24,27 @@
                 <ul class="skills-grid">
                     {% for skill in category_group.list %}
                     <li class="skill-card">
+                        {% if skill.featured_projects %}
+                        <details class="skill-projects">
+                            <summary class="skill-summary">
+                                <span class="skill-dot is-{{ skill.status }}" aria-hidden="true"></span>
+                                <span class="skill-name">{{ skill.name }}</span>
+                                <span class="visually-hidden">({{ skill.get_status_display }})</span>
+                                <span class="skill-project-count">{{ skill.featured_projects|length }} featured project{{ skill.featured_projects|length|pluralize }}</span>
+                            </summary>
+                            <ul class="skill-project-list" aria-label="Featured projects using {{ skill.name }}">
+                                {% for project in skill.featured_projects %}
+                                <li><a href="{{ project.get_absolute_url }}">{{ project.title }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </details>
+                        {% else %}
+                        <span class="skill-label">
                         <span class="skill-dot is-{{ skill.status }}" aria-hidden="true"></span>
                         <span class="skill-name">{{ skill.name }}</span>
                         <span class="visually-hidden">({{ skill.get_status_display }})</span>
+                        </span>
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
