@@ -353,6 +353,42 @@ class SkillsAndJourneyTest(TestCase):
         self.assertIn('<span class="skill-dot is-used_in_projects" aria-hidden="true"></span>', html)
         self.assertIn('<span class="visually-hidden">(Used in Projects)</span>', html)
 
+    def test_skill_disclosure_links_only_to_displayed_featured_projects(self):
+        skill = Skill.objects.create(
+            name="Python", category=SkillCategory.BACKEND, status=SkillStatus.USED_IN_PROJECTS
+        )
+        featured = Project.objects.create(
+            title="Featured", short_description="d", featured=True, order=1
+        )
+        other = Project.objects.create(title="Not featured", short_description="d")
+        featured.technologies.add(skill)
+        other.technologies.add(skill)
+        html = home_html(self.client)
+        section = html[html.index('<section id="skills"'):html.index('</section>', html.index('<section id="skills"'))]
+        self.assertIn("1 featured project", section)
+        self.assertIn('aria-label="Featured projects using Python"', section)
+        self.assertIn(f'href="{featured.get_absolute_url()}"', section)
+        self.assertNotIn(f'href="{other.get_absolute_url()}"', section)
+
+    def test_skills_without_featured_projects_remain_static(self):
+        Skill.objects.create(name="Solo skill", category=SkillCategory.TOOLS)
+        html = home_html(self.client)
+        section = html[html.index('<section id="skills"'):html.index('</section>', html.index('<section id="skills"'))]
+        self.assertIn("Solo skill", section)
+        self.assertNotIn('class="skill-projects"', section)
+
+    def test_featured_projects_beyond_home_page_limit_are_not_linked(self):
+        skill = Skill.objects.create(name="Python", category=SkillCategory.BACKEND)
+        for index in range(7):
+            project = Project.objects.create(
+                title=f"Project {index}", short_description="d", featured=True, order=index
+            )
+            project.technologies.add(skill)
+        html = home_html(self.client)
+        section = html[html.index('<section id="skills"'):html.index('</section>', html.index('<section id="skills"'))]
+        self.assertIn("6 featured projects", section)
+        self.assertNotIn("Project 6", section)
+
     def test_journey_entries_sit_on_a_timeline(self):
         entry = JourneyEntry.objects.create(date="2025-03-01", title="Joined lab", description="More detail about the work.")
         html = home_html(self.client)
