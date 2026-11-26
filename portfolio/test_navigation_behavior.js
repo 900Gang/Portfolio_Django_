@@ -1,8 +1,5 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
-
-const script = fs.readFileSync('static/js/navigation.js', 'utf8');
+const navigationPath = require.resolve('../static/js/navigation.js');
 
 function runPage(sectionPositions) {
     const listeners = {};
@@ -48,12 +45,36 @@ function runPage(sectionPositions) {
             return { id, getBoundingClientRect: () => ({ top: sectionPositions[id] - win.scrollY }) };
         },
     };
-    vm.runInNewContext(script, { document: doc, window: win });
+    const previousDocument = global.document;
+    const previousWindow = global.window;
+    global.document = doc;
+    global.window = win;
+    delete require.cache[navigationPath];
+    require(navigationPath);
+    delete require.cache[navigationPath];
+    global.document = previousDocument;
+    global.window = previousWindow;
+
+    function withPageGlobals(callback) {
+        const currentDocument = global.document;
+        const currentWindow = global.window;
+        global.document = doc;
+        global.window = win;
+        try {
+            callback();
+        } finally {
+            global.document = currentDocument;
+            global.window = currentWindow;
+        }
+    }
+
     return {
         links, headerClasses, progress,
         scroll(y) {
-            win.scrollY = y;
-            (listeners.scroll || []).forEach(callback => callback());
+            withPageGlobals(() => {
+                win.scrollY = y;
+                (listeners.scroll || []).forEach(callback => callback());
+            });
         },
     };
 }
