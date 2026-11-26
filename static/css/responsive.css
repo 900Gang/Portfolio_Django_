@@ -32,6 +32,15 @@
         z-index: calc(var(--z-overlay) + 1);
     }
 
+    .nav-logo,
+    .project-action-link,
+    .footer-link {
+        display: inline-flex;
+        align-items: center;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
     .nav-menu {
         position: fixed;
         inset: 0;
@@ -74,6 +83,10 @@
 
     .nav-logo-role {
         display: none;
+    }
+
+    .hero-stat-label {
+        overflow-wrap: anywhere;
     }
 }
 
