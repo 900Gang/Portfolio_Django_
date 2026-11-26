@@ -30,6 +30,12 @@ def home_html(client):
 class ChromeTest(TestCase):
     """Navigation, header and footer shared by every page."""
 
+    @override_settings(SITE_ROLE="AI Developer", SITE_LOCATION="Example location")
+    def test_footer_tagline_shows_only_the_role(self):
+        html = home_html(self.client)
+        self.assertIn('<p class="footer-tagline">AI Developer</p>', html)
+        self.assertIn('<span class="contact-channel-value">Example location</span>', html)
+
     def test_nav_links_on_home_stay_on_the_page(self):
         hrefs = re.findall(r'href="([^"]*)" class="nav-link"', home_html(self.client))
         self.assertTrue(hrefs, "no nav links found")
