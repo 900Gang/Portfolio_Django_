@@ -22,10 +22,12 @@
                 {# Stretched over the whole card in CSS. #}
                 <a href="{{ project.get_absolute_url }}" class="project-title-link">{{ project.title }}</a>
             </h3>
+            <p class="project-context-label">Overview</p>
             <p class="project-description">{{ project.short_description }}</p>
 
             {% with project_technologies=project.technologies.all|slice:":4" %}
             {% if project_technologies %}
+            <p class="project-context-label">Technologies</p>
             <ul class="project-tech" aria-label="Technologies used in {{ project.title }}">
                 {% for technology in project_technologies %}
                 <li><span class="tech-badge">{{ technology.name }}</span></li>
@@ -34,8 +36,8 @@
             {% endif %}
             {% endwith %}
 
-            {% if project.github_url or project.live_demo_url %}
             <div class="project-actions">
+                <a href="{{ project.get_absolute_url }}" class="project-action-link">View case study<span class="visually-hidden">: {{ project.title }}</span></a>
                 {% if project.github_url %}
                 <a href="{{ project.github_url }}" class="project-action-link" target="_blank" rel="noopener noreferrer">
                     GitHub <span class="visually-hidden">(opens in a new tab)</span>
@@ -47,7 +49,6 @@
                 </a>
                 {% endif %}
             </div>
-            {% endif %}
         </div>
 
         <span class="project-arrow" aria-hidden="true">{% include 'components/icon.html' with name='arrow' %}</span>

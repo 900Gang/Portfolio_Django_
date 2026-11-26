@@ -23,13 +23,14 @@
     border-bottom-color: transparent;
 }
 
-.site-header.is-hidden {
-    transform: translateY(-100%);
-}
-
-/* Keyboard focus inside the header always brings it back. */
-.site-header:focus-within {
-    transform: none;
+.scroll-progress {
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background: var(--color-stage-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    pointer-events: none;
 }
 
 /* The light theme's page red is too dark on the stage (about 1.8:1), so
@@ -81,7 +82,7 @@
 .nav-menu {
     display: flex;
     align-items: center;
-    gap: clamp(1rem, 2vw, 2rem);
+    gap: clamp(0.65rem, 1.25vw, 1.5rem);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -91,7 +92,7 @@
     position: relative;
     padding-block: var(--space-2);
     font-family: var(--font-mono);
-    font-size: var(--text-2xs);
+    font-size: var(--text-nav);
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
@@ -456,8 +457,17 @@
 
 .project-description {
     margin: 0;
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
     color: var(--color-text-secondary);
+}
+
+.project-context-label {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
 }
 
 .project-tech {

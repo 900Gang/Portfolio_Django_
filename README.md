@@ -66,6 +66,10 @@ The navigation, the hero and the project page's title band are "stages": they
 stay dark in the light theme and use only the `--color-stage*` and
 `--color-on-stage*` tokens.
 
+The fixed navigation marks the current home-page section and shows decorative
+scroll progress. Project cards show an overview, technologies when available,
+and a case-study link; their content is managed in the Django admin.
+
 ### Motion
 
 `theme.js` adds `.motion-ready` to `<html>` before first paint unless the

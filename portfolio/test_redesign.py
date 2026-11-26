@@ -59,12 +59,20 @@ class ChromeTest(TestCase):
         missing = self.client.get("/projects/no-such-project/").content.decode()
         self.assertNotIn("has-stage-hero", missing)
 
-    def test_header_hides_on_scroll_down_and_returns_on_focus(self):
-        js = (BASE_DIR / "static" / "js" / "navigation.js").read_text()
-        css = (BASE_DIR / "static" / "css" / "components.css").read_text()
-        self.assertIn("'is-hidden'", js)
-        self.assertIn(".site-header.is-hidden", css)
-        self.assertIn(".site-header:focus-within", css)
+    def test_header_has_a_decorative_progress_indicator(self):
+        self.assertIn('<div class="scroll-progress" aria-hidden="true"></div>', home_html(self.client))
+
+    def test_featured_project_has_a_case_study_link_without_external_links(self):
+        project = Project.objects.create(
+            title="Example project", short_description="A useful tool", featured=True
+        )
+        html = home_html(self.client)
+        self.assertIn('class="project-context-label">Overview</p>', html)
+        self.assertIn("A useful tool", html)
+        self.assertIn(
+            f'href="{project.get_absolute_url()}" class="project-action-link">View case study',
+            html,
+        )
 
     def test_availability_text_gives_way_before_the_nav_runs_out_of_room(self):
         """At laptop widths the eight links plus the availability text overflow
