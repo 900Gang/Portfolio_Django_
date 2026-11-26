@@ -354,10 +354,21 @@ class SkillsAndJourneyTest(TestCase):
         self.assertIn('<span class="visually-hidden">(Used in Projects)</span>', html)
 
     def test_journey_entries_sit_on_a_timeline(self):
-        JourneyEntry.objects.create(date="2025-03-01", title="Joined lab", description="d")
+        entry = JourneyEntry.objects.create(date="2025-03-01", title="Joined lab", description="More detail about the work.")
         html = home_html(self.client)
         self.assertIn('<ol class="timeline">', html)
         self.assertIn("March 2025", html)
+        self.assertIn('<details class="timeline-entry">', html)
+        self.assertIn('<summary class="timeline-summary">', html)
+        self.assertIn(entry.title, html)
+        self.assertIn(entry.description, html)
+
+    def test_journey_disclosure_keeps_the_full_description(self):
+        description = " ".join(f"word{i}" for i in range(35))
+        JourneyEntry.objects.create(date="2026-03-01", title="A milestone", description=description)
+        html = home_html(self.client)
+        self.assertIn(description, html)
+        self.assertIn('datetime="2026-03-01"', html)
 
 
 class CredentialsTest(TestCase):

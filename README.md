@@ -68,7 +68,9 @@ stay dark in the light theme and use only the `--color-stage*` and
 
 The fixed navigation marks the current home-page section and shows decorative
 scroll progress. Project cards show an overview, technologies when available,
-and a case-study link; their content is managed in the Django admin.
+and a case-study link; their content is managed in the Django admin. Journey
+entries use native disclosure controls so their details remain accessible by
+keyboard and without JavaScript.
 
 ### Motion
 
