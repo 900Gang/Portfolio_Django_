@@ -77,11 +77,18 @@ def home(request):
             skill.name,
         ),
     )
+    featured_projects = list(
+        Project.objects.filter(featured=True).prefetch_related('technologies')[:6]
+    )
+    skills_by_id = {skill.pk: skill for skill in skills}
+    for skill in skills:
+        skill.featured_projects = []
+    for project in featured_projects:
+        for technology in project.technologies.all():
+            skills_by_id[technology.pk].featured_projects.append(project)
 
     context = {
-        'featured_projects': Project.objects.filter(featured=True).prefetch_related(
-            'technologies'
-        )[:6],
+        'featured_projects': featured_projects,
         'skills': skills,
         'journey_entries': JourneyEntry.objects.all()[:10],
         'education': Education.objects.all(),

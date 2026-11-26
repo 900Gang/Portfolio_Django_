@@ -598,6 +598,7 @@
 .skills-grid {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
     gap: var(--space-2);
     margin: 0;
     padding: 0;
@@ -605,10 +606,7 @@
 }
 
 .skill-card {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 0.45rem 0.75rem;
+    max-width: 100%;
     font-size: var(--text-sm);
     background: var(--color-surface);
     border: var(--border-width) solid var(--color-border);
@@ -618,6 +616,55 @@
 
 .skill-card:hover {
     border-color: var(--color-accent);
+}
+
+.skill-label,
+.skill-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0.45rem 0.75rem;
+}
+
+.skill-summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.skill-summary::-webkit-details-marker {
+    display: none;
+}
+
+.skill-summary:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+}
+
+.skill-project-count {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.skill-project-count::after {
+    content: " +";
+}
+
+.skill-projects[open] .skill-project-count::after {
+    content: " -";
+}
+
+.skill-project-list {
+    max-width: 30ch;
+    margin: 0;
+    padding: 0 var(--space-4) var(--space-3) var(--space-6);
+}
+
+.skill-project-list a {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
 }
 
 .skills-empty {
