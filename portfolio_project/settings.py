@@ -259,7 +259,7 @@ SITE_EMAIL = get_str('SITE_EMAIL', 'anandanand6776@gmail.com')
 SITE_PHONE = get_str('SITE_PHONE', '+91 7306922640')
 SITE_GITHUB_URL = get_str('SITE_GITHUB_URL', 'https://github.com/900Gang')
 SITE_LINKEDIN_URL = get_str('SITE_LINKEDIN_URL', 'https://linkedin.com/in/anand-n-anand-n')
-SITE_LOCATION = get_str('SITE_LOCATION', 'Trivandrum, Kerala, India')
+SITE_LOCATION = get_str('SITE_LOCATION', 'Bengaluru, Karnataka, India')
 # Current position. The strongest single credential on the page, so it sits in
 # the hero rather than only in the Journey timeline further down. Set to an
 # empty value when between roles — a stale "currently" line is worse than none.

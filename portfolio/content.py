@@ -7,7 +7,7 @@ could drift apart.
 """
 
 ABOUT_PARAGRAPHS = (
-    "I’m a B.Tech Computer Science graduate based in Kerala, India, currently "
+    "I’m a B.Tech Computer Science graduate, currently "
     "an Artificial Intelligence Intern at Yangtso Four Labs. I build things "
     "across the stack — from scalable web applications to AI-driven IoT "
     "systems — and enjoy breaking monolithic ideas down into clean, efficient "

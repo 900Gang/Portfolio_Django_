@@ -6,10 +6,13 @@ They pin what the new design relies on that the older suites do not cover:
 navigation off the home page, the hero, the ticker, the new sections,
 motion safety and the image tooling.
 """
+import importlib.util
 import io
+import os
 import re
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 from django.conf import settings
 from django.core.management import call_command
@@ -30,11 +33,36 @@ def home_html(client):
 class ChromeTest(TestCase):
     """Navigation, header and footer shared by every page."""
 
+    def test_default_location_appears_in_contact_and_assistant_profile(self):
+        from .chatbot import build_profile
+
+        with patch.dict(os.environ, {"DEBUG": "True"}, clear=True):
+            with patch("portfolio_project.env.load_dotenv"):
+                spec = importlib.util.spec_from_file_location(
+                    "portfolio_project.location_test_settings",
+                    BASE_DIR / "portfolio_project" / "settings.py",
+                )
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                location = module.SITE_LOCATION
+        self.assertEqual(location, "Bengaluru, Karnataka, India")
+        with override_settings(SITE_LOCATION=location):
+            self.assertIn(
+                f'<span class="contact-channel-value">{location}</span>',
+                home_html(self.client),
+            )
+            profile = build_profile()
+        self.assertIn(f"Location: {location}", profile)
+        self.assertNotIn("based in Kerala", profile)
+
     @override_settings(SITE_ROLE="AI Developer", SITE_LOCATION="Example location")
     def test_footer_tagline_shows_only_the_role(self):
+        from .chatbot import build_profile
+
         html = home_html(self.client)
         self.assertIn('<p class="footer-tagline">AI Developer</p>', html)
         self.assertIn('<span class="contact-channel-value">Example location</span>', html)
+        self.assertIn("Location: Example location", build_profile())
 
     def test_nav_links_on_home_stay_on_the_page(self):
         hrefs = re.findall(r'href="([^"]*)" class="nav-link"', home_html(self.client))
