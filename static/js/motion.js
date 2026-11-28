@@ -17,6 +17,23 @@
         return;
     }
 
+    var motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var active = true;
+    var cleanups = [];
+
+    function disableMotion() {
+        if (!motion.matches || !active) {
+            return;
+        }
+        active = false;
+        document.documentElement.classList.remove('motion-ready');
+        cleanups.forEach(function (cleanup) { cleanup(); });
+        cleanups = [];
+    }
+
+    motion.addEventListener('change', disableMotion);
+    disableMotion();
+
     function ready(fn) {
         if (document.readyState !== 'loading') {
             fn();
@@ -32,7 +49,9 @@
 
     function countTo(element, target, decimals, duration, pad) {
         var start = null;
+        var frameId;
         function frame(timestamp) {
+            if (!active) { return; }
             if (start === null) {
                 start = timestamp;
             }
@@ -40,10 +59,14 @@
             var eased = 1 - Math.pow(1 - progress, 3);
             element.textContent = format(target * eased, decimals, pad);
             if (progress < 1) {
-                window.requestAnimationFrame(frame);
+                frameId = window.requestAnimationFrame(frame);
             }
         }
-        window.requestAnimationFrame(frame);
+        frameId = window.requestAnimationFrame(frame);
+        cleanups.push(function () {
+            window.cancelAnimationFrame(frameId);
+            element.textContent = format(target, decimals, pad);
+        });
     }
 
     /* A short, original code and title reveal; the canvas never intercepts input. */
@@ -52,7 +75,6 @@
         var canvas = document.querySelector('.hero-code-canvas');
         var title = document.querySelector('.hero-cinematic-title');
         var zoomLetter = document.querySelector('.hero-cinematic-v');
-        var motion = window.matchMedia('(prefers-reduced-motion: reduce)');
         if (!scene || !canvas || !title || !zoomLetter || motion.matches || document.hidden) {
             return;
         }
@@ -183,6 +205,7 @@
             });
         }
         frameId = window.requestAnimationFrame(draw);
+        cleanups.push(stop);
     }
 
     /* --- Detection label: the confidence counts up as the box lands ------ */
@@ -194,9 +217,13 @@
         var target = parseFloat(score.getAttribute('data-score')) || 0;
         score.textContent = format(0, 2, false);
         // Matches the label's fade-in delay in motion.css.
-        window.setTimeout(function () {
+        var timer = window.setTimeout(function () {
             countTo(score, target, 2, 600, false);
         }, 1450);
+        cleanups.push(function () {
+            window.clearTimeout(timer);
+            score.textContent = format(target, 2, false);
+        });
     }
 
     /* --- Stats: count up the first time each one is on screen ------------- */
@@ -206,6 +233,7 @@
             return;
         }
         var observer = new IntersectionObserver(function (entries) {
+            if (!active) { return; }
             entries.forEach(function (entry) {
                 if (!entry.isIntersecting) {
                     return;
@@ -218,6 +246,12 @@
         stats.forEach(function (stat) {
             stat.textContent = format(0, 0, true);
             observer.observe(stat);
+        });
+        cleanups.push(function () {
+            observer.disconnect();
+            stats.forEach(function (stat) {
+                stat.textContent = format(parseInt(stat.getAttribute('data-count'), 10) || 0, 0, true);
+            });
         });
     }
 
@@ -237,6 +271,7 @@
             return;
         }
         var observer = new IntersectionObserver(function (entries) {
+            if (!active) { return; }
             entries.forEach(function (entry) {
                 if (!entry.isIntersecting) {
                     return;
@@ -258,6 +293,7 @@
             item.style.setProperty('--reveal-delay', Math.min(index, 6) * 90 + 'ms');
             observer.observe(item);
         });
+        cleanups.push(function () { observer.disconnect(); });
     }
 
     function initMotionLines() {
@@ -266,6 +302,7 @@
             return;
         }
         var observer = new IntersectionObserver(function (entries) {
+            if (!active) { return; }
             entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-drawing');
@@ -274,6 +311,7 @@
             });
         }, { threshold: 0 });
         lines.forEach(function (line) { observer.observe(line); });
+        cleanups.push(function () { observer.disconnect(); });
     }
 
     /* --- Hero parallax ----------------------------------------------------
@@ -291,27 +329,39 @@
 
         var visible = true;
         var ticking = false;
+        var frameId;
 
-        new IntersectionObserver(function (entries) {
+        var observer = new IntersectionObserver(function (entries) {
             visible = entries[0].isIntersecting;
-        }).observe(hero);
+        });
+        observer.observe(hero);
 
         function update() {
+            if (!active) { return; }
             var y = window.scrollY;
             word.style.transform = 'translate3d(0, ' + (y * 0.3).toFixed(1) + 'px, 0)';
             photo.style.transform = 'translate3d(0, ' + (y * 0.12).toFixed(1) + 'px, 0)';
             ticking = false;
         }
 
-        window.addEventListener('scroll', function () {
+        function onScroll() {
             if (visible && !ticking) {
                 ticking = true;
-                window.requestAnimationFrame(update);
+                frameId = window.requestAnimationFrame(update);
             }
-        }, { passive: true });
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        cleanups.push(function () {
+            observer.disconnect();
+            window.removeEventListener('scroll', onScroll);
+            window.cancelAnimationFrame(frameId);
+            word.style.transform = '';
+            photo.style.transform = '';
+        });
     }
 
     ready(function () {
+        if (!active) { return; }
         initCinematic();
         initDetection();
         initCountUp();

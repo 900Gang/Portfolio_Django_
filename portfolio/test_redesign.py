@@ -561,7 +561,15 @@ class MotionTest(TestCase):
         css = self._css()
         block = css[css.index("@media (prefers-reduced-motion: reduce)"):]
         self.assertIn("animation-duration: 0.01ms !important", block)
+        self.assertIn("animation-delay: 0ms !important", block)
         self.assertIn("transition-duration: 0.01ms !important", block)
+        self.assertIn("transition-delay: 0ms !important", block)
+        self.assertRegex(block, r"\.motion-ready \[data-reveal\] \{\s*opacity: 1;\s*transform: none;")
+
+    def test_keyboard_focus_immediately_reveals_content(self):
+        css = self._css()
+        self.assertIn(".motion-ready [data-reveal]:focus-within", css)
+        self.assertRegex(css, r"\.motion-ready \[data-reveal\]:focus-within \{\s*transition: none;")
 
     def test_hidden_states_only_apply_once_motion_is_ready(self):
         """With JavaScript off, or motion.js blocked, nothing may stay hidden."""
