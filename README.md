@@ -73,6 +73,8 @@ entries use native disclosure controls so their details remain accessible by
 keyboard and without JavaScript. Skill disclosures link to the featured projects
 shown on the home page that list each skill as a technology; they do not imply
 an objective proficiency score or a complete history.
+Project detail pages show the entire image without cropping and link to the
+original image for closer inspection. Missing images retain the placeholder.
 
 ### Motion
 

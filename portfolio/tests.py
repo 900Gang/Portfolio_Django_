@@ -1,6 +1,6 @@
 from datetime import date
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.text import slugify
@@ -469,6 +469,41 @@ class ProjectDetailViewTest(TestCase):
         self.assertNotContains(response, "Project links")
         self.assertNotContains(response, 'class="project-detail-actions"')
         self.assertNotContains(response, "Project details")
+
+    def test_project_without_description_has_no_empty_overview_column(self):
+        self.project.description = ""
+        self.project.save()
+
+        response = self.client.get(self.project.get_absolute_url())
+
+        self.assertContains(response, "project-detail-layout--no-overview")
+        self.assertNotContains(response, 'class="project-detail-main"')
+        self.assertContains(response, self.python.name)
+        self.assertContains(response, self.project.github_url)
+
+    def test_existing_image_can_be_opened_in_full(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as tmp, override_settings(MEDIA_ROOT=tmp):
+            image = Path(tmp) / "projects" / "detail.png"
+            image.parent.mkdir()
+            image.write_bytes(b"image")
+            self.project.image.name = "projects/detail.png"
+            self.project.save()
+
+            response = self.client.get(self.project.get_absolute_url())
+
+            self.assertContains(response, 'class="project-detail-figure"')
+            self.assertContains(response, 'href="/media/projects/detail.png"')
+            self.assertContains(response, "View full image")
+            self.assertContains(response, "(opens in a new tab)")
+
+    def test_missing_image_has_no_full_image_link(self):
+        response = self.client.get(self.project.get_absolute_url())
+
+        self.assertContains(response, "project-image-fallback")
+        self.assertNotContains(response, "View full image")
 
 
 class ContactFormTest(TestCase):
