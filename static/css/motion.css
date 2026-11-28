@@ -170,9 +170,14 @@
     transition-delay: var(--reveal-delay, 0ms);
 }
 
-.motion-ready [data-reveal].is-revealed {
+.motion-ready [data-reveal].is-revealed,
+.motion-ready [data-reveal]:focus-within {
     opacity: 1;
     transform: none;
+}
+
+.motion-ready [data-reveal]:focus-within {
+    transition: none;
 }
 
 /* Reveals are decorative: without motion or JavaScript the content stays visible. */
@@ -221,9 +226,16 @@
     *::before,
     *::after {
         animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
         scroll-behavior: auto !important;
+    }
+
+    .motion-ready [data-reveal] {
+        opacity: 1;
+        transform: none;
     }
 
     .ticker-track {

@@ -42,8 +42,15 @@
 
     <div class="shell project-detail-body">
         {% if project.has_image %}
-        <figure class="project-detail-image">
-            <img src="{{ project.image.url }}" alt="Screenshot of {{ project.title }}">
+        <figure class="project-detail-figure">
+            <div class="project-detail-image">
+                <img src="{{ project.image.url }}" alt="Screenshot of {{ project.title }}">
+            </div>
+            <figcaption>
+                <a href="{{ project.image.url }}" class="link" target="_blank" rel="noopener noreferrer">
+                    View full image <span class="visually-hidden">(opens in a new tab)</span>
+                </a>
+            </figcaption>
         </figure>
         {% else %}
         <div class="project-detail-image project-image-fallback" aria-hidden="true">
@@ -51,15 +58,15 @@
         </div>
         {% endif %}
 
-        <div class="project-detail-layout">
+        <div class="project-detail-layout{% if not project.description %} project-detail-layout--no-overview{% endif %}">
+            {% if project.description %}
             <div class="project-detail-main">
-                {% if project.description %}
                 <section class="project-detail-section" aria-labelledby="overview-heading">
                     <h2 id="overview-heading">Overview</h2>
                     <div class="project-detail-description">{{ project.description|linebreaks }}</div>
                 </section>
-                {% endif %}
             </div>
+            {% endif %}
 
             <aside class="project-detail-sidebar" aria-label="Project information">
                 {% if technologies %}
