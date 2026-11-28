@@ -440,6 +440,20 @@ class SkillsAndJourneyTest(TestCase):
         self.assertIn(description, html)
         self.assertIn('datetime="2026-03-01"', html)
 
+    def test_journey_board_numbers_each_native_disclosure(self):
+        JourneyEntry.objects.create(date="2025-03-01", title="First", description="First detail.")
+        JourneyEntry.objects.create(date="2026-03-01", title="Second", description="Second detail.")
+        html = home_html(self.client)
+        section = html[html.index('<section id="journey"'):html.index('</section>', html.index('<section id="journey"'))]
+        self.assertIn("Selected milestones / 02", section)
+        self.assertIn('aria-hidden="true">Note 01', section)
+        self.assertIn('aria-hidden="true">Note 02', section)
+        self.assertEqual(section.count('<details class="timeline-entry">'), 2)
+        self.assertIn("First detail.", section)
+        self.assertIn("Second detail.", section)
+        self.assertIn('<li class="timeline-item" data-reveal>', section)
+        self.assertIn('My<br>Journey', section)
+
 
 class CredentialsTest(TestCase):
     def test_quote_card_renders_the_agreed_line(self):
@@ -618,18 +632,17 @@ class MotionTest(TestCase):
         html = home_html(self.client)
         css = self._css()
         self.assertIn('<div class="hero-cinematic" aria-hidden="true">', html)
-        self.assertIn('<canvas class="hero-code-canvas"></canvas>', html)
-        self.assertIn(
-            '<span>AI DE</span><span class="hero-cinematic-v">V</span><span>ELOPER</span>',
-            html,
-        )
+        self.assertIn('<span>FOR PASSION</span><span>IS MY REASON</span>', html)
+        for index in range(1, 5):
+            self.assertIn(f'img/intro-{index}.webp', html)
         self.assertRegex(css, r"\.hero-cinematic \{\s*display: none;")
         self.assertRegex(
             css, r"\.motion-ready \.hero-cinematic\.is-playing \{[^}]*pointer-events: none;"
         )
         self.assertIn(".motion-ready .hero-cinematic.is-playing {\n        display: none;", css)
-        self.assertIn("transform-origin: var(--zoom-origin-x, 50%) 50%", css)
-        self.assertIn("translateX(var(--zoom-shift-x, 0px)) scale(24)", css)
+        self.assertIn("@keyframes cinematic-images", css)
+        self.assertIn("@keyframes journey-pop", css)
+        self.assertIn(".motion-ready .timeline-item.is-revealed", css)
 
     def test_assistant_waits_for_the_intro_without_a_permanent_hidden_state(self):
         js = (BASE_DIR / "static" / "js" / "motion.js").read_text()
@@ -643,7 +656,7 @@ class MotionTest(TestCase):
     def test_motion_assets_are_wired_into_every_page(self):
         html = home_html(self.client)
         self.assertIn("css/motion.css", html)
-        self.assertIn('js/motion.js" defer', html)
+        self.assertIn('js/motion.js?v=passion-intro" defer', html)
 
 
 class FinalReviewFixesTest(TestCase):

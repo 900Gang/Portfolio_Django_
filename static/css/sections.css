@@ -673,54 +673,89 @@
 }
 
 /* --- Journey ------------------------------------------------------------------ */
-.timeline {
-    position: relative;
-    max-width: 56rem;
-    margin: 0;
-    padding: 0 0 0 var(--space-7);
-    list-style: none;
+.journey .section-head {
+    display: block;
+    text-align: center;
 }
 
-.timeline::before {
-    content: "";
-    position: absolute;
-    top: 0.5rem;
-    bottom: 0.5rem;
-    left: 9px;
-    width: var(--border-width);
-    background: var(--color-accent);
+.journey .section-rule {
+    display: none;
+}
+
+.journey .section-lede {
+    max-width: 40rem;
+    margin: var(--space-4) auto 0;
+}
+
+.journey-title {
+    margin-top: var(--space-4);
+    font-size: clamp(4rem, 11vw, 10rem);
+    line-height: .85;
+}
+
+.journey-title span {
+    color: var(--color-accent);
+}
+
+.journey-board {
+    position: relative;
+    padding: clamp(1rem, 3vw, 2.5rem);
+}
+
+.journey-board-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding-bottom: var(--space-5);
+    border-bottom: var(--border-width) solid var(--color-border-strong);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    line-height: var(--leading-body);
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
+.timeline {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3vw, 3rem);
+    margin: 0;
+    padding: var(--space-7) var(--space-2);
+    list-style: none;
 }
 
 .timeline-item {
     position: relative;
-    padding-bottom: var(--space-7);
-}
-
-.timeline-item:last-child {
-    padding-bottom: 0;
-}
-
-.timeline-item::before {
-    content: "";
-    position: absolute;
-    top: 1.65rem;
-    left: calc(-1 * var(--space-7) + 2px);
-    width: 15px;
-    height: 15px;
-    background: var(--color-bg);
-    border: 2px solid var(--color-accent);
-    border-radius: 50%;
+    align-self: start;
 }
 
 .timeline-entry {
-    border: var(--border-width) solid var(--color-border);
+    position: relative;
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: 0.5rem;
     background: var(--color-surface);
-    transition: border-color var(--dur-fast) ease;
+    box-shadow: 6px 6px 0 var(--color-border-strong);
+    transform: rotate(-1.5deg);
+    transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-base) var(--ease-out);
+}
+
+.timeline-item:nth-child(even) .timeline-entry {
+    transform: rotate(1.5deg);
 }
 
 .timeline-entry:hover,
-.timeline-entry[open] {
+.timeline-entry[open],
+.timeline-entry:focus-within,
+.timeline-item:nth-child(even) .timeline-entry:hover,
+.timeline-item:nth-child(even) .timeline-entry[open],
+.timeline-item:nth-child(even) .timeline-entry:focus-within {
     border-color: var(--color-accent);
+    box-shadow: 6px 6px 0 var(--color-accent-wash);
+    transform: rotate(0) scale(1.015);
 }
 
 .timeline-summary {
@@ -728,7 +763,8 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    padding: var(--space-5);
+    min-height: 16rem;
+    padding: clamp(1.5rem, 3vw, 3rem);
     cursor: pointer;
     list-style: none;
 }
@@ -745,6 +781,16 @@
 .timeline-summary-content {
     display: block;
     min-width: 0;
+}
+
+.timeline-index {
+    display: block;
+    margin-bottom: var(--space-7);
+    font-family: var(--font-display);
+    font-size: var(--text-display-sm);
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--color-accent);
 }
 
 .timeline-meta {
@@ -775,7 +821,7 @@
 .timeline-title {
     display: block;
     font-weight: var(--weight-semibold);
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     line-height: var(--leading-snug);
     color: var(--color-text-primary);
 }
@@ -820,13 +866,24 @@
 }
 
 .timeline-content {
-    padding: 0 var(--space-5) var(--space-5);
+    padding: 0 clamp(1.5rem, 3vw, 3rem) clamp(1.5rem, 3vw, 3rem);
 }
 
 .timeline-description {
     max-width: 62ch;
     margin: 0;
     color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+    .timeline {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-5);
+    }
+
+    .timeline-summary {
+        min-height: 13rem;
+    }
 }
 
 /* --- Education and credentials ------------------------------------------------- */
