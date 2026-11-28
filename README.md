@@ -291,6 +291,10 @@ Further hardening:
 `SITE_FOCUS`, `SITE_AVAILABILITY`, `RESUME_STATIC_PATH`,
 `RESUME_DOWNLOAD_NAME`, `OG_IMAGE_STATIC_PATH`. See `.env.example`.
 
+`SITE_LOCATION` defaults to `Bengaluru, Karnataka, India`. An existing
+deployment environment override takes precedence; update or remove it and
+redeploy to use the new location.
+
 Three of these gate UI: `SITE_AVAILABILITY` set to an empty value hides the
 availability marker in the navigation and the contact section, `SITE_PHONE`
 set to an empty value drops the phone row from the contact section, and the
