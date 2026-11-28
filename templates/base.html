@@ -40,9 +40,9 @@
     <link rel="stylesheet" href="{% static 'css/reset.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/sections.css' %}?v=journey-board">
-    <link rel="stylesheet" href="{% static 'css/motion.css' %}">
-    <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sections.css' %}?v=journey-pop">
+    <link rel="stylesheet" href="{% static 'css/motion.css' %}?v=passion-intro">
+    <link rel="stylesheet" href="{% static 'css/chatbot.css' %}?v=passion-intro">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
 
     {% block structured_data %}
@@ -82,7 +82,7 @@
     </div>
 
     <script src="{% static 'js/navigation.js' %}" defer></script>
-    <script src="{% static 'js/motion.js' %}" defer></script>
+    <script src="{% static 'js/motion.js' %}?v=passion-intro" defer></script>
     {% if chatbot_enabled %}
     {% include 'components/chatbot.html' %}
     <script src="{% static 'js/chatbot.js' %}" defer></script>

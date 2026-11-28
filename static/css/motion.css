@@ -39,7 +39,6 @@
     to { transform: translateX(-50%); }
 }
 
-/* The canvas is shown only while its non-blocking intro is running. */
 .hero-cinematic {
     display: none;
 }
@@ -53,7 +52,7 @@
     overflow: hidden;
     pointer-events: none;
     background: var(--color-stage);
-    animation: cinematic-fade 7000ms ease-in both;
+    animation: cinematic-fade 5500ms ease-in both;
 }
 
 .hero-cinematic::before {
@@ -63,57 +62,64 @@
     background: radial-gradient(ellipse at center, var(--color-accent-glow), transparent 70%);
 }
 
-.hero-code-canvas {
+.hero-cinematic-images {
     position: absolute;
     inset: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    opacity: .48;
+    animation: cinematic-images 5500ms var(--ease-out) both;
+}
+
+.hero-cinematic-images img {
     width: 100%;
     height: 100%;
-    animation: cinematic-code-fade 7000ms linear both;
+    min-width: 0;
+    object-fit: cover;
 }
 
 .hero-cinematic-title-frame {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: var(--space-4);
 }
 
 .hero-cinematic-title {
     position: relative;
-    display: flex;
-    white-space: pre;
+    display: grid;
+    text-align: center;
     font-family: var(--font-display);
-    font-size: clamp(2rem, 8.5vw, 7.5rem);
-    line-height: 1;
-    letter-spacing: 0.04em;
-    color: var(--color-stage-accent);
-    text-shadow: 0 0 30px var(--color-accent-wash);
-    transform-origin: var(--zoom-origin-x, 50%) 50%;
-    animation: cinematic-title 7000ms ease-in both;
+    font-size: clamp(2.5rem, 8.5vw, 8rem);
+    line-height: .95;
+    letter-spacing: var(--tracking-display);
+    color: var(--color-on-stage);
+    text-shadow: 0 4px 24px var(--color-stage);
+    animation: cinematic-title 5500ms var(--ease-out) both;
 }
 
 .hero-cinematic-title > span {
-    animation: cinematic-title-part 7000ms var(--ease-out) both;
+    animation: cinematic-title-part 5500ms var(--ease-out) both;
 }
 
-.hero-cinematic-title > span:nth-child(2) { animation-delay: 80ms; }
-.hero-cinematic-title > span:nth-child(3) { animation-delay: 160ms; }
+.hero-cinematic-title > span:nth-child(2) { color: var(--color-stage-accent); animation-delay: 120ms; }
 
-@keyframes cinematic-code-fade {
-    0%, 25% { opacity: 1; }
-    46% { opacity: .14; }
-    70%, 100% { opacity: 0; }
+@keyframes cinematic-images {
+    0% { opacity: 0; transform: scale(1.12); }
+    25%, 75% { opacity: .48; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.04); }
 }
 
 @keyframes cinematic-title {
-    0%, 25% { opacity: 0; transform: scale(.96); }
-    32%, 65% { opacity: 1; transform: scale(1); }
-    100% { opacity: 1; transform: translateX(var(--zoom-shift-x, 0px)) scale(24); }
+    0% { opacity: 0; transform: scale(.94); }
+    20%, 75% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.08); }
 }
 
 @keyframes cinematic-title-part {
-    0%, 27% { opacity: 0; transform: translateY(0.18em); }
-    42%, 100% { opacity: 1; transform: translateY(0); }
+    0% { opacity: 0; transform: translateY(0.18em); }
+    20%, 100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes cinematic-fade {
@@ -178,6 +184,20 @@
 
 .motion-ready [data-reveal]:focus-within {
     transition: none;
+}
+
+@keyframes journey-pop {
+    from { opacity: 0; transform: translateY(36px) scale(.9); }
+    70% { opacity: 1; transform: translateY(-4px) scale(1.015); }
+    to { opacity: 1; transform: none; }
+}
+
+.motion-ready .timeline-item.is-revealed {
+    animation: journey-pop 700ms var(--ease-out) var(--reveal-delay, 0ms) both;
+}
+
+.motion-ready .timeline-item:focus-within {
+    animation: none;
 }
 
 /* Reveals are decorative: without motion or JavaScript the content stays visible. */

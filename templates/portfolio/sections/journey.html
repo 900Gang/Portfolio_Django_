@@ -5,7 +5,7 @@
         <div class="section-head" data-reveal>
             <div class="section-head-text">
                 <span class="eyebrow">05 — Journey</span>
-                <h2 class="section-title">Journey</h2>
+                <h2 class="section-title journey-title">My<br>Journey<span aria-hidden="true">.</span></h2>
             </div>
             <span class="section-rule" aria-hidden="true"></span>
             <p class="section-lede">The milestones, projects and experiences behind my work.</p>
@@ -18,7 +18,7 @@
             </div>
             <ol class="timeline">
                 {% for entry in journey_entries %}
-                <li class="timeline-item">
+                <li class="timeline-item" data-reveal>
                     <details class="timeline-entry">
                         <summary class="timeline-summary">
                             <span class="timeline-summary-content">

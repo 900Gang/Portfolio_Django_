@@ -30,9 +30,6 @@ function page(readyState = 'complete', cinematic = false) {
             contains: name => sceneClasses.has(name),
         },
     };
-    const canvas = { getContext: () => ({ setTransform() {} }) };
-    const title = { style: { setProperty() {} }, offsetWidth: 200 };
-    const letter = { offsetLeft: 100, offsetWidth: 20 };
     const document = {
         readyState,
         documentElement: { classList: {
@@ -45,9 +42,6 @@ function page(readyState = 'complete', cinematic = false) {
                 '.hero-detect-score': score, '.hero': hero,
                 '.hero-word-wrap': word, '.hero-parallax': photo,
                 '.hero-cinematic': cinematic ? scene : null,
-                '.hero-code-canvas': cinematic ? canvas : null,
-                '.hero-cinematic-title': cinematic ? title : null,
-                '.hero-cinematic-v': cinematic ? letter : null,
             }[selector] || null;
         },
         querySelectorAll(selector) { return selector === '[data-count]' ? [stat] : []; },
@@ -123,3 +117,9 @@ assert.equal(intro.sceneClasses.has('is-playing'), false);
 assert.equal(intro.classes.has('cinematic-active'), false);
 assert.equal(intro.frames.size, 0);
 assert.equal(intro.timers.size, 0);
+
+const dismissedIntro = page('complete', true);
+dismissedIntro.dispatch('keydown');
+assert.equal(dismissedIntro.sceneClasses.has('is-playing'), false);
+assert.equal(dismissedIntro.classes.has('cinematic-active'), false);
+assert.equal(dismissedIntro.timers.size, 1); // Detection counter remains active.

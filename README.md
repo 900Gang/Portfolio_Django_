@@ -69,7 +69,7 @@ stay dark in the light theme and use only the `--color-stage*` and
 The fixed navigation marks the current home-page section and shows decorative
 scroll progress. Project cards show an overview, technologies when available,
 and a case-study link; their content is managed in the Django admin. Journey
-entries are arranged as a connected board of notes and use native disclosure
+entries are arranged as a set of animated cards and use native disclosure
 controls so their details remain accessible by keyboard, touch and without
 JavaScript. Skill disclosures link to the featured projects
 shown on the home page that list each skill as a technology; they do not imply
@@ -81,7 +81,7 @@ original image for closer inspection. Missing images retain the placeholder.
 
 `theme.js` adds `.motion-ready` to `<html>` before first paint unless the
 visitor asked for reduced motion; `motion.css` scopes every hidden state under
-it. A brief decorative red code-stream, title reveal and V zoom introduce the hero without
+it. A brief decorative image collage and title reveal introduce the hero without
 blocking interaction; interacting with the page dismisses it. The assistant appears after the intro
 or immediately when motion is reduced. `static/js/motion.js` adds the detection-box counter,
 scroll reveals, the stats count-up and the hero parallax. If `motion.js` has not run within three

@@ -673,12 +673,33 @@
 }
 
 /* --- Journey ------------------------------------------------------------------ */
+.journey .section-head {
+    display: block;
+    text-align: center;
+}
+
+.journey .section-rule {
+    display: none;
+}
+
+.journey .section-lede {
+    max-width: 40rem;
+    margin: var(--space-4) auto 0;
+}
+
+.journey-title {
+    margin-top: var(--space-4);
+    font-size: clamp(4rem, 11vw, 10rem);
+    line-height: .85;
+}
+
+.journey-title span {
+    color: var(--color-accent);
+}
+
 .journey-board {
     position: relative;
-    overflow: hidden;
     padding: clamp(1rem, 3vw, 2.5rem);
-    border: var(--border-width) solid var(--color-border-strong);
-    background: var(--color-surface-raised);
 }
 
 .journey-board-header {
@@ -700,18 +721,10 @@
     position: relative;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(1.5rem, 4vw, 4rem);
+    gap: clamp(1.5rem, 3vw, 3rem);
     margin: 0;
-    padding: var(--space-7) clamp(0px, 3vw, 3rem) var(--space-5);
+    padding: var(--space-7) var(--space-2);
     list-style: none;
-}
-
-.timeline::before {
-    content: "";
-    position: absolute;
-    inset: var(--space-7) 15%;
-    background: repeating-linear-gradient(165deg, transparent 0, transparent 8rem, var(--color-accent-wash) 8rem, var(--color-accent-wash) calc(8rem + 1px), transparent calc(8rem + 1px), transparent 16rem);
-    pointer-events: none;
 }
 
 .timeline-item {
@@ -719,36 +732,30 @@
     align-self: start;
 }
 
-.timeline-item::before {
-    content: "";
-    position: absolute;
-    z-index: 1;
-    top: -6px;
-    left: 50%;
-    width: 12px;
-    height: 12px;
-    background: var(--color-accent);
-    border: 2px solid var(--color-surface);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.timeline-item:nth-child(even) {
-    margin-top: var(--space-7);
-}
-
 .timeline-entry {
     position: relative;
-    border: var(--border-width) solid var(--color-border);
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: 0.5rem;
     background: var(--color-surface);
     box-shadow: 6px 6px 0 var(--color-border-strong);
-    transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+    transform: rotate(-1.5deg);
+    transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-base) var(--ease-out);
+}
+
+.timeline-item:nth-child(even) .timeline-entry {
+    transform: rotate(1.5deg);
 }
 
 .timeline-entry:hover,
-.timeline-entry[open] {
+.timeline-entry[open],
+.timeline-entry:focus-within,
+.timeline-item:nth-child(even) .timeline-entry:hover,
+.timeline-item:nth-child(even) .timeline-entry[open],
+.timeline-item:nth-child(even) .timeline-entry:focus-within {
     border-color: var(--color-accent);
     box-shadow: 6px 6px 0 var(--color-accent-wash);
+    transform: rotate(0) scale(1.015);
 }
 
 .timeline-summary {
@@ -756,7 +763,8 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    padding: var(--space-5);
+    min-height: 16rem;
+    padding: clamp(1.5rem, 3vw, 3rem);
     cursor: pointer;
     list-style: none;
 }
@@ -777,12 +785,12 @@
 
 .timeline-index {
     display: block;
-    margin-bottom: var(--space-5);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: var(--tracking-label);
+    margin-bottom: var(--space-7);
+    font-family: var(--font-display);
+    font-size: var(--text-display-sm);
+    line-height: 1;
     text-transform: uppercase;
-    color: var(--color-text-secondary);
+    color: var(--color-accent);
 }
 
 .timeline-meta {
@@ -813,7 +821,7 @@
 .timeline-title {
     display: block;
     font-weight: var(--weight-semibold);
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     line-height: var(--leading-snug);
     color: var(--color-text-primary);
 }
@@ -858,7 +866,7 @@
 }
 
 .timeline-content {
-    padding: 0 var(--space-5) var(--space-5);
+    padding: 0 clamp(1.5rem, 3vw, 3rem) clamp(1.5rem, 3vw, 3rem);
 }
 
 .timeline-description {
@@ -873,12 +881,8 @@
         gap: var(--space-5);
     }
 
-    .timeline-item:nth-child(even) {
-        margin-top: 0;
-    }
-
-    .timeline::before {
-        inset: var(--space-7) 10%;
+    .timeline-summary {
+        min-height: 13rem;
     }
 }
 
