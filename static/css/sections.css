@@ -690,7 +690,7 @@
 .journey-title {
     margin-top: var(--space-4);
     font-size: clamp(4rem, 11vw, 10rem);
-    line-height: .85;
+    line-height: 1.08;
 }
 
 .journey-title span {
