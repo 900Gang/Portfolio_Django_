@@ -83,7 +83,11 @@ blocking interaction; interacting with the page dismisses it. The assistant appe
 or immediately when motion is reduced. `static/js/motion.js` adds the detection-box counter,
 scroll reveals, the stats count-up and the hero parallax. If `motion.js` has not run within three
 seconds, `theme.js` withdraws the class, so content can never stay invisible.
-With JavaScript off, the page is static and complete.
+If reduced motion is enabled during a visit, running effects stop, counters
+show their final values, and content stays visible. Motion resumes on the next
+page load if the preference is turned off again (the CSS ticker follows the
+current preference). Keyboard focus also reveals
+content immediately. With JavaScript off, the page is static and complete.
 
 ## Local Setup
 
