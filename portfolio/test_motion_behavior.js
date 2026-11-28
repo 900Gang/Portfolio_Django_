@@ -59,7 +59,7 @@ function page(readyState = 'complete', cinematic = false) {
         IntersectionObserver,
         requestAnimationFrame(callback) { const id = ++nextId; frames.set(id, callback); return id; },
         cancelAnimationFrame(id) { frames.delete(id); },
-        setTimeout(callback) { const id = ++nextId; timers.set(id, callback); return id; },
+        setTimeout(callback, delay) { const id = ++nextId; timers.set(id, { callback, delay }); return id; },
         clearTimeout(id) { timers.delete(id); },
         addEventListener(name, callback) { (listeners[name] ||= []).push(callback); },
         removeEventListener(name, callback) {
@@ -112,6 +112,7 @@ assert.equal(beforeReady.observers.length, 0);
 const intro = page('complete', true);
 assert.equal(intro.sceneClasses.has('is-playing'), true);
 assert.equal(intro.classes.has('cinematic-active'), true);
+assert.ok([...intro.timers.values()].some(timer => timer.delay === 4900));
 intro.reduce();
 assert.equal(intro.sceneClasses.has('is-playing'), false);
 assert.equal(intro.classes.has('cinematic-active'), false);
