@@ -81,7 +81,8 @@ original image for closer inspection. Missing images retain the placeholder.
 
 `theme.js` adds `.motion-ready` to `<html>` before first paint unless the
 visitor asked for reduced motion; `motion.css` scopes every hidden state under
-it. A brief decorative image collage and title reveal introduce the hero without
+it. A brief decorative sequence alternates words and images, then shows a
+collage and red streaks before revealing the hero without
 blocking interaction; interacting with the page dismisses it. The assistant appears after the intro
 or immediately when motion is reduced. `static/js/motion.js` adds the detection-box counter,
 scroll reveals, the stats count-up and the hero parallax. If `motion.js` has not run within three
