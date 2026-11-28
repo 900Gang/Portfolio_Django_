@@ -198,16 +198,6 @@
     animation: project-sweep 900ms var(--ease-out) var(--reveal-delay, 0ms) both;
 }
 
-@keyframes line-draw {
-    from { transform: scaleY(0); }
-    to { transform: scaleY(1); }
-}
-
-.motion-ready .timeline.is-drawing::before {
-    transform-origin: top;
-    animation: line-draw 1200ms var(--ease-out) both;
-}
-
 @keyframes process-pulse {
     50% { transform: scale(1.12); }
 }

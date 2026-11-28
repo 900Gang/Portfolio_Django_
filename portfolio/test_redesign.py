@@ -440,6 +440,18 @@ class SkillsAndJourneyTest(TestCase):
         self.assertIn(description, html)
         self.assertIn('datetime="2026-03-01"', html)
 
+    def test_journey_board_numbers_each_native_disclosure(self):
+        JourneyEntry.objects.create(date="2025-03-01", title="First", description="First detail.")
+        JourneyEntry.objects.create(date="2026-03-01", title="Second", description="Second detail.")
+        html = home_html(self.client)
+        section = html[html.index('<section id="journey"'):html.index('</section>', html.index('<section id="journey"'))]
+        self.assertIn("Selected milestones / 02", section)
+        self.assertIn('aria-hidden="true">Note 01', section)
+        self.assertIn('aria-hidden="true">Note 02', section)
+        self.assertEqual(section.count('<details class="timeline-entry">'), 2)
+        self.assertIn("First detail.", section)
+        self.assertIn("Second detail.", section)
+
 
 class CredentialsTest(TestCase):
     def test_quote_card_renders_the_agreed_line(self):

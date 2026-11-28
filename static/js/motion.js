@@ -296,24 +296,6 @@
         cleanups.push(function () { observer.disconnect(); });
     }
 
-    function initMotionLines() {
-        var lines = document.querySelectorAll('.timeline');
-        if (!('IntersectionObserver' in window)) {
-            return;
-        }
-        var observer = new IntersectionObserver(function (entries) {
-            if (!active) { return; }
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-drawing');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0 });
-        lines.forEach(function (line) { observer.observe(line); });
-        cleanups.push(function () { observer.disconnect(); });
-    }
-
     /* --- Hero parallax ----------------------------------------------------
        Wide screens only. The giant word drifts faster than the portrait;
        transforms only, one frame per scroll burst, idle once the hero is off
@@ -366,7 +348,6 @@
         initDetection();
         initCountUp();
         initReveals();
-        initMotionLines();
         initParallax();
     });
 })();
