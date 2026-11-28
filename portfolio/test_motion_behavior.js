@@ -112,7 +112,7 @@ assert.equal(beforeReady.observers.length, 0);
 const intro = page('complete', true);
 assert.equal(intro.sceneClasses.has('is-playing'), true);
 assert.equal(intro.classes.has('cinematic-active'), true);
-assert.ok([...intro.timers.values()].some(timer => timer.delay === 4900));
+assert.ok([...intro.timers.values()].some(timer => timer.delay === 7450));
 intro.reduce();
 assert.equal(intro.sceneClasses.has('is-playing'), false);
 assert.equal(intro.classes.has('cinematic-active'), false);

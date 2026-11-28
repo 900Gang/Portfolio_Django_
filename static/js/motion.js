@@ -76,7 +76,7 @@
             return;
         }
         var fallbackTimer;
-        var duration = 4700;
+        var duration = 7250;
 
         function stop() {
             scene.classList.remove('is-playing');

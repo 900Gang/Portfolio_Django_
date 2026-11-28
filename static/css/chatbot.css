@@ -20,7 +20,7 @@
 }
 
 .cinematic-active .chatbot {
-    animation: chatbot-after-intro 4700ms step-end both;
+    animation: chatbot-after-intro 7250ms step-end both;
 }
 
 .cinematic-active .chatbot-controls,

@@ -637,17 +637,19 @@ class MotionTest(TestCase):
             for word in ("FOR", "PASSION", "IS", "MY", "REASON")
         ]
         self.assertEqual(words, sorted(words))
-        for index in range(1, 5):
-            self.assertIn(f'img/intro-{index}.webp', html)
+        for index in (1, 3, 4, 5, 6, 7):
+            self.assertIn(f'img/intro-shot-{index}.webp', html)
         beats = re.findall(r'class="hero-cinematic-beat hero-cinematic-(word|image)"', html)
-        self.assertEqual(beats, ["word", "image", "word", "image", "word", "image", "word", "image", "word"])
+        self.assertEqual(beats, ["image", "word"] * 5)
+        self.assertIn("FOR PASSION<br>IS MY REASON", html)
+        self.assertIn('class="hero-cinematic-lines"', html)
         self.assertRegex(css, r"\.hero-cinematic \{\s*display: none;")
         self.assertRegex(
             css, r"\.motion-ready \.hero-cinematic\.is-playing \{[^}]*pointer-events: none;"
         )
         self.assertIn(".motion-ready .hero-cinematic.is-playing {\n        display: none;", css)
         self.assertIn("@keyframes cinematic-beat", css)
-        self.assertIn("@keyframes cinematic-shutter", css)
+        self.assertIn("@keyframes cinematic-finale", css)
         self.assertIn("@keyframes journey-pop", css)
         self.assertIn(".motion-ready .timeline-item.is-revealed", css)
 
@@ -663,7 +665,7 @@ class MotionTest(TestCase):
     def test_motion_assets_are_wired_into_every_page(self):
         html = home_html(self.client)
         self.assertIn("css/motion.css", html)
-        self.assertIn('js/motion.js?v=intro-sequence" defer', html)
+        self.assertIn('js/motion.js?v=intro-montage" defer', html)
 
 
 class FinalReviewFixesTest(TestCase):
